@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "projectmem": {
+      "command": "/Users/thomasestep/.local/share/uv/tools/projectmem/bin/python",
+      "args": [
+        "-m", "projectmem.mcp_server",
+        "--root", "/Users/thomasestep/Developer/skills"
+      ]
+    }
+  }
+}
