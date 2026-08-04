@@ -1,0 +1,42 @@
+diff --git a/jobs/worker.py b/jobs/worker.py
+index 1111111..2222222 100644
+--- a/jobs/worker.py
++++ b/jobs/worker.py
+@@ -1,17 +1,23 @@
++import time
++
++
++MAX_RETRIES = 3
++
++
+ def run_job(job):
+-    tries = 0
+-    while tries < 3:
++    for attempt in range(MAX_RETRIES):
+         try:
+-            result = job.execute()
+-            return result
+-        except Exception as e:
+-            tries = tries + 1
+-            if tries >= 3:
+-                raise e
+-            continue
++            return job.execute()
++        except Exception:
++            if attempt == MAX_RETRIES - 1:
++                raise
++            time.sleep(0.5 * (attempt + 1))
+diff --git a/jobs/test_worker.py b/jobs/test_worker.py
+index 3333333..4444444 100644
+--- a/jobs/test_worker.py
++++ b/jobs/test_worker.py
+@@ -10,3 +10,10 @@ def test_run_job_succeeds_first_try():
+ def test_run_job_raises_after_max_retries():
+     job = FlakyJob(fail_times=5)
+     with pytest.raises(RuntimeError):
+         run_job(job)
++
++
++def test_run_job_succeeds_after_transient_failure():
++    job = FlakyJob(fail_times=2)
++    assert run_job(job) == "ok"

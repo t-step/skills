@@ -1,0 +1,101 @@
+{
+  "skill_name": "slice-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "clean-slice",
+      "prompt": "I finished a small slice of work. All the materials are in evals/slice-review/cases/case-001/: goal.md is the stated goal, instructions.md is the relevant repo convention, diff.patch is the actual change, verification.md is the verification evidence I have. Review this slice and tell me if it's ready to merge.",
+      "expected_output": "Verdict 'Ready to merge'. No blocking findings. Verification evidence is correctly credited because real pytest output was shown.",
+      "files": ["evals/slice-review/cases/case-001/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge'",
+        "No blocking findings are listed",
+        "The review references the actual observed pytest output (2 passed) as the verification evidence, not just a restated claim"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "hidden-defect-despite-passing-tests",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-002/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Not ready to merge'. Blocking finding: tax in compute_total is computed on the pre-discount price, not the discounted price, contradicting the ticket, even though all 3 tests pass.",
+      "files": ["evals/slice-review/cases/case-002/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Not ready to merge'",
+        "The review identifies that compute_total calculates tax on the original/pre-discount price instead of the discounted price",
+        "The review does not treat 'all tests passed' as sufficient evidence that the goal was met — it explains why the passing tests don't cover this case (all existing tests use pct=0, or test apply_discount in isolation)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "reachable-obsolete-path",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-003/: goal.md, instructions.md, repo_snapshot.md (relevant files as they stand after the diff), diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Not ready to merge'. Blocking finding: password_reset.py still imports and calls LegacyEmailSender directly, so the legacy path is still reachable even though signup.py was migrated and its test passes.",
+      "files": ["evals/slice-review/cases/case-003/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Not ready to merge'",
+        "The review explicitly names password_reset.py as a place where LegacyEmailSender is still called/reachable",
+        "The review does not conclude 'Ready to merge' merely because signup.py was migrated and its own test passes"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "insufficient-evidence",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-004/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Unable to verify'. The cache is an ordinary, unremarkable implementation of the stated goal (no request-scoping or eviction requirement is stated), so there is no visible contradiction to point at; the review does not claim the change works or fails, and explicitly says there's no observed test output or way to run/verify the change, only an unverified claim of 'tested locally, works fine'.",
+      "files": ["evals/slice-review/cases/case-004/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Unable to verify'",
+        "The review explicitly says it has no observed verification evidence (no test output, no way to run anything) rather than treating 'tested locally, works fine' as evidence",
+        "The review does not state or imply that the caching change is confirmed to work, and does not state or imply it is confirmed broken"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "scope-creep-trap",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-005/: goal.md, instructions.md, repo_snapshot.md (full file the diff touches), diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Ready to merge'. The pre-existing format_date timezone TODO (same file, untouched by the diff) is noted as out-of-scope, not treated as a blocking finding.",
+      "files": ["evals/slice-review/cases/case-005/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge'",
+        "If the review mentions the format_date timezone TODO at all, it is placed in a non-blocking or out-of-scope category, not blocking",
+        "No blocking findings are listed"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "false-positive-trap",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-006/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Ready to merge'. The '>' to '>=' comparison change is recognized as the intentional, correct fix matching the goal, not flagged as a blocking off-by-one risk.",
+      "files": ["evals/slice-review/cases/case-006/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge'",
+        "The review does not list the '>' to '>=' comparison change as a blocking finding or an unresolved off-by-one risk",
+        "No blocking findings are listed"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "minor-corrections",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-007/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Ready after minor corrections'. The rate-limiting logic itself is correct and verified (10 allowed, 11th rejected, real passing test output), but the 429 response returns a plain-text body instead of the JSON {\"error\": ...} format instructions.md requires — a real, small, one-line-fixable violation, not severe enough to withhold the merge outright, but real enough that 'Ready to merge' would be wrong.",
+      "files": ["evals/slice-review/cases/case-007/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready after minor corrections'",
+        "The review identifies that the 429 response body is plain text ('Too many requests') instead of the required JSON {\"error\": ...} format",
+        "The review confirms the core rate-limiting boundary (10 allowed, 11th request rejected) is correctly implemented and backed by the observed passing test output, rather than treating the format issue as disqualifying on its own"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "goal-ambiguity",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-008/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict is one of 'Unable to verify', 'Ready after minor corrections', or 'Not ready to merge' — all three are defensible for this fixture (see evals/slice-review/grading/case-008.expected.md). The goal ('clean up the retry logic') states no success criteria, and the diff smuggles in a real behavior change (a time.sleep backoff) under that vague banner. The one wrong answer is 'Ready to merge' without ever surfacing that. Verification evidence (3 passed in 3.02s) is genuinely present and internally consistent with the diff's own backoff math — a thorough review checks that consistency rather than taking the pasted number at face value.",
+      "files": ["evals/slice-review/cases/case-008/"],
+      "expectations": [
+        "The review does not state a verdict of 'Ready to merge'",
+        "The review explicitly names the goal ('clean up the retry logic') as ambiguous and/or explicitly flags the added time.sleep backoff as a behavior change not clearly authorized by the stated goal, rather than silently treating the diff's specific interpretation as settled fact",
+        "The review does not treat the pasted verification evidence as unsupported or missing — it correctly credits it as genuinely observed (3 passed), whether or not it goes further to check the 3.02s runtime against the diff's own sleep calls"
+      ]
+    }
+  ]
+}

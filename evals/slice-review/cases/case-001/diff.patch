@@ -1,0 +1,26 @@
+diff --git a/billing/amounts.py b/billing/amounts.py
+index 1111111..2222222 100644
+--- a/billing/amounts.py
++++ b/billing/amounts.py
+@@ -1,8 +1,12 @@
+ def parse_amount(s: str) -> float:
+     """Parse a dollar string like '12.50' into a float."""
+     cleaned = s.strip().lstrip("$")
+-    return float(cleaned)
++    value = float(cleaned)
++    if value < 0:
++        raise ValueError(f"amount must not be negative: {s!r}")
++    return value
+diff --git a/billing/test_amounts.py b/billing/test_amounts.py
+index 3333333..4444444 100644
+--- a/billing/test_amounts.py
++++ b/billing/test_amounts.py
+@@ -3,3 +3,10 @@ from billing.amounts import parse_amount
+ def test_parses_dollar_string():
+     assert parse_amount("$12.50") == 12.50
++
++
++def test_rejects_negative_amount():
++    import pytest
++    with pytest.raises(ValueError):
++        parse_amount("-5.00")

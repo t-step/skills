@@ -1,0 +1,29 @@
+diff --git a/shipping/cost.py b/shipping/cost.py
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/shipping/cost.py
+@@ -0,0 +1,8 @@
++def shipping_cost(weight_kg: float) -> int:
++    """Flat-rate shipping cost in dollars based on weight tier."""
++    if weight_kg <= 1:
++        return 5
++    if weight_kg <= 5:
++        return 10
++    return 20
+diff --git a/shipping/test_cost.py b/shipping/test_cost.py
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/shipping/test_cost.py
+@@ -0,0 +1,10 @@
++from shipping.cost import shipping_cost
++
++def test_light_package():
++    assert shipping_cost(1) == 5
++
++def test_medium_package():
++    assert shipping_cost(5) == 10
++
++def test_heavy_package():
++    assert shipping_cost(10) == 20
