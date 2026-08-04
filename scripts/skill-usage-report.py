@@ -186,8 +186,8 @@ def ingest(conn: sqlite3.Connection, projects_root: pathlib.Path, tracked_skills
             path_str = str(transcript)
             stat = transcript.stat()
             stored_mtime, stored_offset = get_scan_state(conn, path_str)
-            unchanged = stat.st_mtime == stored_mtime and stat.st_size >= stored_offset
-            start_offset = stored_offset if unchanged else 0
+            abnormal = stat.st_size < stored_offset or stat.st_mtime < stored_mtime
+            start_offset = 0 if abnormal else stored_offset
             rows, new_offset = scan_transcript_file(transcript, tracked_skills, project_slug, start_offset)
             for row in rows:
                 conn.execute(
