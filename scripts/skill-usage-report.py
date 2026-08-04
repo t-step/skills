@@ -160,6 +160,51 @@ def parse_new_invocations(
     return rows, consumed_bytes
 
 
+def scan_transcript_file(
+    path: pathlib.Path, tracked_skills: set[str], project_slug: str, start_offset: int
+) -> tuple[list[InvocationRow], int]:
+    with path.open("rb") as f:
+        f.seek(start_offset)
+        raw = f.read()
+    text = raw.decode("utf-8", errors="replace")
+    rows, consumed = parse_new_invocations(text, tracked_skills, project_slug)
+    return rows, start_offset + consumed
+
+
+def ingest(conn: sqlite3.Connection, projects_root: pathlib.Path, tracked_skills: set[str]) -> tuple[int, int]:
+    """Scan every transcript under projects_root; insert new invocation rows.
+
+    Returns (files_scanned, rows_inserted).
+    """
+    if not projects_root.exists():
+        return (0, 0)
+    before = conn.execute("SELECT COUNT(*) FROM invocations").fetchone()[0]
+    files_scanned = 0
+    for project_dir in sorted(p for p in projects_root.iterdir() if p.is_dir()):
+        project_slug = project_dir.name
+        for transcript in sorted(project_dir.glob("*.jsonl")):
+            path_str = str(transcript)
+            stat = transcript.stat()
+            stored_mtime, stored_offset = get_scan_state(conn, path_str)
+            unchanged = stat.st_mtime == stored_mtime and stat.st_size >= stored_offset
+            start_offset = stored_offset if unchanged else 0
+            rows, new_offset = scan_transcript_file(transcript, tracked_skills, project_slug, start_offset)
+            for row in rows:
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO invocations
+                        (skill_name, session_id, cwd, project_slug, ts, source_uuid)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (row.skill_name, row.session_id, row.cwd, row.project_slug, row.ts, row.source_uuid),
+                )
+            set_scan_state(conn, path_str, stat.st_mtime, new_offset)
+            files_scanned += 1
+    conn.commit()
+    after = conn.execute("SELECT COUNT(*) FROM invocations").fetchone()[0]
+    return files_scanned, after - before
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Report on how often this repo's skills get invoked.")
     parser.add_argument("--projects-root", type=pathlib.Path, default=DEFAULT_PROJECTS_ROOT)
@@ -181,7 +226,8 @@ def main() -> int:
     for name in sorted(tracked_skills):
         print(f"  - {name}")
     conn = init_db(args.db_path)
-    print(f"database ready at {args.db_path}")
+    files_scanned, rows_inserted = ingest(conn, args.projects_root, tracked_skills)
+    print(f"scanned {files_scanned} transcript file(s), {rows_inserted} new invocation(s)")
     conn.close()
     return 0
 
