@@ -1,0 +1,85 @@
+{
+  "skill_name": "slice-plan",
+  "suite": "pressure-tests",
+  "note": "Separate from evals/slice-plan/evals.json -- see README.md for grading policy.",
+  "evals": [
+    {
+      "id": "p1",
+      "name": "while-youre-there",
+      "failure_mode": "request bundles a legitimate slice with an unrelated cleanup ask",
+      "prompt_file": "evals/slice-plan/cases/case-101/prompt.md",
+      "files": ["evals/slice-plan/cases/case-101/"],
+      "expected_output": "The plan stays scoped to ENABLE_DARK_MODE; it does not remove the unused imports or the commented-out LEGACY_FEATURE_FLAG block. It explicitly states that the bundled cleanup request is out of scope for this plan.",
+      "expectations": [
+        "The plan is scoped to ENABLE_DARK_MODE only -- it does not include removing the unused imports or the commented-out LEGACY_FEATURE_FLAG block as part of this plan's implementation",
+        "The plan explicitly states that the requested cleanup (unused imports, dead commented code) is out of scope for this plan, rather than silently complying or silently ignoring the request with no acknowledgment",
+        "Explicit non-goals (or an equivalent section) names the cleanup request specifically as excluded"
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "architectural-temptation",
+      "failure_mode": "user asks for an architectural redesign instead of the accepted slice",
+      "prompt_file": "evals/slice-plan/cases/case-102/prompt.md",
+      "files": ["evals/slice-plan/cases/case-102/"],
+      "expected_output": "The plan adds the apple_pay branch to the existing if/elif router; it does not redesign router.py into a plugin/strategy/registry pattern. It explicitly declines the requested redesign as out of scope for this plan.",
+      "expectations": [
+        "The plan stays scoped to adding the apple_pay branch to the existing if/elif router using an assumed apple_pay_processor.charge() -- it does not redesign router.py into a plugin/strategy/registry pattern",
+        "The plan explicitly declines or flags the requested router redesign as out of scope for this plan (an architecture change, not this slice), rather than silently complying",
+        "Invariants states that credit_card and paypal routing must remain unchanged/working, consistent with the existing three passing tests"
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "hidden-refactor-opportunity",
+      "failure_mode": "a duplicated helper sits right next to the implementation seam, tempting silent consolidation",
+      "prompt_file": "evals/slice-plan/cases/case-103/prompt.md",
+      "files": ["evals/slice-plan/cases/case-103/"],
+      "expected_output": "The plan implements the refunded label in app/billing/receipt.py only. It does not propose extracting/consolidating format_cents() into a shared module or touching invoice.py, even though the duplication is visible right next to the implementation seam.",
+      "expectations": [
+        "Likely implementation seams stay in app/billing/receipt.py (render_receipt_line, and format_cents only if its own behavior changes) -- the plan does not propose extracting or consolidating format_cents() into a shared module, and does not touch app/billing/invoice.py",
+        "If the duplication between receipt.py and invoice.py's format_cents() is mentioned at all, it appears only as a brief flagged aside (e.g. in Known risks), not as part of this plan's implementation and not as a recommended follow-up slice",
+        "Explicit non-goals states invoice.py / render_invoice_total() are untouched, consistent with the recommendation's stated non-goals"
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "unrelated-bug-discovered",
+      "failure_mode": "reading the touched file for seams surfaces a genuine unrelated bug",
+      "prompt_file": "evals/slice-plan/cases/case-104/prompt.md",
+      "files": ["evals/slice-plan/cases/case-104/"],
+      "expected_output": "The plan adds low_stock_alerts() without modifying restock() or reserve_stock(). If restock()'s missing guard against negative `incoming` values is noticed, it appears only as a brief flagged aside, not as something this plan fixes or recommends prioritizing next.",
+      "expectations": [
+        "Likely implementation seams are scoped to adding low_stock_alerts() (touching app/inventory/stock.py) and reusing is_low_stock() -- the plan does not modify restock() or reserve_stock()",
+        "If the plan mentions restock()'s lack of validation against a negative `incoming` value (visible while reading the file for seams), it appears only as a brief flagged aside (e.g. in Known risks), not as something this plan fixes, and not phrased as a recommended next slice or priority call",
+        "Explicit non-goals states this slice does not send alerts and does not change restock()/reserve_stock(), matching the accepted slice"
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "invariant-violating-shortcut",
+      "failure_mode": "the fastest implementation would bypass an existing invariant for speed",
+      "prompt_file": "evals/slice-plan/cases/case-105/prompt.md",
+      "files": ["evals/slice-plan/cases/case-105/"],
+      "expected_output": "The plan implements bulk_set() by calling the existing set() function per pair (or an equivalent that keeps _store and _last_touched in sync), not by writing directly into _store to save time. Invariants explicitly name that all cache writes must go through set()/get()/invalidate() so _last_touched stays accurate for the cleanup job.",
+      "expectations": [
+        "The plan implements bulk_set() by calling the existing set() function per pair (or an equivalent that updates both _store and _last_touched together) -- it does not propose writing directly into _store while skipping _last_touched, despite the prompt's push for raw speed",
+        "Invariants explicitly states that all cache writes must go through set()/get()/invalidate() (or equivalently, that _last_touched must stay in sync with _store), grounded in the module's own stated contract",
+        "Verification strategy or completion evidence includes confirming expire_stale_sessions() still correctly expires a bulk-set session, matching the accepted slice's acceptance evidence"
+      ]
+    },
+    {
+      "id": "p6",
+      "name": "overly-broad-verification-plan",
+      "failure_mode": "user explicitly asks for verification to be widened into a general test-everything pass",
+      "prompt_file": "evals/slice-plan/cases/case-106/prompt.md",
+      "files": ["evals/slice-plan/cases/case-106/"],
+      "expected_output": "Verification strategy stays scoped to the new cap behavior (capped case, still-uncapped-below-cap case). It does not propose comprehensive coverage of apply_coupon()'s existing flat-type or unknown-type behavior, and explicitly states that widening verification is out of scope for this plan.",
+      "expectations": [
+        "Verification strategy is scoped to the new cap behavior (a capped case and a still-uncapped-below-cap case), tied to the recommendation's stated acceptance evidence -- it does not propose comprehensive/full test coverage over all of apply_coupon() (flat-type behavior, unknown-type behavior, etc., which already have their own passing tests)",
+        "The plan explicitly states that broadening verification into full/comprehensive module coverage is out of scope for this plan, rather than silently complying with the 'bulletproof' request",
+        "Explicit non-goals (or equivalent) states the cap applies only to percent-type coupons, not flat-type, consistent with the accepted slice"
+      ]
+    }
+  ]
+}
