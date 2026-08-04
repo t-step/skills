@@ -4,7 +4,7 @@ Working instructions for the skills repository, shared by all coding agents. Cod
 
 ## What this repo is
 
-A collection of portable Agent Skills — self-contained skill definitions (SKILL.md plus supporting `examples/`, `references/`, `templates/`, `scripts/`) usable across harnesses. Currently a skeleton: three skill directories exist (`skills/create-session-handoff/`, `skills/investigate-tradeoff/`, `skills/retrieve-prior-work/`) with no SKILL.md files authored yet, plus empty `evals/` and `scripts/` directories and a `.github/workflows/` stub.
+A collection of portable Agent Skills — self-contained skill definitions (SKILL.md plus supporting `examples/`, `references/`, `templates/`, `scripts/`) usable across harnesses. First content skill: `skills/slice-review/`, with its eval suites under `evals/slice-review/` (agent-visible inputs in `cases/`, answer keys isolated in `grading/`, committed benchmark evidence in `RESULTS.md` and `runs/`). Repository-wide guard scripts live under `scripts/`.
 
 ## Project memory (projectmem) — MANDATORY
 
@@ -26,3 +26,5 @@ Harness note: the projectmem MCP server is registered for Claude Code (`.mcp.jso
 ## Verification — local-first
 
 This repository is private, so GitHub CI runs rarely and must never be the first place checks execute. Run whatever checks exist locally (skill evals under `evals/`, scripts under `scripts/`) and confirm they pass before opening a PR. Do not claim work is complete or PR-ready on the expectation that CI will catch problems.
+
+The canonical check command is `bash scripts/check.sh`. It runs the strict-YAML skill-frontmatter lint (`scripts/check-skill-frontmatter.py`, a uv script) and the eval answer-leakage guard (`scripts/check-eval-isolation.py`), and it must pass before any commit or PR. It is enforced at three layers: run it directly while working; the machine-local pre-commit hook invokes it (appended below projectmem's fenced block in `.git/hooks/pre-commit` — hooks are untracked, so re-append on a fresh clone); and `.github/workflows/checks.yml` re-runs the identical script in CI as a backstop, never as the first execution. Add future checks to `check.sh` itself, not to the hook or the workflow.
