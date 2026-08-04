@@ -1,0 +1,77 @@
+{
+  "skill_name": "slice-plan",
+  "evals": [
+    {
+      "id": 1,
+      "name": "straightforward-slice",
+      "prompt": "Plan this accepted slice for me. Materials are in evals/slice-plan/cases/case-001/: recommendation.md and repo/.",
+      "expected_output": "A clean, small plan: Goal restates the max-length check; behavioral contract names the 24-char boundary and the exact error message; seams name app/validators.py::validate_username; invariants preserve MIN_LENGTH and the other three checks; verification strategy is the one new boundary test plus the existing suite passing; non-goals match the recommendation's.",
+      "files": ["evals/slice-plan/cases/case-001/"],
+      "expectations": [
+        "Likely implementation seams names app/validators.py::validate_username specifically (not a new file, not the signup HTTP handler)",
+        "Behavioral contract or invariants state the exact boundary (usernames longer than 24 characters rejected, 24 itself still valid) and that MIN_LENGTH and the existing start-with-letter / character-set checks are unaffected",
+        "The plan does not introduce anything beyond the accepted slice (e.g. no new configurable max-length setting, no changes to the signup HTTP handler) -- Explicit non-goals matches or is consistent with the recommendation's stated non-goals"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "invariant-across-boundary",
+      "prompt": "Plan this accepted slice for me. Materials are in evals/slice-plan/cases/case-002/: recommendation.md and repo/.",
+      "expected_output": "The plan adds last_login_at to serialize_user()'s returned dict, formatted like created_at with null-handling for None. Invariants explicitly name that the existing required keys (id, email, display_name, created_at) must stay present and unchanged, and that password_hash must continue to be excluded -- both grounded in the module's own docstring and the client_consumer.py boundary.",
+      "files": ["evals/slice-plan/cases/case-002/"],
+      "expectations": [
+        "Likely implementation seams names app/serializers.py::serialize_user as the touched seam",
+        "Invariants explicitly states that the existing keys serialize_user() already returns (id, email, display_name, created_at) must remain present and unrenamed, grounded in the file's own docstring about downstream consumers depending on the exact key set -- not just asserted without grounding",
+        "Invariants or behavioral contract also notes that password_hash must continue to never appear in the serialized payload, even though this slice touches the same function"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "ambiguous-seam-choice",
+      "prompt": "Plan this accepted slice for me. Materials are in evals/slice-plan/cases/case-003/: recommendation.md and repo/.",
+      "expected_output": "The plan implements the SMS call at app/signup_flow.py::handle_signup (the seam the goal's wording -- \"when a new user signs up\" -- actually points to), not at admin_tools/bulk_import.py, even though bulk_import.py calls the same dispatcher and its rows already carry an optional phone field. The parallel bulk-import path is named explicitly as a known risk/non-goal, not silently extended to and not silently ignored.",
+      "files": ["evals/slice-plan/cases/case-003/"],
+      "expectations": [
+        "Likely implementation seams names app/signup_flow.py::handle_signup (and the dispatcher's send_sms) as where this is implemented, not app/admin_tools/bulk_import.py::import_users",
+        "The plan does not add SMS sending to bulk_import.py's import path, despite its rows already carrying an optional 'phone' field that makes doing so easy",
+        "Explicit non-goals or Known risks explicitly names that bulk_import.py has its own parallel call to send_welcome_email and was not addressed by this slice, rather than leaving that fact unmentioned"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "underspecified-goal",
+      "prompt": "Plan this accepted slice for me. Materials are in evals/slice-plan/cases/case-004/: recommendation.md and repo/.",
+      "expected_output": "The plan adds retry-on-TransientProviderError to attempt_charge(), but explicitly flags that the recommendation never specifies a retry count or backoff schedule -- the chosen number is presented as the smallest reasonable judgment call, not as a spec requirement. The plan doesn't invent unrequested infrastructure (config knobs, metrics, circuit breakers) beyond the retry itself, and preserves that ChargeDeclinedError still raises immediately.",
+      "files": ["evals/slice-plan/cases/case-004/"],
+      "expectations": [
+        "Known risks (or an equivalent section) explicitly states that the accepted slice does not specify a retry count or backoff schedule, and frames whatever number the plan picks as a judgment call rather than presenting an invented number as if it were a specified requirement",
+        "The plan does not add unrequested scope beyond retrying on TransientProviderError -- no new configuration system, no metrics/observability layer, no circuit breaker, no change to how ChargeDeclinedError is raised",
+        "Invariants or behavioral contract explicitly preserves that ChargeDeclinedError still raises immediately without any retry, consistent with the recommendation's stated non-goal"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "bounded-footprint",
+      "prompt": "Plan this accepted slice for me. Materials are in evals/slice-plan/cases/case-005/: recommendation.md and repo/.",
+      "expected_output": "Likely implementation seams names only app/checkout/pricing.py::apply_discount. refund_amount() in app/admin/refunds.py and discounted_line_total() in app/reports/export.py -- both near-identical in code -- are explicitly named as untouched in Explicit non-goals, consistent with the recommendation. Behavioral contract specifies rounding the discount up rather than truncating, with a concrete non-whole-cent example.",
+      "files": ["evals/slice-plan/cases/case-005/"],
+      "expectations": [
+        "Likely implementation seams names only app/checkout/pricing.py::apply_discount -- it does not list app/admin/refunds.py::refund_amount or app/reports/export.py::discounted_line_total as seams to change",
+        "Explicit non-goals explicitly states refund_amount() and discounted_line_total() are out of scope, despite being near-identical code, consistent with the recommendation's stated non-goals",
+        "Behavioral contract or completion evidence specifies rounding the discount amount up (ceiling) rather than truncating, with a concrete example where the exact discount isn't a whole number of cents"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "verification-scoped-to-contract",
+      "prompt": "Plan this accepted slice for me. Materials are in evals/slice-plan/cases/case-006/: recommendation.md and repo/.",
+      "expected_output": "Verification strategy adds only tests for the new \"-word\" exclusion behavior (e.g. basic negation, negation combined with existing must terms) -- it does not propose expanding coverage for the already-tested must/or/fields/quoted-phrase behaviors, and does not propose testing exclusion combined with quoted phrases or field filters (both explicit non-goals). Note: the fixture contains a genuine tension -- the recommendation says existing tests \"still pass unchanged,\" but two existing tests use whole-dict equality that breaks under any added key -- a good plan names this explicitly rather than silently picking a side; either resolution (keep the two tests untouched via a conditional key, or mechanically update their literals) is acceptable.",
+      "files": ["evals/slice-plan/cases/case-006/"],
+      "expectations": [
+        "Verification strategy specifies new test(s) scoped to the '-word' exclusion behavior only (e.g. basic negation, negation combined with an existing must term), tied to the recommendation's stated acceptance evidence",
+        "Verification strategy or explicit non-goals does not propose testing exclusion for quoted phrases or field filters -- both are explicitly out of scope in the recommendation",
+        "The plan explicitly names, as a known risk or equivalent, the tension between the recommendation's 'existing tests pass unchanged' claim and the two existing tests (test_single_term, test_empty_query) that use whole-dict equality and would break under any unconditionally-added key -- rather than silently resolving it either way. Either concrete resolution (a conditional must_not key that leaves both tests untouched, or an unconditional key with the two tests' literals mechanically updated) passes, provided the tradeoff is surfaced"
+      ]
+    }
+  ]
+}
