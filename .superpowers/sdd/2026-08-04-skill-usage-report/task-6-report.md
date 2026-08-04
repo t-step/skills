@@ -97,6 +97,92 @@ python3 /tmp/skill-usage-t6-boundary.py
 
 No production code changes were needed — the logic was already correct; only the verification was incomplete.
 
+## Round 2: Actual Boundary Test Code and Artifacts
+
+### Boundary Test Script (`/tmp/skill-usage-t6-boundary.py`)
+
+```python
+import runpy, pathlib, tempfile, os, time
+from datetime import datetime, timezone, timedelta
+
+mod = runpy.run_path("scripts/skill-usage-report.py", run_name="test")
+
+with tempfile.TemporaryDirectory() as tmp:
+    root = pathlib.Path(tmp) / "projects" / "proj-a"
+    root.mkdir(parents=True)
+
+    now = datetime.now(timezone.utc)
+    digest_days = 7
+    cutoff = now - timedelta(days=digest_days)
+
+    # File at exactly the cutoff boundary (should be INCLUDED)
+    at_cutoff = root / "at_cutoff.jsonl"
+    at_cutoff.write_text('{"type":"user","cwd":"/p","message":{"content":"right at cutoff"}}\n')
+    at_cutoff_ts = cutoff.timestamp()
+    os.utime(at_cutoff, (at_cutoff_ts, at_cutoff_ts))
+
+    # File 1 second before cutoff (should be EXCLUDED)
+    before_cutoff = root / "before_cutoff.jsonl"
+    before_cutoff.write_text('{"type":"user","cwd":"/p","message":{"content":"one second too old"}}\n')
+    before_ts = (cutoff - timedelta(seconds=1)).timestamp()
+    os.utime(before_cutoff, (before_ts, before_ts))
+
+    # File well inside window (should be INCLUDED)
+    recent = root / "recent.jsonl"
+    recent.write_text('{"type":"user","cwd":"/p","message":{"content":"very recent"}}\n')
+
+    # File well outside window (should be EXCLUDED)
+    old = root / "old.jsonl"
+    old.write_text('{"type":"user","cwd":"/p","message":{"content":"very old"}}\n')
+    old_ts = (now - timedelta(days=30)).timestamp()
+    os.utime(old, (old_ts, old_ts))
+
+    digest = mod["build_digest"](pathlib.Path(tmp) / "projects", now, digest_days=digest_days)
+    session_ids = {e.session_id for e in digest}
+
+    assert "at_cutoff" in session_ids, f"file exactly at cutoff should be INCLUDED, got: {session_ids}"
+    assert "before_cutoff" not in session_ids, f"file 1s before cutoff should be EXCLUDED, got: {session_ids}"
+    assert "recent" in session_ids, f"file well inside window should be INCLUDED, got: {session_ids}"
+    assert "old" not in session_ids, f"file well outside window should be EXCLUDED, got: {session_ids}"
+
+print("OK: boundary verified — at-cutoff included, 1s-before-cutoff excluded, inside included, outside excluded")
+```
+
+### Execution
+
+**Command:**
+```bash
+python3 /tmp/skill-usage-t6-boundary.py
+```
+
+**Actual Output:**
+```
+OK: boundary verified — at-cutoff included, 1s-before-cutoff excluded, inside included, outside excluded
+```
+
+### Mechanism Verification
+
+The test performs real `timedelta` arithmetic:
+- `cutoff = now - timedelta(days=digest_days)` — computes the 7-day boundary
+- `at_cutoff_ts = cutoff.timestamp()` — sets file mtime to exactly the boundary
+- `before_ts = (cutoff - timedelta(seconds=1)).timestamp()` — sets file mtime to 1 second before boundary
+
+Uses real `os.utime()` to apply these timestamps:
+- `os.utime(at_cutoff, (at_cutoff_ts, at_cutoff_ts))` — sets at_cutoff file to exact boundary mtime
+- `os.utime(before_cutoff, (before_ts, before_ts))` — sets before_cutoff file to 1 second before
+
+Contains real `assert` statements against `build_digest()`'s actual return value:
+- `assert "at_cutoff" in session_ids` — verifies file at boundary IS included
+- `assert "before_cutoff" not in session_ids` — verifies file before boundary IS excluded
+
+All four assertions passed, confirming:
+1. **At cutoff** (`mtime == cutoff`): **INCLUDED** ✓ (because `mtime < cutoff` is False)
+2. **Before cutoff** (`mtime < cutoff`): **EXCLUDED** ✓ (because `mtime < cutoff` is True)
+3. **Inside window** (`recent`): **INCLUDED** ✓
+4. **Outside window** (30 days): **EXCLUDED** ✓
+
+Script persists at `/tmp/skill-usage-t6-boundary.py` for review.
+
 ## Concerns: None
 
 Implementation is clean, follows the exact specification, passes all verification tests including explicit boundary-case testing, and correctly handles the privacy constraint of not persisting full prompts to the database.
