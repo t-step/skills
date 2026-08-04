@@ -67,6 +67,51 @@ def discover_tracked_skills(repo_root: pathlib.Path) -> set[str]:
     return {p.parent.name for p in repo_root.glob("skills/*/SKILL.md")}
 
 
+def init_db(db_path: pathlib.Path) -> sqlite3.Connection:
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS invocations (
+            id INTEGER PRIMARY KEY,
+            skill_name TEXT NOT NULL,
+            session_id TEXT NOT NULL,
+            cwd TEXT,
+            project_slug TEXT NOT NULL,
+            ts TEXT NOT NULL,
+            source_uuid TEXT NOT NULL UNIQUE
+        )
+        """
+    )
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS scanned_files (
+            path TEXT PRIMARY KEY,
+            mtime REAL NOT NULL,
+            byte_offset INTEGER NOT NULL
+        )
+        """
+    )
+    conn.commit()
+    return conn
+
+
+def get_scan_state(conn: sqlite3.Connection, path: str) -> tuple[float, int]:
+    row = conn.execute("SELECT mtime, byte_offset FROM scanned_files WHERE path = ?", (path,)).fetchone()
+    return (row[0], row[1]) if row else (0.0, 0)
+
+
+def set_scan_state(conn: sqlite3.Connection, path: str, mtime: float, byte_offset: int) -> None:
+    conn.execute(
+        """
+        INSERT INTO scanned_files (path, mtime, byte_offset) VALUES (?, ?, ?)
+        ON CONFLICT(path) DO UPDATE SET mtime = excluded.mtime, byte_offset = excluded.byte_offset
+        """,
+        (path, mtime, byte_offset),
+    )
+    conn.commit()
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Report on how often this repo's skills get invoked.")
     parser.add_argument("--projects-root", type=pathlib.Path, default=DEFAULT_PROJECTS_ROOT)
@@ -87,6 +132,9 @@ def main() -> int:
     print("tracked skills:")
     for name in sorted(tracked_skills):
         print(f"  - {name}")
+    conn = init_db(args.db_path)
+    print(f"database ready at {args.db_path}")
+    conn.close()
     return 0
 
 
