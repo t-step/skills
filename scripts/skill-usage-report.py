@@ -112,6 +112,54 @@ def set_scan_state(conn: sqlite3.Connection, path: str, mtime: float, byte_offse
     conn.commit()
 
 
+def parse_new_invocations(
+    text: str, tracked_skills: set[str], project_slug: str
+) -> tuple[list[InvocationRow], int]:
+    parts = text.split("\n")
+    leftover = parts[-1]
+    complete_lines = parts[:-1]
+    consumed_text = text[: len(text) - len(leftover)]
+    consumed_bytes = len(consumed_text.encode("utf-8"))
+
+    rows: list[InvocationRow] = []
+    for line in complete_lines:
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError as exc:
+            print(f"skill-usage-report: skipping malformed line: {exc}", file=sys.stderr)
+            continue
+        if entry.get("type") != "assistant":
+            continue
+        content = entry.get("message", {}).get("content")
+        if not isinstance(content, list):
+            continue
+        session_id = entry.get("sessionId") or entry.get("session_id") or ""
+        cwd = entry.get("cwd")
+        ts = entry.get("timestamp") or ""
+        line_uuid = entry.get("uuid")
+        for index, block in enumerate(content):
+            if not isinstance(block, dict):
+                continue
+            if block.get("type") != "tool_use" or block.get("name") != "Skill":
+                continue
+            skill_name = block.get("input", {}).get("skill")
+            if skill_name not in tracked_skills:
+                continue
+            rows.append(
+                InvocationRow(
+                    skill_name=skill_name,
+                    session_id=session_id,
+                    cwd=cwd,
+                    project_slug=project_slug,
+                    ts=ts,
+                    source_uuid=f"{line_uuid}:{index}",
+                )
+            )
+    return rows, consumed_bytes
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Report on how often this repo's skills get invoked.")
     parser.add_argument("--projects-root", type=pathlib.Path, default=DEFAULT_PROJECTS_ROOT)
