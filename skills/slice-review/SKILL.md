@@ -1,6 +1,18 @@
 ---
 name: slice-review
-description: Reviews one bounded implementation slice (a diff, PR, or "I finished X" claim) against its stated goal, the repo's own instructions, the actual diff content, and verification evidence you can point to. Produces exactly one verdict — Ready to merge, Ready after minor corrections, Not ready to merge, or Unable to verify — plus findings sorted into blocking / required corrections / non-blocking / out-of-scope. Use this whenever you or another agent is about to say a change is "done", "ready", or "passing", before merging, before closing a task, or whenever someone asks for a review of a diff or PR. It exists specifically to stop premature "looks good" verdicts: it refuses to credit tests as passing unless their output was actually observed, and it checks whether an old implementation a change claims to replace is still reachable.
+description: >-
+  Reviews one bounded implementation slice (a diff, PR, or "I finished X"
+  claim) against its stated goal, the repo's own instructions, the actual
+  diff content, and verification evidence you can point to. Produces exactly
+  one verdict — Ready to merge, Ready after minor corrections, Not ready to
+  merge, or Unable to verify — plus findings sorted into blocking / required
+  corrections / non-blocking / out-of-scope. Use this whenever you or
+  another agent is about to say a change is "done", "ready", or "passing",
+  before merging, before closing a task, or whenever someone asks for a
+  review of a diff or PR. It exists specifically to stop premature "looks
+  good" verdicts: it refuses to credit tests as passing unless their output
+  was actually observed, and it checks whether an old implementation a
+  change claims to replace is still reachable.
 ---
 
 # Slice Review
