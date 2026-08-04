@@ -1,0 +1,6 @@
+{
+  "name": "@acme/web",
+  "version": "0.1.0",
+  "dependencies": { "@acme/core": "*", "@acme/ui": "*", "react": "^18" },
+  "scripts": { "build": "next build", "test": "vitest run", "lint": "eslint src" }
+}

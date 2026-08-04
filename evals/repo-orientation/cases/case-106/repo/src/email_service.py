@@ -1,0 +1,3 @@
+def send_email(user_id: str, message: str) -> None:
+    # sends via the transactional email provider
+    ...

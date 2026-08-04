@@ -1,0 +1,3 @@
+def write_event(event) -> None:
+    # writes to the event warehouse
+    ...

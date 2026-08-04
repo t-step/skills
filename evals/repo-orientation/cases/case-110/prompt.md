@@ -1,0 +1,2 @@
+Orient me in this repository before I start working in it. Materials are
+in evals/repo-orientation/cases/case-110/repo/.

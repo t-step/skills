@@ -1,0 +1,3 @@
+quick script for parsing the export files from the vendor portal, ran it
+by hand last time with `python main.py export.txt`. remember to check
+whether they changed the format again before running.
