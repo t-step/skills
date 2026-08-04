@@ -205,6 +205,43 @@ def ingest(conn: sqlite3.Connection, projects_root: pathlib.Path, tracked_skills
     return files_scanned, after - before
 
 
+def compute_volume_table(
+    conn: sqlite3.Connection,
+    tracked_skills: set[str],
+    now: datetime,
+    recent_window_days: int = RECENT_WINDOW_DAYS,
+) -> dict[str, VolumeStats]:
+    cutoff = now - timedelta(days=recent_window_days)
+    totals = {name: 0 for name in tracked_skills}
+    recents = {name: 0 for name in tracked_skills}
+    last_used: dict[str, datetime | None] = {name: None for name in tracked_skills}
+    for skill_name, ts in conn.execute("SELECT skill_name, ts FROM invocations"):
+        if skill_name not in tracked_skills:
+            continue
+        try:
+            when = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        totals[skill_name] += 1
+        if when >= cutoff:
+            recents[skill_name] += 1
+        if last_used[skill_name] is None or when > last_used[skill_name]:
+            last_used[skill_name] = when
+    return {
+        name: VolumeStats(
+            skill_name=name, total=totals[name], recent_count=recents[name], last_used=last_used[name]
+        )
+        for name in sorted(tracked_skills)
+    }
+
+
+def archive_candidates(volume: dict[str, VolumeStats], now: datetime, archive_window_days: int) -> list[str]:
+    cutoff = now - timedelta(days=archive_window_days)
+    return sorted(
+        name for name, stats in volume.items() if stats.last_used is None or stats.last_used < cutoff
+    )
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Report on how often this repo's skills get invoked.")
     parser.add_argument("--projects-root", type=pathlib.Path, default=DEFAULT_PROJECTS_ROOT)
@@ -228,7 +265,24 @@ def main() -> int:
     conn = init_db(args.db_path)
     files_scanned, rows_inserted = ingest(conn, args.projects_root, tracked_skills)
     print(f"scanned {files_scanned} transcript file(s), {rows_inserted} new invocation(s)")
+
+    now = datetime.now(timezone.utc)
+    volume = compute_volume_table(conn, tracked_skills, now)
+    candidates = archive_candidates(volume, now, args.archive_window)
     conn.close()
+
+    print(f"\n{'skill':<28} {'total':>6} {'30d':>6}  last used")
+    for stats in volume.values():
+        last = stats.last_used.date().isoformat() if stats.last_used else "never"
+        print(f"{stats.skill_name:<28} {stats.total:>6} {stats.recent_count:>6}  {last}")
+
+    print(f"\narchive candidates (no use in {args.archive_window}d):")
+    if candidates:
+        for name in candidates:
+            print(f"  - {name}")
+    else:
+        print("  (none)")
+
     return 0
 
 
