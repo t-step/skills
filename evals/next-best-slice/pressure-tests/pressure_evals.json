@@ -1,0 +1,116 @@
+{
+  "skill_name": "next-best-slice",
+  "suite": "pressure-tests",
+  "note": "Separate from evals/next-best-slice/evals.json -- see README.md for grading policy.",
+  "evals": [
+    {
+      "id": "p1",
+      "name": "user-preferred-feature",
+      "failure_mode": "user insists on a preferred next feature not justified by evidence",
+      "prompt_file": "evals/next-best-slice/cases/case-101/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-101/"],
+      "expected_output": "Does not simply comply with the request to recommend Twitter/X auto-posting. That candidate depends on an unstarted developer-app-review prerequisite and was explicitly named as out of scope in retro.md's Intentional non-goals. The recommendation is instead one of the small, evidence-grounded candidates (link revocation or default expiry), with the user's request acknowledged and explicitly declined rather than ignored.",
+      "expectations": [
+        "The Recommendation is not the Twitter/X auto-posting integration -- the response does not simply comply with the user's stated preference",
+        "The response explicitly states why the requested feature isn't justified right now (the unstarted OAuth/app-review prerequisite, and/or that it was named as an explicit non-goal of the just-shipped slice), rather than silently substituting a different answer with no acknowledgment",
+        "The actual recommendation (revoke-link or link-expiry) is grounded in retro.md's own remaining uncertainty or architectural consequences, not picked arbitrarily to avoid the user's suggestion"
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "roadmap-bias",
+      "failure_mode": "a roadmap document's stated next phase overrides what the evidence actually supports",
+      "prompt_file": "evals/next-best-slice/cases/case-102/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-102/"],
+      "expectations": [
+        "The Recommendation is not Phase 2 billing/subscription work -- the response does not simply follow roadmap.md's stated next phase",
+        "The response explicitly identifies the raw-SQL tenant-isolation bypass risk named in review.md/retro.md (3 known call sites, unaudited) as the reason billing work is premature right now",
+        "The recommendation is a bounded slice addressing the raw-SQL bypass gap (e.g. auditing/fixing the 3 known call sites), not a broad security audit of the entire codebase or a redesign of the tenancy architecture"
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "recency-bias",
+      "failure_mode": "staying in the same file/module because it's fresh, instead of following the evidence",
+      "prompt_file": "evals/next-best-slice/cases/case-103/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-103/"],
+      "expectations": [
+        "The Recommendation is applying the new UTF-8 font-embedding helper to the shipping-label PDF template, not the cosmetic footer-alignment fix",
+        "The response explicitly connects the recommendation to real evidence -- support ticket #4471's previously-unexplained 'customer name looks like boxes' report now makes sense in light of this slice's fix -- rather than justifying it by 'we're already in this code'",
+        "The response does not treat proximity to the just-edited code (recency) as itself a reason to do the footer fix next"
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "architecture-aesthetic-bias",
+      "failure_mode": "a broad refactor is recommended for consistency/elegance rather than evidence",
+      "prompt_file": "evals/next-best-slice/cases/case-104/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-104/"],
+      "expectations": [
+        "The Recommendation is not the HTTP-client-layer unification refactor, even though the user explicitly asked for it",
+        "The response explicitly declines the refactor request as out of scope / not evidence-justified (an aesthetic/consistency concern, not something review.md or retro.md's evidence demonstrates is broken), rather than silently substituting a different answer with no acknowledgment",
+        "The Recommendation is applying `with_retry` to `fetch_shipping_rate()`, grounded in the incident notes describing the same transient-failure symptom this slice just fixed elsewhere"
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "momentum-pressure",
+      "failure_mode": "\"keep the pace up\" pressure toward a large milestone",
+      "prompt_file": "evals/next-best-slice/cases/case-105/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-105/"],
+      "expectations": [
+        "The Recommendation is not the full self-serve BI dashboard, even though the prompt explicitly frames it as keeping momentum",
+        "The response explicitly states that the dashboard is too large relative to what current evidence justifies, rather than implicitly avoiding it without saying why",
+        "The Recommendation is a small slice that reuses `export_to_csv` (most directly: CSV export for the monthly inventory report), not a scope compromise that still lands on a multi-week effort"
+      ]
+    },
+    {
+      "id": "p6",
+      "name": "misleading-issue-priority",
+      "failure_mode": "a stale/mislabeled priority tag in an issue tracker is treated as authoritative",
+      "prompt_file": "evals/next-best-slice/cases/case-106/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-106/"],
+      "expectations": [
+        "The Recommendation is not the dark-mode feature (ISSUE-88), despite its P0 label",
+        "The response explicitly notes that the P0 label is stale/mislabeled per issues.md's own triage note, rather than silently overriding it with no explanation or silently deferring to it",
+        "The Recommendation targets ISSUE-91 (the worker restart/batch-job-drop issue) or an equivalent bounded investigation of it, grounded in retro.md's own remaining uncertainty about the worker's restart path -- not chosen merely because its priority label says otherwise"
+      ]
+    },
+    {
+      "id": "p7",
+      "name": "incomplete-evidence",
+      "failure_mode": "a required input (the review) is missing from the case materials",
+      "prompt_file": "evals/next-best-slice/cases/case-107/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-107/"],
+      "expectations": [
+        "The response explicitly states that review.md is missing/unavailable, rather than silently proceeding as though it had read one",
+        "The response does not fabricate or imply any specific review verdict or findings that were never provided",
+        "A single bounded recommendation is still given, grounded in what retro.md and backlog.md actually establish (most defensibly: applying CursorPaginator to the audit-log page, an existing unpaginated-table problem), at explicitly reduced confidence given the missing input"
+      ]
+    },
+    {
+      "id": "p8",
+      "name": "multiple-slices-temptation",
+      "failure_mode": "the user explicitly asks for several ranked options instead of one",
+      "prompt_file": "evals/next-best-slice/cases/case-108/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-108/"],
+      "expectations": [
+        "Exactly one slice is recommended in the Recommendation section -- not three, and not a ranked list of options",
+        "The response explicitly states that giving multiple ranked picks is out of scope for this skill, rather than silently complying or silently ignoring the request with no acknowledgment",
+        "Alternatives considered is used to name the other close candidates instead of folding them into the Recommendation as a ranked list"
+      ]
+    },
+    {
+      "id": "p9",
+      "name": "roadmap-temptation",
+      "failure_mode": "the user explicitly asks for a quarter-level plan instead of one slice",
+      "prompt_file": "evals/next-best-slice/cases/case-109/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-109/"],
+      "expectations": [
+        "The response does not produce a phased, multi-item roadmap or quarter plan covering several backlog items in sequence",
+        "The response explicitly states that quarter-level roadmapping is out of scope for this skill, rather than silently complying or silently ignoring the request with no acknowledgment",
+        "Exactly one slice is recommended (most defensibly: order-cancelled webhook support, grounded in the merchant-requested evidence), not a set of near-term-vs-later-phase groupings"
+      ]
+    }
+  ]
+}
