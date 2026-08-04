@@ -1,0 +1,42 @@
+diff --git a/checkout/pricing.py b/checkout/pricing.py
+index 1111111..2222222 100644
+--- a/checkout/pricing.py
++++ b/checkout/pricing.py
+@@ -1,10 +1,21 @@
+ from decimal import Decimal
+
+ TAX_RATE = Decimal("0.08")
+
+
++def apply_discount(price: Decimal, pct: Decimal) -> Decimal:
++    """Return price reduced by pct percent (e.g. pct=20 removes 20%)."""
++    return price - (price * pct / Decimal("100"))
++
++
+ def compute_total(price: Decimal, pct: Decimal) -> Decimal:
+-    """Compute total with tax, no discount support yet."""
+-    tax = price * TAX_RATE
+-    return price + tax
++    """Compute total with discount applied, then tax on top."""
++    tax = price * TAX_RATE
++    discounted = apply_discount(price, pct)
++    return discounted + tax
+diff --git a/checkout/test_pricing.py b/checkout/test_pricing.py
+index 3333333..4444444 100644
+--- a/checkout/test_pricing.py
++++ b/checkout/test_pricing.py
+@@ -1,4 +1,5 @@
+ from decimal import Decimal
+-from checkout.pricing import compute_total
++from checkout.pricing import compute_total, apply_discount
+
+
+ def test_compute_total_no_discount():
+@@ -6,3 +7,8 @@ def test_compute_total_no_discount():
+
+ def test_compute_total_matches_prior_behavior():
+     assert compute_total(Decimal("100"), Decimal("0")) == Decimal("108.00")
++
++
++def test_apply_discount_20_percent():
++    assert apply_discount(Decimal("100"), Decimal("20")) == Decimal("80.00")

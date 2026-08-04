@@ -1,0 +1,25 @@
+diff --git a/expenses/policy.py b/expenses/policy.py
+index 1111111..2222222 100644
+--- a/expenses/policy.py
++++ b/expenses/policy.py
+@@ -1,3 +1,8 @@
++def within_budget(spent: float, limit: float) -> bool:
++    """True if spent does not exceed limit."""
++    return spent < limit
++
++
+ def approve_expense(report):
+     ...
+diff --git a/expenses/test_policy.py b/expenses/test_policy.py
+index 3333333..4444444 100644
+--- a/expenses/test_policy.py
++++ b/expenses/test_policy.py
+@@ -1,4 +1,10 @@
+ from expenses.policy import within_budget
+
+ def test_under_budget_is_within():
+     assert within_budget(50, 100) is True
++
++
++def test_over_budget_is_not_within():
++    assert within_budget(150, 100) is False

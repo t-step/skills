@@ -1,0 +1,64 @@
+diff --git a/rate_limiter/token_bucket.py b/rate_limiter/token_bucket.py
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/rate_limiter/token_bucket.py
+@@ -0,0 +1,22 @@
++import time
++
++
++class TokenBucketRateLimiter:
++    CAPACITY = 10
++    REFILL_PER_SEC = 1.0
++
++    _buckets = {}
++
++    @staticmethod
++    def check(request):
++        key = getattr(request, "client_id", "global")
++        now = time.monotonic()
++        tokens, last = TokenBucketRateLimiter._buckets.get(
++            key, (TokenBucketRateLimiter.CAPACITY, now)
++        )
++        tokens = min(
++            TokenBucketRateLimiter.CAPACITY,
++            tokens + (now - last) * TokenBucketRateLimiter.REFILL_PER_SEC,
++        )
++        allowed = tokens >= 1
++        TokenBucketRateLimiter._buckets[key] = (tokens - 1 if allowed else tokens, now)
++        return allowed
+diff --git a/api/middleware.py b/api/middleware.py
+index 2222222..3333333 100644
+--- a/api/middleware.py
++++ b/api/middleware.py
+@@ -1,7 +1,7 @@
+-from rate_limiter.legacy import LegacyRateLimiter
++from rate_limiter.token_bucket import TokenBucketRateLimiter
+
+ def handle_request(request):
+-    if not LegacyRateLimiter.check(request):
++    if not TokenBucketRateLimiter.check(request):
+         return Response("Too Many Requests", status=429)
+     return next_handler(request)
+diff --git a/api/test_middleware.py b/api/test_middleware.py
+new file mode 100644
+index 0000000..4444444
+--- /dev/null
++++ b/api/test_middleware.py
+@@ -0,0 +1,16 @@
++from api.middleware import handle_request
++from rate_limiter.token_bucket import TokenBucketRateLimiter
++
++
++def test_allows_request_under_limit():
++    TokenBucketRateLimiter._buckets.clear()
++    resp = handle_request(object())
++    assert resp.status_code == 200
++
++
++def test_blocks_when_rate_limited():
++    TokenBucketRateLimiter._buckets.clear()
++    for _ in range(TokenBucketRateLimiter.CAPACITY):
++        handle_request(object())
++    resp = handle_request(object())
++    assert resp.status_code == 429

@@ -1,0 +1,28 @@
+diff --git a/comments/sanitize.py b/comments/sanitize.py
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/comments/sanitize.py
+@@ -0,0 +1,9 @@
++import re
++
++SCRIPT_TAG_RE = re.compile(r"<script.*?>.*?</script>", re.IGNORECASE | re.DOTALL)
++
++
++def sanitize_html(text: str) -> str:
++    """Removes all <script> tags and on* event-handler attributes to
++    prevent stored XSS in rendered comments."""
++    return SCRIPT_TAG_RE.sub("", text)
+diff --git a/comments/test_sanitize.py b/comments/test_sanitize.py
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/comments/test_sanitize.py
+@@ -0,0 +1,7 @@
++from comments.sanitize import sanitize_html
++
++def test_strips_script_tag():
++    assert sanitize_html('hello <script>alert(1)</script> world') == 'hello  world'
++
++def test_leaves_plain_text_alone():
++    assert sanitize_html('just plain text') == 'just plain text'

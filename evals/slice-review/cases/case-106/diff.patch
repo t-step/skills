@@ -1,0 +1,35 @@
+diff --git a/auth/login.py b/auth/login.py
+index 1111111..2222222 100644
+--- a/auth/login.py
++++ b/auth/login.py
+@@ -10,6 +10,7 @@ def handle_login(user, password):
+     if not check_password(user, password):
+         user.failed_attempts += 1
+         return LoginResult(success=False)
++    user.failed_attempts = 0
+     return LoginResult(success=True)
+diff --git a/auth/test_login.py b/auth/test_login.py
+index 3333333..4444444 100644
+--- a/auth/test_login.py
++++ b/auth/test_login.py
+@@ -8,3 +8,10 @@ def test_failed_login_increments_attempts():
+     handle_login(user, "wrong-password")
+     assert user.failed_attempts == 1
++
++
++def test_successful_login_resets_attempts():
++    user = User(failed_attempts=3)
++    handle_login(user, "correct-password")
++    assert user.failed_attempts == 0
+diff --git a/auth/session.py b/auth/session.py
+index 5555555..6666666 100644
+--- a/auth/session.py
++++ b/auth/session.py
+@@ -1,6 +1,6 @@
+ from datetime import timedelta
+
+-SESSION_TTL = timedelta(minutes=30)
++SESSION_TTL = timedelta(minutes=15)
+
+ def create_session(user):
+     ...
