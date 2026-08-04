@@ -1,0 +1,44 @@
+diff --git a/db/connection.py b/db/connection.py
+index 1111111..2222222 100644
+--- a/db/connection.py
++++ b/db/connection.py
+@@ -1,7 +1,19 @@
++import time
++
++
+ def get_connection():
+-    return _connect()
++    last_exc = None
++    for attempt in range(3):
++        try:
++            return _connect()
++        except ConnectionError as exc:
++            last_exc = exc
++            if attempt < 2:
++                time.sleep(1)
++    raise last_exc
+diff --git a/db/test_connection.py b/db/test_connection.py
+index 3333333..4444444 100644
+--- a/db/test_connection.py
++++ b/db/test_connection.py
+@@ -1,3 +1,20 @@
++from unittest.mock import patch, MagicMock
++
++from db.connection import get_connection
++
++
++def test_succeeds_after_one_retry():
++    with patch("db.connection._connect", side_effect=[ConnectionError("down"), MagicMock()]):
++        with patch("db.connection.time.sleep"):
++            conn = get_connection()
++    assert conn is not None
++
++
++def test_raises_after_three_failed_attempts():
++    with patch("db.connection._connect", side_effect=ConnectionError("down")):
++        with patch("db.connection.time.sleep"):
++            try:
++                get_connection()
++                assert False, "expected ConnectionError"
++            except ConnectionError:
++                pass

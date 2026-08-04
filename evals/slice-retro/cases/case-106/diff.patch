@@ -1,0 +1,39 @@
+diff --git a/worker/loop.py b/worker/loop.py
+index 1111111..2222222 100644
+--- a/worker/loop.py
++++ b/worker/loop.py
+@@ -1,12 +1,20 @@
++from collections import deque
++
++# NOTE: this probably also fixes the periodic OOM kills we've been seeing
++# on the scheduler pods, though we haven't actually confirmed that yet —
++# worth watching over the next few days.
++_MAX_RECENT_JOB_IDS = 1000
++
++
+ class WorkerLoop:
+     def __init__(self):
+-        self._completed_job_ids = []
++        self._completed_job_ids = deque(maxlen=_MAX_RECENT_JOB_IDS)
+
+     def run_job(self, job):
+         result = job.execute()
+         self._completed_job_ids.append(job.id)
+         return result
+diff --git a/worker/test_loop.py b/worker/test_loop.py
+index 3333333..4444444 100644
+--- a/worker/test_loop.py
++++ b/worker/test_loop.py
+@@ -1,3 +1,17 @@
++from unittest.mock import MagicMock
++
++from worker.loop import WorkerLoop
++
++
++def test_completed_job_ids_stay_bounded():
++    loop = WorkerLoop()
++    for i in range(5000):
++        job = MagicMock(id=i, execute=MagicMock(return_value="ok"))
++        loop.run_job(job)
++    assert len(loop._completed_job_ids) == 1000
++    assert list(loop._completed_job_ids)[-1] == 4999

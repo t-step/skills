@@ -1,0 +1,39 @@
+diff --git a/validation/email.py b/validation/email.py
+index 1111111..2222222 100644
+--- a/validation/email.py
++++ b/validation/email.py
+@@ -1,3 +1,8 @@
++import re
++
++_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
++
++
+ def is_valid_email(s):
+-    return True
++    return bool(_EMAIL_RE.match(s))
+diff --git a/validation/test_email.py b/validation/test_email.py
+index 3333333..4444444 100644
+--- a/validation/test_email.py
++++ b/validation/test_email.py
+@@ -1,3 +1,15 @@
++from validation.email import is_valid_email
++
++
++def test_rejects_missing_at_sign():
++    assert is_valid_email("no-at-sign.example.com") is False
++
++
++def test_rejects_double_at_sign():
++    assert is_valid_email("a@@b.com") is False
++
++
++def test_rejects_empty_string():
++    assert is_valid_email("") is False
++
++
++def test_rejects_missing_domain():
++    assert is_valid_email("user@") is False
++
++
++def test_accepts_ordinary_address():
++    assert is_valid_email("user@example.com") is True
