@@ -242,6 +242,70 @@ def archive_candidates(volume: dict[str, VolumeStats], now: datetime, archive_wi
     )
 
 
+def build_digest(
+    projects_root: pathlib.Path,
+    now: datetime,
+    digest_days: int = DEFAULT_DIGEST_DAYS,
+    prompt_truncate: int = 200,
+) -> list[SessionDigestEntry]:
+    if not projects_root.exists():
+        return []
+    cutoff = now - timedelta(days=digest_days)
+    scored: list[tuple[datetime, SessionDigestEntry]] = []
+    for project_dir in sorted(p for p in projects_root.iterdir() if p.is_dir()):
+        project_slug = project_dir.name
+        for transcript in sorted(project_dir.glob("*.jsonl")):
+            stat = transcript.stat()
+            mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
+            if mtime < cutoff:
+                continue
+            prompts: list[str] = []
+            skills_fired: list[str] = []
+            cwd: str | None = None
+            for line in transcript.read_text(encoding="utf-8", errors="replace").splitlines():
+                if not line.strip():
+                    continue
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                cwd = entry.get("cwd") or cwd
+                entry_type = entry.get("type")
+                content = entry.get("message", {}).get("content")
+                if entry_type == "user":
+                    if isinstance(content, str):
+                        prompts.append(content[:prompt_truncate])
+                    elif isinstance(content, list):
+                        for block in content:
+                            if isinstance(block, dict) and block.get("type") == "text":
+                                prompts.append(block.get("text", "")[:prompt_truncate])
+                elif entry_type == "assistant" and isinstance(content, list):
+                    for block in content:
+                        if (
+                            isinstance(block, dict)
+                            and block.get("type") == "tool_use"
+                            and block.get("name") == "Skill"
+                        ):
+                            skill_name = block.get("input", {}).get("skill")
+                            if skill_name:
+                                skills_fired.append(skill_name)
+            if prompts:
+                scored.append(
+                    (
+                        mtime,
+                        SessionDigestEntry(
+                            session_id=transcript.stem,
+                            project_slug=project_slug,
+                            cwd=cwd,
+                            prompts=prompts,
+                            skills_fired=skills_fired,
+                        ),
+                    )
+                )
+    scored.sort(key=lambda pair: pair[0])
+    return [entry for _, entry in scored]
+
+
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Report on how often this repo's skills get invoked.")
     parser.add_argument("--projects-root", type=pathlib.Path, default=DEFAULT_PROJECTS_ROOT)
@@ -282,6 +346,17 @@ def main() -> int:
             print(f"  - {name}")
     else:
         print("  (none)")
+
+    digest = build_digest(args.projects_root, now, args.digest_days)
+    print(f"\nrecent sessions (last {args.digest_days}d):")
+    if not digest:
+        print("  (none)")
+    for entry in digest:
+        fired = ", ".join(entry.skills_fired) if entry.skills_fired else "none"
+        print(f"\n  session {entry.session_id}  [{entry.project_slug}]  cwd={entry.cwd}")
+        print(f"    skills fired: {fired}")
+        for prompt in entry.prompts:
+            print(f"    > {prompt}")
 
     return 0
 
