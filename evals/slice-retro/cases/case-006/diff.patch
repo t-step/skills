@@ -1,0 +1,71 @@
+diff --git a/metrics/counters.py b/metrics/counters.py
+index 1111111..2222222 100644
+--- a/metrics/counters.py
++++ b/metrics/counters.py
+@@ -1,12 +1,23 @@
++import threading
++
++
+ class Counters:
+     def __init__(self):
+         self._values = {}
++        self._lock = threading.Lock()
+
+     def increment(self, name, amount=1):
+-        self._values[name] = self._values.get(name, 0) + amount
++        with self._lock:
++            self._values[name] = self._values.get(name, 0) + amount
+
+     def flush(self):
++        # NOTE: reads and resets self._values without holding self._lock,
++        # since flush() is only ever called from the single background
++        # exporter thread, not from request-handling threads.
+         snapshot = dict(self._values)
+         self._values.clear()
+         return snapshot
+diff --git a/metrics/test_counters.py b/metrics/test_counters.py
+index 3333333..4444444 100644
+--- a/metrics/test_counters.py
++++ b/metrics/test_counters.py
+@@ -1,3 +1,35 @@
++import threading
++
++from metrics.counters import Counters
++
++
++def test_concurrent_increments_no_lost_updates():
++    counters = Counters()
++    threads = [
++        threading.Thread(target=lambda: [counters.increment("x") for _ in range(1000)])
++        for _ in range(50)
++    ]
++    for t in threads:
++        t.start()
++    for t in threads:
++        t.join()
++    assert counters.flush()["x"] == 50000
++
++
++def test_concurrent_increment_and_flush():
++    results = []
++    for trial in range(5):
++        counters = Counters()
++        stop = threading.Event()
++
++        def flusher():
++            total = 0
++            while not stop.is_set():
++                total += counters.flush().get("x", 0)
++            total += counters.flush().get("x", 0)
++            results.append(total)
++
++        flush_thread = threading.Thread(target=flusher)
++        flush_thread.start()
++        threads = [threading.Thread(target=lambda: [counters.increment("x") for _ in range(1000)]) for _ in range(50)]
++        for t in threads:
++            t.start()
++        for t in threads:
++            t.join()
++        stop.set()
++        flush_thread.join()
++        assert results[-1] == 50000, f"trial {trial}: got {results[-1]}, expected 50000"

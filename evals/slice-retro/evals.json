@@ -1,0 +1,77 @@
+{
+  "skill_name": "slice-retro",
+  "evals": [
+    {
+      "id": 1,
+      "name": "straightforward-success",
+      "prompt": "Write a slice retrospective for this one. Materials are in evals/slice-retro/cases/case-001/: goal.md, diff.patch, verification.md, notes.md.",
+      "expected_output": "A clean retro: what we proved is scoped to the two observed test outcomes (succeeds after 2 failures with correct 0.1/0.2s backoff; raises after exhausting attempts). No assumptions falsified. Architectural consequences note the reusable retry seam. Follow-up questions raised as questions, not a plan.",
+      "files": ["evals/slice-retro/cases/case-001/"],
+      "expectations": [
+        "The 'What we proved' section is grounded in the two observed pytest results (success-after-two-failures with 0.1s/0.2s backoff, and raise-after-exhaustion), not a broader claim about retry robustness in general",
+        "'Assumptions falsified' is empty/None — nothing in this fixture contradicts an assumption",
+        "The retrospective does not include a recommended next slice, a project plan, or a broader architecture review of net/client.py"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "disproves-assumption",
+      "prompt": "Write a slice retrospective for this one. Materials are in evals/slice-retro/cases/case-002/: goal.md, diff.patch, verification.md, notes.md.",
+      "expected_output": "Assumptions falsified names the core premise (an in-process LRU cache alone would bring p95 under 50ms) as falsified by the benchmark showing 178ms p95 and 40% hit rate. Cache correctness itself (hits avoid re-fetch, eviction at 128) is validated. The retro does not claim the caching slice failed outright or was a bad idea -- it separates 'cache works correctly' from 'cache alone meets the SLA'.",
+      "files": ["evals/slice-retro/cases/case-002/"],
+      "expectations": [
+        "The retrospective states that the p95 < 50ms target was NOT met, citing the observed 178ms benchmark result, and treats this as a falsified assumption rather than downplaying or omitting it",
+        "The retrospective distinguishes cache correctness (validated: hit avoids re-fetch, eviction at capacity works, both backed by the passing unit tests) from the falsified performance assumption -- it does not conflate 'the cache doesn't work' with 'the cache doesn't meet the SLA alone'",
+        "The retrospective does not recommend a specific next step (e.g. 'switch to a shared/distributed cache') as a stated conclusion -- if raised at all, it appears only as a follow-up question"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "partial-success-uncertainty",
+      "prompt": "Write a slice retrospective for this one. Materials are in evals/slice-retro/cases/case-003/: goal.md, diff.patch, verification.md, notes.md.",
+      "expected_output": "What we proved is scoped to the tested failure rate (20/500 timeouts, batch completes without crashing). Remaining uncertainty explicitly names the untested full-provider-outage scenario and the unverified email rendering for 479 of 480 sent emails, rather than treating the author's own expectation ('I'd expect it just logs 500 failures') as proven.",
+      "files": ["evals/slice-retro/cases/case-003/"],
+      "expectations": [
+        "The retrospective credits per-user failure isolation as proven only for the observed 20-failures-out-of-500 staging run, not for an unbounded/general failure rate",
+        "Remaining uncertainty explicitly names the untested full-outage scenario (all 500 users failing) and does not treat the author's stated expectation about that scenario as confirmed evidence",
+        "Remaining uncertainty (or an equivalent qualification) also notes that email rendering was only visually spot-checked for one of 480 sent emails, rather than treating rendering correctness as broadly verified"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "plan-deviation-goal-met",
+      "prompt": "Write a slice retrospective for this one. Materials are in evals/slice-retro/cases/case-004/: goal.md, diff.patch, verification.md, notes.md.",
+      "expected_output": "The retro notes the implementation deviated from the plan (in-process sliding window instead of the planned redis-py token bucket) while still meeting the stated behavioral requirement, verified by both tests. The plan's assumption that Redis would be available is named as falsified. The known multi-instance limitation (effective ~400/60s across 4 instances) is placed under Intentional non-goals, grounded in the notes' explicit scoping decision, not treated as an undiscovered bug.",
+      "files": ["evals/slice-retro/cases/case-004/"],
+      "expectations": [
+        "The retrospective identifies that the shipped implementation (in-process sliding window) differs from the original plan (redis-py token bucket), while still meeting the stated per-IP 100-requests-per-60s behavioral requirement, backed by the two passing tests",
+        "The retrospective names the plan's assumption that Redis would be available/provisioned as falsified, since that's why the implementation pivoted",
+        "The cross-instance limitation (each of the 4 app instances enforces its own independent limit) is placed in Intentional non-goals, grounded in the notes' explicit statement that this was a deliberate scope decision -- not reported as an undiscovered defect or as remaining uncertainty"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "intentional-non-goals",
+      "prompt": "Write a slice retrospective for this one. Materials are in evals/slice-retro/cases/case-005/: goal.md, diff.patch, verification.md, notes.md.",
+      "expected_output": "Intentional non-goals lists relevance ranking beyond FTS5 defaults, typo/fuzzy matching, and pagination beyond the 20-result cap, grounded in goal.md's explicit scope statement -- these are not treated as missing functionality, blocking gaps, or remaining uncertainty. What we proved stays scoped to the fixture-dataset tests (30 articles); production-scale (~140,000 rows) behavior is untested and, if mentioned, goes under remaining uncertainty.",
+      "files": ["evals/slice-retro/cases/case-005/"],
+      "expectations": [
+        "Intentional non-goals explicitly lists ranking-beyond-defaults, typo/fuzzy matching, and pagination-beyond-20, attributing them to the goal's own stated scope -- not phrased as gaps, missing work, or things the review is concerned about",
+        "The retrospective does not list any of those three deferred items under Remaining uncertainty or as a problem with the slice",
+        "'What we proved' is scoped to the fixture-dataset test results (matching/substring search, 20-result cap) and does not claim the search works correctly at the production dataset size, which was never tested"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "verification-changes-conclusion",
+      "prompt": "Write a slice retrospective for this one. Materials are in evals/slice-retro/cases/case-006/: goal.md, diff.patch, verification.md, notes.md.",
+      "expected_output": "The retro does not repeat the first implementation note's claim ('this fixes the lost-update race condition') as settled fact. It reflects the fuller picture from the second verification pass: the specific issue #482 scenario (concurrent increment() only) is fixed, but a related race between increment() and the unlocked flush() was discovered by the more thorough test and remains unresolved. Assumptions falsified names 'the lock fully resolves the race condition' as falsified by the second test run. Intentional non-goals is None -- the flush() gap was discovered, not deliberately deferred.",
+      "files": ["evals/slice-retro/cases/case-006/"],
+      "expectations": [
+        "The retrospective does not state or imply that the race condition is fully/completely fixed -- it distinguishes the fixed increment-only scenario (50000/50000, reproduced) from the still-flaky concurrent increment+flush scenario (intermittent shortfalls like 49987 and 49991)",
+        "Assumptions falsified (or equivalent framing in 'What we proved') explicitly notes that the initial claim/assumption that the lock fully closes the race was contradicted by the second, more thorough verification run",
+        "Intentional non-goals is 'None' or equivalent -- the retrospective does not misclassify the flush()/increment() race gap as a deliberate scope decision, since it was discovered via testing, not chosen in the goal or notes"
+      ]
+    }
+  ]
+}

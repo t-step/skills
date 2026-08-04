@@ -1,0 +1,52 @@
+diff --git a/db/client.py b/db/client.py
+index 1111111..2222222 100644
+--- a/db/client.py
++++ b/db/client.py
+@@ -1,7 +1,24 @@
++import queue
++
++import psycopg2
++
++_POOL_SIZE = 10
++_pool = queue.Queue(maxsize=_POOL_SIZE)
++for _ in range(_POOL_SIZE):
++    _pool.put(psycopg2.connect(DSN))
++
++
++class pooled_connection:
++    def __enter__(self):
++        self.conn = _pool.get()
++        return self.conn
++
++    def __exit__(self, *exc):
++        _pool.put(self.conn)
++
++
+ def run_query(sql, params=None):
+-    conn = psycopg2.connect(DSN)
+-    cur = conn.cursor()
+-    cur.execute(sql, params or ())
+-    return cur.fetchall()
++    with pooled_connection() as conn:
++        cur = conn.cursor()
++        cur.execute(sql, params or ())
++        return cur.fetchall()
+diff --git a/db/test_client.py b/db/test_client.py
+index 3333333..4444444 100644
+--- a/db/test_client.py
++++ b/db/test_client.py
+@@ -1,3 +1,15 @@
++import threading
++
++from db.client import run_query
++
++
++def test_ten_concurrent_queries_reuse_pool(staging_db):
++    results = []
++    threads = [threading.Thread(target=lambda: results.append(run_query("SELECT 1"))) for _ in range(10)]
++    for t in threads:
++        t.start()
++    for t in threads:
++        t.join()
++    assert len(results) == 10
++    assert all(r == [(1,)] for r in results)

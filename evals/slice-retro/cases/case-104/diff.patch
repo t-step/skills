@@ -1,0 +1,39 @@
+diff --git a/checkout/views.py b/checkout/views.py
+index 1111111..2222222 100644
+--- a/checkout/views.py
++++ b/checkout/views.py
+@@ -1,5 +1,13 @@
++from flags import is_enabled
++from checkout.new_flow import process_checkout_v2
++from checkout.legacy_flow import process_checkout_legacy
++
++
+ def checkout(request):
+-    return process_checkout_legacy(request)
++    if is_enabled("NEW_CHECKOUT_FLOW", request.user):
++        return process_checkout_v2(request)
++    return process_checkout_legacy(request)
+diff --git a/checkout/test_views.py b/checkout/test_views.py
+index 3333333..4444444 100644
+--- a/checkout/test_views.py
++++ b/checkout/test_views.py
+@@ -1,3 +1,15 @@
++from unittest.mock import patch
++
++from checkout.views import checkout
++
++
++def test_routes_to_v2_when_flag_enabled(rf):
++    request = rf.post("/checkout")
++    with patch("checkout.views.is_enabled", return_value=True):
++        with patch("checkout.views.process_checkout_v2") as mock_v2:
++            checkout(request)
++    mock_v2.assert_called_once()
++
++
++def test_routes_to_legacy_when_flag_disabled(rf):
++    request = rf.post("/checkout")
++    with patch("checkout.views.is_enabled", return_value=False):
++        with patch("checkout.views.process_checkout_legacy") as mock_legacy:
++            checkout(request)
++    mock_legacy.assert_called_once()

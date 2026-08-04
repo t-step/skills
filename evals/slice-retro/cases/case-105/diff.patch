@@ -1,0 +1,44 @@
+diff --git a/config/loader.py b/config/loader.py
+index 1111111..2222222 100644
+--- a/config/loader.py
++++ b/config/loader.py
+@@ -1,10 +1,25 @@
++class ConfigError(Exception):
++    pass
++
++
++REQUIRED_KEYS = {"database_url", "secret_key", "allowed_hosts"}
++DEFAULTS = {"timeout": 30, "log_level": "INFO"}
++
++
+ def load_config(raw):
+     config = {}
+-    for key in REQUIRED_KEYS | set(DEFAULTS):
+-        config[key] = raw.get(key, DEFAULTS.get(key))
++    for key in REQUIRED_KEYS:
++        if key not in raw:
++            raise ConfigError(f"missing required config key: {key!r}")
++        config[key] = raw[key]
++    for key, default in DEFAULTS.items():
++        config[key] = raw.get(key, default)
+     return config
+diff --git a/config/test_loader.py b/config/test_loader.py
+index 3333333..4444444 100644
+--- a/config/test_loader.py
++++ b/config/test_loader.py
+@@ -1,3 +1,25 @@
++import pytest
++
++from config.loader import load_config, ConfigError
++
++
++def test_raises_on_missing_required_key():
++    raw = {"database_url": "x", "secret_key": "y"}  # missing allowed_hosts
++    with pytest.raises(ConfigError):
++        load_config(raw)
++
++
++def test_timeout_still_defaults_when_missing():
++    raw = {"database_url": "x", "secret_key": "y", "allowed_hosts": ["*"]}
++    config = load_config(raw)
++    assert config["timeout"] == 30
