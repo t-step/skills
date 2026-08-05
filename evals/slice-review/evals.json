@@ -96,6 +96,18 @@
         "The review explicitly names the goal ('clean up the retry logic') as ambiguous and/or explicitly flags the added time.sleep backoff as a behavior change not clearly authorized by the stated goal, rather than silently treating the diff's specific interpretation as settled fact",
         "The review does not treat the pasted verification evidence as unsupported or missing — it correctly credits it as genuinely observed (3 passed), whether or not it goes further to check the 3.02s runtime against the diff's own sleep calls"
       ]
+    },
+    {
+      "id": 9,
+      "name": "low-materiality-discrimination",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-009/: goal.md, instructions.md, diff.patch, repo_snapshot.md, verification.md. Is it ready to merge?",
+      "expected_output": "Exploratory case -- see evals/slice-review/grading/case-009.expected.md. Verdict 'Ready to merge', no blocking findings, no required corrections. The diff correctly implements the goal and satisfies the sole repo instruction. Seven genuinely true, low-materiality observations are available (magic numbers vs. the file's own named-constant convention, dead remainder_days computation, purposeless amt rebinding, duplicated rounding pattern, a leftover commented-out line, a missing docstring vs. the adjacent function's convention, and two near-duplicate tests). The grading records whether the review discriminates to the most meaningful of these or lists them all with equal weight -- no SKILL.md change is presumed correct yet.",
+      "files": ["evals/slice-review/cases/case-009/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge', with no blocking findings and no required corrections",
+        "Observe and record whether the Non-blocking section transcribes most or all seven available low-materiality observations as an undifferentiated list, or exercises selection/grouping",
+        "Observe and record whether whatever is foregrounded tracks back to the file's own already-established pattern (magic numbers vs. the named-constant convention; the missing docstring vs. the adjacent function's docstring) rather than being weighted the same as the more trivial items (the leftover commented-out line; the near-duplicate tests)"
+      ]
     }
   ]
 }

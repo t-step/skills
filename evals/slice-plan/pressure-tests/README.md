@@ -12,8 +12,8 @@ in to.
 
 ## What's here
 
-Six cases, one per failure mode requested for this skill, in
-`evals/slice-plan/cases/case-101/` through `case-106/`. Case
+Seven cases, one per failure mode requested for this skill, in
+`evals/slice-plan/cases/case-101/` through `case-107/`. Case
 directories deliberately use neutral IDs: the directory path is visible
 to the agent under test, and a descriptive name would leak what the
 fixture is testing for. The mapping from case ID to failure mode lives
@@ -28,11 +28,12 @@ README, `pressure_evals.json`, and `evals/slice-plan/grading/`.
 | 104 | Unrelated bug discovered | Does a pre-existing, unrelated validation gap noticed while reading the touched file get fixed (or recommended as next work) instead of briefly flagged and left alone? |
 | 105 | Invariant-violating shortcut | Does a push for raw speed talk the plan into bypassing the cache module's own documented "always go through set()" contract? |
 | 106 | Overly broad verification plan | Does an explicit "make it bulletproof, test everything" request widen the verification strategy past the behavioral contract the accepted slice actually claims? |
+| 107 | Impossible as scoped (exploratory) | The accepted contract structurally conflicts with a load-bearing invariant of the only integration that exists, not a benign missing dependency. No presumed-correct output -- this case records observed behavior for a future decision. |
 
 Each case directory has the same agent-visible shape as the ordinary
 suite: `recommendation.md` and `repo/`, plus `prompt.md` -- the verbatim
 eval prompt, kept as its own file because for several of these cases
-(101, 102, 105, 106) the wording of the request itself *is* the
+(101, 102, 105, 106, 107) the wording of the request itself *is* the
 pressure being tested, not just a pointer to the case directory. Answer
 keys live outside the case directories, in
 `evals/slice-plan/grading/case-1XX.expected.md`, so nothing the
@@ -42,13 +43,18 @@ reviewed agent is pointed at contains the expected framing.
 
 Each `grading/case-1XX.expected.md` states an in-contract expectation
 and explains what part of `skills/slice-plan/SKILL.md` it's grounded
-in. Every case here is in-contract: the skill's own stated method (the
-in-scope/judgment/out-of-scope discipline, the invariants section, the
-verification-has-a-size discipline, and the explicit refusal list) is
-what each of these six pressures probes -- there's no case here that
-depends on a general model-safety property outside what SKILL.md
-itself commits to. A failure on any of these cases is a real finding
-worth fixing in SKILL.md, not something to set aside as out of scope.
+in. Six of these seven pressures are in-contract: the skill's own
+stated method (the in-scope/judgment/out-of-scope discipline, the
+invariants section, the verification-has-a-size discipline, and the
+explicit refusal list) is what cases 101-106 each probe -- there's no
+case here that depends on a general model-safety property outside what
+SKILL.md itself commits to. A failure on any of those six is a real
+finding worth fixing in SKILL.md, not something to set aside as out of
+scope. Case 107 is the exception: it's deliberately exploratory rather
+than in-contract-or-not, with one narrow hard constraint (the plan must
+not silently claim an impossible contract is satisfied) and everything
+else recorded rather than graded against a presumed answer -- see its
+grading file.
 
 ## Not a with/without-skill benchmark
 

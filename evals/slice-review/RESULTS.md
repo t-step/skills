@@ -131,3 +131,120 @@ versions.
   assertions, not by independent human graders.
 - Timing/token totals are not compared against iteration-1b because the run
   harnesses differ.
+
+## Iteration 3 — evidence-only additions, no SKILL.md change (2026-08-05)
+
+Part of a repo-wide evidence-first pass across the three slice-family
+skills (see `skills/slice-retro/RESULTS.md`'s Iteration 3 for the one
+skill that did get a prompt edit this round, and
+`skills/slice-plan/RESULTS.md`'s new section). slice-review's own
+candidate question — does the skill naturally discriminate to the most
+meaningful findings, or does it just list everything it notices? — had
+no demonstrated failure yet, so it got eval coverage only, no SKILL.md
+edit, per this project's "observed failure -> prompt change; suspected
+failure -> evaluation first" rule.
+
+### Change 1: tightened the case-108 (tempting-redesign) grading loophole
+
+`grading/case-108.expected.md` and its `pressure_evals.json` expectations
+previously required only that a speculative shipping_cost redesign
+suggestion not appear "as a blocking or strongly-recommended change" —
+wording that, read literally, would still pass a review that quietly
+tucked the same suggestion into Non-blocking as a mild, softly-worded
+aside. The fixture's own "Why" text already argued this should fail
+("especially if framed as blocking or *even as a strongly-worded
+non-blocking recommendation*"), so the grading criterion was inconsistent
+with its own stated rationale. Tightened both files: the redesign
+suggestion must not appear anywhere in the report — not blocking, not a
+required correction, not a quiet Non-blocking or Out-of-scope entry —
+full stop.
+
+**Rerun result (fresh subagent, tightened criteria):** 3/3, cleanly.
+Verdict "Ready to merge"; the two Non-blocking items surfaced (missing
+mid-tier test coverage; unspecified behavior for `weight_kg <= 0`) are
+both real, narrowly-scoped observations unrelated to redesigning or
+generalizing the function — no config-table/Enum/strategy-pattern
+suggestion anywhere in the report, blocking or otherwise. **Conclusion:
+no SKILL.md change is warranted for this failure mode based on this
+evidence** — the loophole was in the grading key, not in the skill's
+actual behavior; slice-review was already doing the right thing, the
+eval just wasn't rigorous enough to prove it.
+
+### Change 2: new regression case-009 (low-materiality-discrimination, exploratory)
+
+New fixture: `apply_late_fee()` added to `billing/late_fees.py`, correct
+against its stated goal and the sole repo instruction (a test is
+required), but implemented with seven genuine, low-materiality
+observations available (inline magic numbers vs. the file's own
+established named-constant convention; a computed-but-unused variable; a
+purposeless variable rebinding; a duplicated rounding pattern; a
+leftover commented-out line; a missing docstring vs. the adjacent
+function's docstring convention; two near-duplicate tests). Like
+slice-retro's case 110, this is deliberately exploratory — SKILL.md's
+Non-blocking bucket definition doesn't currently ask for a count limit or
+discrimination, so there's no presumed-correct answer, only checks on
+whether discrimination happens at all.
+
+**Run result (fresh subagent, n=1):**
+
+- Hard checks: verdict "Ready to merge", no blocking findings, no
+  required corrections — all correct (none of the seven items violate
+  the goal or the sole repo instruction).
+- Discrimination checks (observational): the run surfaced **5** of the
+  available observations, not all 7 — some selection clearly happened,
+  this wasn't blind enumeration. But the axis of selection was not the
+  one this fixture was built to probe: the two items most directly
+  comparable to the file's own established convention (magic numbers vs.
+  `EARLY_PAYMENT_DISCOUNT_RATE`; the missing docstring vs.
+  `apply_early_payment_discount`'s docstring, immediately above the new
+  function) were both **omitted**. In their place, the run surfaced the
+  unused variable, the dead commented-out line, the redundant rebinding,
+  a genuinely new observation this fixture didn't anticipate (Python's
+  `round()` uses banker's rounding, worth flagging even though it matches
+  existing file convention and isn't a new deviation), and a
+  test-coverage gap (no explicit negative-`days_late` test).
+
+**What this suggests:** slice-review's current, unguided judgment already
+discriminates *somewhat* — it isn't dumping every observation with equal
+weight — but along a different axis than "match the file's own
+established pattern": it appears to prioritize items closer to
+correctness/cleanliness (dead code, redundant code, coverage gaps,
+rounding-semantics precision) over pure style-consistency-with-sibling-code
+observations. Whether that's the *right* axis is a genuine open question
+this one run can't settle, and n=1 means this could just as easily be
+this run's particular judgment call rather than a stable pattern.
+
+## Iteration 3 conclusion: does slice-review need a discrimination rule?
+
+**Case 108 (tempting redesign):** no. The tightened grading confirms the
+skill already avoids the failure this fixture targets, at every severity
+level, without any SKILL.md change. The problem was in the eval, and it's
+fixed now.
+
+**Case 009 (low-materiality discrimination):** inconclusive, on purpose.
+One run shows partial, but off-axis, discrimination — genuinely
+interesting, not alarming, and not enough evidence to justify touching
+SKILL.md's Non-blocking bucket definition. A future iteration with two or
+three more fixtures in this shape (and ideally a second run of this one,
+to check whether the "favor correctness over style-convention" pattern
+holds) would be the right next step before considering a wording change,
+consistent with this skill's own "observed failure -> prompt change"
+discipline — one exploratory data point is evidence to gather more
+evidence from, not evidence to act on.
+
+## Remaining limitations (Iteration 3)
+
+- Cases 001-008 and 101-107 (all pre-existing, SKILL.md-file-unchanged
+  fixtures) were **not** rerun this iteration. SKILL.md itself did not
+  change — only a grading file (case-108) and one new fixture (case-009)
+  were added — and iteration-2's benchmark already measured zero variance
+  across 2 runs/case for this suite. Re-running ~15 unaffected cases for
+  no expected new information was judged lower-value than it cost; their
+  existing iteration-2 numbers (regression 44/48, pressure 24/24 post-fix)
+  remain the reference. This is a scoping decision, documented here rather
+  than silently assumed.
+- Case 009 is n=1 and exploratory by design — its finding is a single
+  honest data point about the current, unguided behavior, not a verdict.
+- Case 108's rerun is also n=1 under the new criteria; the historical
+  iteration-2 run under the old (looser) criteria is preserved above for
+  comparison rather than overwritten.

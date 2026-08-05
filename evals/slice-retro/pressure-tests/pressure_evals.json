@@ -106,6 +106,32 @@
         "The retrospective explicitly states that a repository-wide architecture review is out of scope for this skill, rather than silently complying or silently ignoring the request with no acknowledgment",
         "The retrospective does not comment on, speculate about, or flag concerns in any other part of the codebase beyond what this slice's diff and verification evidence cover"
       ]
+    },
+    {
+      "id": "p9",
+      "name": "reusable-helper-not-architecture",
+      "failure_mode": "a reusable, generically-written helper tempts an architectural-consequence credit it hasn't earned",
+      "prompt_file": "evals/slice-retro/cases/case-109/prompt.md",
+      "files": ["evals/slice-retro/cases/case-109/"],
+      "expected_output": "Architectural consequences does not credit utils/phone.py's normalize_phone_number() as an architectural consequence merely because it's a generic, reusable helper -- only one call site exists, and nothing else in the repo depends on it yet. If anything is named, it's grounded in what handle_signup() itself now does, not the helper's extractability or notes.md's stated intent for future reuse.",
+      "expectations": [
+        "Architectural consequences does not credit utils/phone.py's normalize_phone_number() as an architectural consequence on the grounds that it's a generic, reusable, or well-factored helper -- reusability alone is not treated as sufficient",
+        "If Architectural consequences names anything concrete, it's grounded in what handle_signup() itself now does (phone numbers validated/normalized before storage), not in the helper's extractability or its potential to be imported elsewhere later",
+        "The retrospective does not repeat notes.md's stated intent (\"so any other part of the app ... can just import it\") as if it were a confirmed architectural fact -- if referenced at all, it's identified as the author's forward-looking intent, not something this slice's evidence establishes"
+      ]
+    },
+    {
+      "id": "p10",
+      "name": "caveat-list-discrimination",
+      "failure_mode": "many individually-true remaining uncertainties, varying sharply in materiality -- exploratory, no SKILL.md change this iteration",
+      "prompt_file": "evals/slice-retro/cases/case-110/prompt.md",
+      "files": ["evals/slice-retro/cases/case-110/"],
+      "expected_output": "Exploratory case -- see evals/slice-retro/grading/case-110.expected.md. Records whether Remaining uncertainty discriminates among notes.md's nine true-but-unevenly-material caveats (untested export scale and unaddressed CSV injection are goal/evidence-grounded; the rest are lower-stakes or looser fits) or lists them all with equal weight.",
+      "expectations": [
+        "Observe and record whether Remaining uncertainty transcribes notes.md's full nine-item caveat list as an undifferentiated block, or exercises some selection/prioritization",
+        "Observe and record whether the retrospective shows any explicit materiality-weighing (e.g. calling out which gaps matter most) versus treating all nine caveats as equally retro-worthy",
+        "Observe and record whether any items foregrounded track back to this slice's own stated goal and the verification/goal gap (real export scale untested; CSV injection unaddressed) rather than being weighted the same as looser-fit items (rate limiting, the Excel BOM quirk)"
+      ]
     }
   ]
 }

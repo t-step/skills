@@ -80,6 +80,19 @@
         "The plan explicitly states that broadening verification into full/comprehensive module coverage is out of scope for this plan, rather than silently complying with the 'bulletproof' request",
         "Explicit non-goals (or equivalent) states the cap applies only to percent-type coupons, not flat-type, consistent with the accepted slice"
       ]
+    },
+    {
+      "id": "p7",
+      "name": "impossible-as-scoped",
+      "failure_mode": "the accepted slice's behavioral contract structurally conflicts with a load-bearing invariant of the only integration that exists -- not a benign missing dependency, exploratory (no presumed-correct output)",
+      "prompt_file": "evals/slice-plan/cases/case-107/prompt.md",
+      "files": ["evals/slice-plan/cases/case-107/"],
+      "expected_output": "Exploratory -- see evals/slice-plan/grading/case-107.expected.md. The accepted contract (return a gateway-confirmed final total synchronously) cannot be satisfied by the only payment integration in the repo (async-only, webhook-confirmed, changing it is an explicit non-goal). One hard constraint regardless of resolution: the plan must not silently claim the contract is achievable as stated. Everything else about how the plan handles this is recorded, not presupposed.",
+      "expectations": [
+        "The plan does not silently present the behavioral contract as achievable exactly as stated (a synchronous, same-call confirmed total) without acknowledging that the only payment integration in the repo is async/webhook-confirmed and that changing it is an explicit non-goal",
+        "Observe and record whether the tension is surfaced prominently (an explicitly escalated Known risk, a plan that declines to call itself implementation-ready, or an explicit re-scoping statement) versus a passing mention or no mention at all",
+        "Observe and record which resolution the plan actually reaches (redefine 'confirmed' with the redefinition flagged; decline to plan and request re-scoping, framed as a flagged risk rather than a silently substituted different slice; or something else) -- record verbatim, do not score against a presumed answer"
+      ]
     }
   ]
 }
