@@ -35,10 +35,10 @@ prove or unlock one thing, justified by evidence — from the completed
 slice, from the product's current state, or both — not a plan, not a
 ranked shortlist, not a rewrite.
 
-## Evidence channels
+## Evidence channels and the strategic-continuity lens
 
-A recommendation can rest on any of three channels, and more than one
-usually applies at once:
+A recommendation rests on two evidence channels — factual inputs, each
+capable of independently grounding a claim of its own kind:
 
 1. **Recent slice evidence** — the completed slice's review verdict and
    findings, and its retrospective's validated/falsified assumptions,
@@ -51,19 +51,32 @@ usually applies at once:
    code or docs actually confirm, an architecture that makes a bounded
    slice feasible. This channel doesn't depend on a review or retro
    existing at all.
-3. **Strategic continuity** — does the candidate strengthen the product's
-   core surface, complete an end-to-end workflow, or avoid over-deepening
-   a peripheral subsystem at product coherence's expense? This channel
-   compares a candidate against the shape of the whole product, not
-   against one slice's history.
 
 Missing channel 1 lowers confidence in any claim about what the last
 slice specifically proved or unlocked — that claim needs channel 1, and
 nothing substitutes for it. It does not lower confidence in, or excuse
-ignoring, whatever channels 2 and 3 independently establish. A repository
+ignoring, whatever channel 2 independently establishes. A repository
 with no review and no retro can still have a directly observable
 core-surface gap, and that gap is real evidence, not a placeholder for
 evidence.
+
+**Strategic continuity is a decision lens, not a third channel — it
+doesn't supply facts, it weighs the facts channels 1 and 2 already
+supplied.** Apply it when ranking or choosing among candidates that have
+already cleared the evidence bar on their own: does this candidate sit
+on the product's core surface or a peripheral subsystem? Does it
+complete an end-to-end workflow, or leave one still half-finished? Is
+recent work over-deepening one subsystem at the expense of a gap
+somewhere else? The lens can make one evidenced candidate win over
+another evidenced candidate — it cannot turn a candidate with no
+evidence behind it into one worth recommending, and it cannot itself
+manufacture urgency or user need. The intended shape: *evidence* — the
+catalog has no search or stable ordering; *lens* — the catalog is the
+product's core surface; *conclusion* — prefer bounded catalog work over
+another admin refinement. Skip the lens step and you're left with an
+unranked fact. Skip the evidence step and the lens has nothing to weigh
+— "this is the core surface" is not itself a reason to build something
+there if nothing observable is actually wrong with it.
 
 ## Gather before recommending
 
@@ -113,8 +126,8 @@ A missing review or retro is not, by itself, grounds to refuse a product
 recommendation. Work the problem instead of stopping at the gap:
 
 1. Identify candidates directly observable from the repository's current
-   state (channel 2) and from strategic continuity (channel 3), same as
-   any other run of this skill.
+   state (channel 2), same as any other run of this skill, then use the
+   strategic-continuity lens to weigh them against each other.
 2. Separate candidates whose justification depends on the missing
    review/retro from candidates that stand on their own without it.
 3. Compare the independently-justified candidates on the criteria below —
@@ -204,14 +217,18 @@ When a candidate's justification is only as strong as speculation, that's
 the signal to recommend evidence-gathering instead of the feature itself,
 not to write it up as if the evidence were already observed.
 
-Name which channel backs each major claim as you reason — recent slice
-evidence, current product-state evidence, strategic continuity, or
-speculation. This doesn't require a labeled tag on every sentence of the
-final prose ("the current public catalog has no filtering" is
+Name which channel backs each factual claim as you reason — recent slice
+evidence, current product-state evidence, or speculation — and separately
+say when the strategic-continuity lens shaped how candidates were ranked
+against each other. This doesn't require a labeled tag on every sentence
+of the final prose ("the current public catalog has no filtering" is
 self-evidently a channel-2 observation and doesn't need one) — it requires
 that the reasoning behind the recommendation could be traced back to a
-channel by anyone reading it, and that no claim borrows more certainty
-than its channel actually provides.
+channel (for facts) or the lens (for ranking) by anyone reading it, and
+that no claim borrows more certainty than its channel actually provides.
+The lens is never itself the answer to "what's your evidence" — if a
+claim's only backing is "this is the core surface," that's a ranking
+judgment standing in for a fact, and the fact still needs to be named.
 
 ## When a test-only or verification-only candidate is eligible
 
@@ -253,8 +270,8 @@ that nothing in the evidence justifies doing *now* is not this skill's job
 to greenlight. A candidate with nothing to show on Dependency unlocking —
 because no review or retro exists to unlock anything — isn't disqualified
 by that alone; it's judged on whichever of the other six criteria actually
-apply, same as any candidate whose case rests on channels 2 and 3 rather
-than channel 1:
+apply, same as any candidate whose case rests on channel 2 and the
+strategic-continuity lens rather than channel 1:
 
 - **Dependency unlocking** — did the completed slice make something newly
   possible or newly worth doing that wasn't before? This is usually the
@@ -288,14 +305,20 @@ than channel 1:
   consequential bounded capability or a risk the review/retro actually
   demonstrated.
 
-Ground every comparison in the evidence channels above — what the review
-or retro actually established, and what the repository's current state
-and product shape directly show. When two or more candidates score
-comparably on these criteria — this happens, and forcing a falsely
-confident tiebreaker is worse than naming the tie — pick one, name the
-actual tiebreak used (usually implementation size or reversibility), and
-say plainly that the alternative was close rather than dressing up a coin
-flip as an obvious call.
+Ground every comparison in the two evidence channels above — what the
+review or retro actually established, and what the repository's current
+state directly shows — applying the strategic-continuity lens where it
+helps rank candidates that are already evidenced. When two or more
+independently-justified candidates score comparably on these criteria —
+this happens, and forcing a falsely confident tiebreaker is worse than
+naming the tie — pick one, name the actual tiebreak used (usually
+implementation size or reversibility), and say plainly that the
+alternative was close rather than dressing up a coin flip as an obvious
+call. This tiebreak presumes each candidate already cleared the evidence
+bar on its own; it is not a way to choose between candidates whose value
+depends on the same missing fact — when no candidate has cleared that bar
+yet, "When no candidate is justified yet" below is the right section, not
+this one.
 
 ## Don't tunnel into the most recently touched subsystem
 
@@ -320,10 +343,16 @@ the review's verification was inconclusive, the retro reopened a question
 nothing has since answered, or the most attractive-looking candidate
 depends on a fact (does this happen at production scale? is that canary
 delta real or noise?) that nobody has actually measured. This is a
-genuine-ambiguity outcome, not a default: it applies when none of the
-three evidence channels can responsibly distinguish the candidates, not
-merely because channel 1 happens to be missing — see "When recent-slice
-evidence is missing" above for that case.
+genuine-ambiguity outcome, not a default: it applies when neither
+evidence channel, nor the strategic-continuity lens applied to whatever
+evidence does exist, can responsibly distinguish the candidates — not
+merely because channel 1 happens to be missing (see "When recent-slice
+evidence is missing" above for that case) and not merely because the
+candidates cost about the same to build. Two candidates whose entire
+justification rests on the same unresolved fact are exactly this case,
+even if each one individually sounds reasonable — a candidate "sounding
+reasonable" on its own is not the same as evidence distinguishing it from
+its alternative.
 
 The right move here is neither silence nor a confident-sounding guess. It's
 the smallest bounded slice whose entire purpose is producing the missing
@@ -366,9 +395,10 @@ ask together with one of these:
 - Treat a missing review or retro as blanket grounds to decline a product
   recommendation. Missing recent-slice evidence only blocks claims that
   specifically need it (what the last slice proved or unlocked) — it
-  doesn't block a candidate that current product-state evidence or
-  strategic continuity already justifies on its own. Say what's missing,
-  then still recommend when the case for it doesn't depend on that gap.
+  doesn't block a candidate that current product-state evidence already
+  justifies, even before the strategic-continuity lens is used to rank it
+  against alternatives. Say what's missing, then still recommend when the
+  case for it doesn't depend on that gap.
 
 If a request bundles a legitimate ask together with one of these — "also
 give me your top 3," "what's the roadmap for next quarter" — say plainly

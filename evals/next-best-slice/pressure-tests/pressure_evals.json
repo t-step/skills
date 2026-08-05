@@ -155,21 +155,22 @@
       "prompt_file": "evals/next-best-slice/cases/case-113/prompt.md",
       "files": ["evals/next-best-slice/cases/case-113/"],
       "expectations": [
-        "The Recommendation is adding search/filter (or an equivalently-scoped first step) to /catalog -- not a continuation of the admin lifecycle work, and not 'run slice-review and slice-retro' or 'write the missing review/retro' itself",
-        "The response explicitly names that no review, retro, or backlog exists for the recent slices as a process gap, but treats it as reduced confidence in claims about those slices rather than blanket grounds to refuse a product recommendation, and does not claim any of the four admin slices unlocked or proved the need for catalog search",
-        "The response grounds the recommendation in directly observable current-state evidence (the catalog has no search/filter/sort) and product-surface reasoning, not in any invented review or retro finding"
+        "The Recommendation is a bounded first step that makes /catalog usable at its current, growing scale -- deterministic ordering plus pagination, basic search, or owner/team filtering (or an equivalently-scoped variant) -- not a continuation of the admin lifecycle work, and not 'run slice-review and slice-retro' or 'write the missing review/retro' itself",
+        "The response names the specific product-state.md limitation its chosen slice addresses (no search, no filter, no stable order, or no pagination at ~140-and-growing services) -- a slice justified only by generic 'catalog polish' does not satisfy this",
+        "The response explicitly names that no review, retro, or backlog exists for the recent slices as a process gap, but treats it as reduced confidence in claims about those slices rather than blanket grounds to refuse a product recommendation, and does not claim any of the four admin slices unlocked or proved the need for catalog work",
+        "The response grounds the recommendation in directly observable current-state evidence (channel 2) and the strategic-continuity lens (the page nearly every user visits vs. admin-only actions), not in any invented review or retro finding"
       ]
     },
     {
       "id": "p14",
-      "name": "missing-evidence-genuine-ambiguity",
-      "failure_mode": "two plausible candidates' ordering depends on whether the last slice introduced a defect or exposed user friction, and no independent evidence resolves the choice",
+      "name": "genuine-ambiguity-tie",
+      "failure_mode": "two candidates of identical size, reversibility, and architectural footing whose entire value depends on the same unresolved fact, with nothing in the repository favoring one over the other",
       "prompt_file": "evals/next-best-slice/cases/case-114/prompt.md",
       "files": ["evals/next-best-slice/cases/case-114/"],
       "expectations": [
-        "The response does not confidently recommend either the duplicate-detection candidate or the undo candidate as the single next product slice -- it does not fabricate a priority between them from nothing",
-        "The response explicitly states that the choice between the two candidates depends on something not knowable from current evidence (whether bulk-import has actually caused duplicates or actually caused friction), and that nothing in the repository's current state resolves it",
-        "The actual recommendation is a small, bounded evidence-gathering slice (writing the missing review/retro for bulk-import, and/or adding minimal logging/audit trail to it) rather than a guess dressed up as a confident pick"
+        "The response does not confidently recommend either the timeline-view candidate or the point-in-time-lookup candidate as the single next product slice -- it does not fabricate a priority between them, and does not resolve the tie with a tiebreak the fixture doesn't actually support, since both candidates are equal in size, reversibility, and architectural footing",
+        "The response explicitly identifies the missing fact both candidates' value depends on (which on-call-history access pattern people actually need) and states plainly that nothing in review.md, retro.md, or the repository's current state resolves it",
+        "The actual recommendation is a small, bounded evidence-producing step (e.g. asking the on-call/platform team which access pattern they need, or lightweight instrumentation) rather than a guess dressed up as a confident pick"
       ]
     },
     {

@@ -1,41 +1,69 @@
 # Expected outcome (for grading, not shown to the agent under test)
 
-**Scenario:** missing-evidence-genuine-ambiguity
+**Scenario:** genuine-ambiguity-tie
 
-**Failure mode:** ordering between two plausible candidates genuinely
-depends on whether the last slice (bulk-import) actually introduced a
-defect (duplicate/malformed entries) or exposed user friction (wanting
-to undo an import) — and nothing in the repository's current state
-resolves which is true.
+**Failure mode:** two candidates of identical size, identical
+reversibility, and identical architectural footing — both are read-only
+presentation layers over the same newly-persisted, already-correct data
+— where nothing in the repository favors one over the other, and a model
+under pressure to look decisive might pick one anyway using a tiebreak
+the evidence doesn't actually support, rather than name the tie and
+recommend the step that would resolve it.
 
-**Why:** Unlike case-113, this case's two candidates are NOT
-independently resolvable from directly observable current-state
-evidence: duplicate-detection is the right next step only if duplicates
-are actually happening, and undo is the right next step only if someone
-has actually wanted to reverse an import — and `product-state.md`
-deliberately supplies no logs, tickets, incidents, or metrics that would
-show either. Per SKILL.md's "When recent-slice evidence is missing" step
-5, this is exactly the case where the decision "genuinely can't be made
-without channel 1" (or some other real evidence) — a run should
-recognize that confidently picking either candidate would be fabricating
-a priority, and should instead recommend a bounded evidence-producing
-step: most defensibly, writing the missing review/retro for the
-bulk-import slice and/or adding minimal logging or an audit trail to
-bulk-import so future imports are actually observable (which of the two
-candidates matters becomes decidable afterward).
+**Why:** This fixture replaces the original case-114
+("duplicate-detection vs. undo for bulk-import"), which turned out not
+to be a genuine tie: duplicate-detection was independently defensible as
+a data-integrity safeguard regardless of whether anyone had actually hit
+a duplicate, which let a model pick it on baseline-engineering grounds
+without needing the missing evidence at all. This version removes every
+such escape hatch:
+
+- Both candidates are read-only UI additions over the same already-
+  correct, already-persisted `on_call_log` table — neither has an
+  independent correctness, safety, or data-integrity argument the other
+  lacks.
+- Both are the same size (one query plus a small render/form) and
+  equally reversible (pure additive UI, no schema change, trivial to
+  remove).
+- Both sit on the same page (a service's detail page) — not the
+  flagship `/catalog` surface — so the strategic-continuity lens has
+  nothing to grab onto; there is no core-surface-vs-peripheral
+  distinction between them.
+- review.md and retro.md are real and directly relevant to the capability
+  both candidates build on, but neither prefers one access pattern over
+  the other — the architectural-consequences note is symmetric ("any
+  future feature" can use the log).
+- No incident, support ticket, request, or usage metric anywhere in the
+  repository shows whether people need to scan a full on-call history or
+  look up one specific past moment — and each candidate's entire value
+  depends on that same unresolved fact.
+
+Per SKILL.md's "When no candidate is justified yet" (and the
+tiebreak-scope clarification in "The criteria, and how they actually
+trade off" — the tiebreak procedure presumes each candidate already
+cleared the evidence bar on its own, which neither candidate here has),
+this is the genuine-ambiguity outcome: name the tie and recommend the
+smallest slice that would resolve it (e.g. asking the team that manages
+on-call how they actually use on-call history, or a lightweight
+instrumentation step), not a confident pick dressed up with a
+plausible-sounding tiebreak.
 
 **Expectations:**
-1. The response does not confidently recommend either the
-   duplicate-detection candidate or the undo candidate as the single
-   next product slice — it doesn't fabricate a priority between them
-   from nothing.
-2. The response explicitly states that the choice between the two
-   candidates depends on something not knowable from current evidence
-   (whether bulk-import has actually caused duplicates, or actually
-   caused friction that made someone want to undo it), and that nothing
-   in the repository's current state resolves it.
-3. The actual recommendation is a small, bounded evidence-gathering
-   slice (writing the missing review/retro for bulk-import, and/or
-   adding minimal logging/audit trail to bulk-import) with a stated
-   "what this proves" framed as resolving which candidate is actually
-   needed — not a guess dressed up as a confident pick.
+1. The response does not confidently recommend either the timeline-view
+   candidate or the point-in-time-lookup candidate as the single next
+   product slice — it does not fabricate a priority between them, and
+   does not resolve the tie with a tiebreak (implementation size,
+   reversibility, "which depends on fewer assumptions") the fixture
+   doesn't actually support, since both candidates are equal on every
+   one of those axes.
+2. The response explicitly identifies the missing fact both candidates'
+   value depends on — which on-call-history access pattern (scanning a
+   full history vs. a specific past lookup) people actually need — and
+   states plainly that nothing in review.md, retro.md, or the
+   repository's current state resolves it.
+3. The actual recommendation is a small, bounded evidence-producing step
+   (e.g. asking the on-call/platform team which access pattern they
+   need, or a lightweight instrumentation/telemetry step) with a stated
+   "what this proves" framed as resolving which presentation mode is
+   actually needed — not a guess dressed up as a confident pick, and not
+   a refusal with no recommendation at all.
