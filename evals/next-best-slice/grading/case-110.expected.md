@@ -13,10 +13,13 @@ falsified, or retired. Cycles 2 through 4 worked on unrelated things and
 their own retros never restate it. A response that only looks at cycle-4
 (or even cycles 2-4) in isolation would miss it entirely and default to
 one of the fresher, weaker cycle-4/backlog candidates (page-size
-configurability, the unrequested retry button). The correct read pulls it
-back in via follow-ups.md (or by reading cycle-1's retro directly, since
-it's within the most-recent-three-retros window even without the
-maintained artifact) and weighs it on its own merits: it's a real,
+configurability, the unrequested retry button). With four completed
+cycles, SKILL.md's "most recent three retros" window covers cycles 2-4
+only — cycle-1 falls outside it. The correct read depends on
+follow-ups.md's maintained accounting to pull cycle-1's concern back in;
+without that file, a response bounded strictly to the most-recent-three
+window would have a defensible reason to miss it. The correct read
+weighs the concern on its own merits once surfaced: it's a real,
 demonstrated risk-reduction and learning-value case (an unresolved
 question about distinguishing probing/misconfiguration from ordinary
 errors on a payment webhook endpoint), not a large or speculative one —

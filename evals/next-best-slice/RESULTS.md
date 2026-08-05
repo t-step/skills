@@ -304,3 +304,96 @@ features, and loss of the evidence discipline. Findings:
 
 **Net result:** revision adopted. See the top-level report for the exact
 SKILL.md diff, full rationale per edit, and remaining risks/ambiguities.
+
+## Iteration 2 follow-up — candidate-universe wording generalized (2026-08-05)
+
+Review feedback on the iteration-2 PR flagged that the candidate-universe
+clause above was still too literal: it gated repo-inspection-derived
+candidates on "no backlog, roadmap, or issue tracker exists at all," when
+the actual failure mode it was meant to prevent is broader — a tracker
+that *exists* but is stale, a placeholder, thin, or simply silent on the
+area a completed slice just touched shouldn't get treated as though it
+had covered the ground either. The fix generalizes the gate: the skill
+now weighs a tracker by how well it's actually maintained, not by
+whether one is merely present, and the repo-inspection-derived-candidate
+allowance fires whenever the available tracker "is absent, or isn't
+materially representing the real candidate space," not only when none
+exists. The always-eligible rule for review/retro-surfaced candidates
+(the first half of the "candidate universe" bullet) was already correctly
+unconditional and is unchanged.
+
+This also corrected a stale claim in this file's own iteration-2
+adversarial-read note above, which described the clause as "scoped to
+fire only when no backlog/roadmap/issue-tracker exists at all" — that was
+an accurate description of the wording at the time it was written, but
+the wording it described is exactly what this follow-up replaced. Left
+uncorrected in place above (struck through nowhere, since altering
+already-published run commentary would misrepresent what iteration 2
+actually shipped); this section is the correction of record.
+
+**Case-110's grading key also had a factual error, unrelated to the
+wording fix:** its explanation claimed cycle-1 (where the
+signature-verification concern was first raised) fell "within the
+most-recent-three-retros window even without the maintained artifact."
+With four completed cycles, SKILL.md's "most recent three retros" window
+covers cycles 2-4 only — cycle-1 is the fourth-most-recent and falls
+outside it. The case's correctness was never in question (follow-ups.md
+is a maintained artifact and independently pulls cycle-1's concern back
+in, which is what the fixture was built to test), but the explanation's
+claim that the three-retro window alone would have caught it was wrong.
+Corrected in `grading/case-110.expected.md`.
+
+**New pressure case added: case-112 (`p12`, candidate-universe
+omission).** Cases 110 and 111 both exercise pieces of the candidate
+universe logic, but neither isolates it: 110 is about a concern aging out
+of retros specifically, and 111 pairs the candidate-universe question
+with the test-only-eligibility gate (the strongest candidate happens to
+also be competing against a tempting e2e test). Case-112 isolates the
+generalized rule directly — a normal, current-looking backlog with four
+legitimate candidates (none stale or padding), where the strongest
+evidence-grounded next slice (extending a newly-generalized idempotency
+mechanism to a second endpoint with two documented duplicate-charge
+incidents, INC-4432/INC-4501) is one backlog.md never lists at all. This
+is now the canonical regression test for the candidate-universe change.
+
+**Full suite rerun after both fixes** (regression cases 001-007, pressure
+cases 101-112), one fresh subagent run per case, same harness as prior
+iterations (fresh subagent, confined to the case directory plus the
+revised SKILL.md, blind to grading materials), graded by the orchestrating
+session against `evals.json` / `pressure_evals.json`:
+
+| Suite | Result |
+|---|---|
+| Regression (001-007) | 7/7 cases pass all expectations (21/21) |
+| Pressure, pre-existing (101-109) | 9/9 cases pass all expectations (27/27) |
+| Pressure, prior new (110-111) | 2/2 cases pass all expectations (6/6) |
+| Pressure, this follow-up (112) | 1/1 case passes all expectations (3/3) |
+| **Total** | **19/19 cases, 57/57 expectations** |
+
+No fixture was edited to force a pass. Notable this run:
+
+- **Case 004** explicitly used reversibility language this time
+  ("the largest, least reversible option") — the iteration-1/iteration-2
+  runs both folded this into "evidence is too thin" without the word
+  "reversible/reversibility" appearing, which prior addenda judged
+  eval-expectation over-strictness rather than a SKILL.md gap. This run's
+  phrasing satisfies even the strict reading; treated as normal run
+  variance, not a regression signal either way.
+- **Case 107** again picked "verify `CursorPaginator` at production scale
+  first" over the grading key's "most defensible" audit-log-reuse pick —
+  the same legitimate alternate reading documented in the iteration-1 and
+  iteration-2 addenda above, reproduced a third time.
+- **Case 112** correctly declined all four backlog.md candidates and
+  grounded its recommendation entirely in retro.md's architectural
+  consequences and the two named incidents, explicitly calling out the
+  backlog items as "real but weaker" rather than dismissing backlog.md as
+  fake or irrelevant — the exact discipline the generalized wording is
+  meant to produce.
+- **Case 110** again correctly excluded the retired per-consumer-filtering
+  item and tied its pick to risk reduction and learning value rather than
+  the concern's age.
+
+**Net result:** both fixes adopted; no other behavioral change made. The
+skill's core discipline (one recommendation, evidence tiers, refusal
+list, size/reversibility trade-offs, "gather more evidence" as a valid
+outcome) is untouched by this follow-up.

@@ -135,6 +135,18 @@
         "The response explicitly explains why the e2e addition doesn't clear the bar for a test-only next slice (behavior already proven at the database/unit/component layers, the shared banner component already has e2e coverage via email verification, nothing about it blocks trust, safe operation, or safe extension) -- it may name the test as valid maintenance, but does not silently comply or silently ignore the suggestion",
         "The Recommendation is a bounded slice enabling SMS-based account recovery (or an equivalently-scoped first step of it) using the newly persisted `phone_verified_at` capability, grounded in retro.md's architectural-consequences/follow-up-questions text -- not the phone-number-change or localization backlog items, which are unevidenced"
       ]
+    },
+    {
+      "id": "p12",
+      "name": "candidate-universe-omission",
+      "failure_mode": "a maintained tracker exists and contains legitimate candidates, but the strongest evidence-grounded next slice is one it never lists",
+      "prompt_file": "evals/next-best-slice/cases/case-112/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-112/"],
+      "expectations": [
+        "The Recommendation is not any of the four backlog.md items (idempotency-key cleanup job, order search by email, CSV export for finance, longer retention window) -- the response does not treat backlog.md as the ceiling on the candidate space",
+        "The Recommendation is applying the existing idempotency mechanism (require_idempotency_key / the idempotency_keys table) to POST /payments/:id/capture, or an equivalently-scoped first step, grounded explicitly in retro.md's architectural-consequences text and the two named incidents (INC-4432, INC-4501) -- not a guess or a general appeal to 'this would also help'",
+        "The response explains why the backlog items are real but weaker (explicitly low-stakes, or unevidenced support/finance conveniences) rather than dismissing backlog.md as fake, stale, or irrelevant, and does not expand scope into a broader payments-reliability audit or idempotency protection for every write endpoint"
+      ]
     }
   ]
 }

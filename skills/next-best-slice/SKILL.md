@@ -48,20 +48,29 @@ Three things, gathered before any candidate gets weighed:
 3. **The candidate universe** — whatever backlog, roadmap, issue tracker,
    or notes-file the repo actually has listing possible next work, plus
    whatever the review's findings and the retro's remaining uncertainty /
-   follow-up questions / architectural consequences themselves surface — a
-   maintained backlog is a source, not the whole candidate set, and a real
-   candidate those documents imply doesn't stop being real just because no
-   one has filed it yet. If no backlog, roadmap, or issue tracker exists at
-   all, say so explicitly, and the skill may also name a nearby, bounded
-   gap the repository's present state makes visible — an adjacent user
-   journey the completed work leaves half-finished, a lifecycle path with
-   an obvious missing step, or a capability now reachable because persisted
-   data or a stable seam exists for the first time. Either way, don't
-   invent an ambitious backlog to have something to choose from: a
-   candidate the repository's current state introduces still has to clear
-   the same evidence bar as any other before it can be recommended, not
-   just to be listed — see "Keep evidence, inference, and speculation
-   separate" below.
+   follow-up questions / architectural consequences themselves surface. A
+   tracker is a source, not an authoritative ceiling on the candidate set,
+   and a real candidate those documents imply doesn't stop being real just
+   because no one has filed it, or because a tracker exists and simply
+   doesn't happen to list it. Weigh a tracker by how well it's actually
+   maintained, not by whether one is present: a backlog that's current,
+   specific, and actually speaks to the area the completed slice just
+   touched is strong evidence of the real candidate space, and most
+   candidates should come from it. One that's stale, a placeholder, thin,
+   or silent on that area is weak evidence of the full space even though
+   what it does list can still be real — a tracker existing is not the
+   same as a tracker having covered the ground. When the available tracker
+   is absent, or isn't materially representing the real candidate space,
+   the skill may also name a nearby, bounded gap the repository's present
+   state itself makes visible — an adjacent user journey the completed
+   work leaves half-finished, a lifecycle path with an obvious missing
+   step, or a capability now reachable because persisted data or a stable
+   seam exists for the first time. Say plainly when this is what's
+   happening. Either way, don't invent an ambitious backlog to have
+   something to choose from: a candidate the repository's current state
+   introduces still has to clear the same evidence bar as any other before
+   it can be recommended, not just to be listed — see "Keep evidence,
+   inference, and speculation separate" below.
 
 If the review or the retrospective is missing rather than just thin, don't
 fabricate its content or proceed as if it said something it didn't. Say
