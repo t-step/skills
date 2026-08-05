@@ -206,3 +206,101 @@ this review — every finding was either confirmed as a legitimate,
 intentionally-preserved alternate judgment (cases 004 and 107, both already
 documented as such above before the review ran) or judged a non-issue. No
 benchmark rerun was needed since nothing was changed.
+
+## Iteration 2 — SKILL.md revision (2026-08-05)
+
+Repeated real-world use surfaced a pattern the iteration-1 fixtures never
+exercised: the skill would overweight the latest review's localized
+findings, treat a small testing asymmetry as the best next slice, confuse
+test-fixture/nearby-file reuse with architectural momentum, exclude a
+legitimate adjacent capability because it wasn't explicitly named in the
+latest review/retro/backlog, and let a carried-forward concern lose
+standing once it aged out of the newest retrospective. A concrete failure
+motivated this: the skill recommended a test-only e2e extension for
+behavior already proven at the database and component layers, over a
+newly-enabled bounded capability.
+
+Five small, targeted edits to `skills/next-best-slice/SKILL.md` addressed
+this (see the top-level report for exact diffs and rationale). None of the
+skill's core discipline — one recommendation, evidence tiers, refusal to
+inherit roadmap/priority labels, "gather more evidence" as a valid outcome,
+size/reversibility discipline — was touched.
+
+**Two new pressure cases added**, both targeting the reported failure mode
+directly (see `pressure-tests/README.md` for the full description):
+
+- **case-110** (`p10`, carried-forward evidence): four sequential
+  completed-slice review/retro cycles, an important observability gap
+  raised in cycle 1, absent from cycles 2-4's own retros, tracked only in a
+  maintained `follow-ups.md`. Tests that the concern is neither dropped nor
+  given automatic priority for its age, and that an explicitly-retired item
+  in the same file is correctly excluded.
+- **case-111** (`p11`, test-only symmetry trap): a completed phone-
+  verification slice where the review flags a non-blocking e2e coverage
+  gap for behavior already proven at the database/unit/component layers,
+  while the retro's own architectural-consequences/follow-up-questions text
+  (not backlog.md, which never lists it) points to a newly-enabled, bounded
+  account-recovery capability.
+
+**Full suite rerun after the SKILL.md revision** (regression cases
+001-007, pressure cases 101-111), one subagent run per case, same harness
+as iteration 1 (fresh subagent, confined to the case directory plus the
+revised SKILL.md), graded by the orchestrating session against
+`evals.json` / `pressure_evals.json` expectations:
+
+| Suite | Result |
+|---|---|
+| Regression (001-007) | 7/7 cases pass all expectations |
+| Pressure, pre-existing (101-109) | 9/9 cases pass all expectations |
+| Pressure, new (110-111) | 2/2 cases pass all expectations |
+
+No case's correct-answer expectations changed and no fixture was edited to
+force a pass. Two runs reproduced pre-existing, already-documented
+divergences from a literal reading of the grading key rather than new
+regressions:
+
+- **Case 004** again did not use the word "reversibility" explicitly
+  (folding it into "the evidence is too thin" and "harder to reverse"
+  language), matching the iteration-1 finding that this is eval-expectation
+  over-strictness, not a SKILL.md gap (see the post-review addendum above).
+- **Case 107** again picked "verify `CursorPaginator` at production scale
+  first" over the grading key's "most defensible" audit-log-reuse pick —
+  the same legitimate alternate reading already documented above, this
+  time additionally consistent with the tightened Architectural-momentum
+  wording (don't extend an unverified-at-scale seam to a second table
+  before paying down the risk the retro already demonstrated).
+
+Two runs directly exercised the new wording by name: case-103's response
+stated that proximity to just-edited code "doesn't count as momentum" per
+the criteria, and case-106's response justified a verification-only slice
+as addressing something "materially uncertain rather than merely
+unasserted" — both phrases lifted directly from the revised SKILL.md,
+indicating the new sections are being read and applied, not just present
+as inert text.
+
+**Adversarial read.** A dedicated pass over the final wording, checking
+for: speculative product expansion, scope creep, resurrection of
+deliberately-retired concerns, reflexive preference for user-facing
+features, and loss of the evidence discipline. Findings:
+
+- The broadened candidate-universe clause is scoped to fire only when no
+  backlog/roadmap/issue-tracker exists at all, and closes with an explicit
+  "still has to clear the same evidence bar... not just to be listed" —
+  reinforced by a matching addition to the refusal list. No case run
+  treated repo-inspection as license to invent unevidenced work; case-111's
+  correct pick was grounded in retro.md's stated facts, not a guess.
+- The carried-forward-evidence rule is bounded (three retros, or a
+  maintained artifact) and explicitly reduces to "closed, not carried
+  forward" once a concern is retired — case-110 correctly excluded the
+  retired per-consumer-filtering item in every run.
+- No run showed a reflexive pull toward user-facing work over
+  architectural/maintenance work; the new candidate-universe examples
+  (adjacent journey, incomplete lifecycle, persisted-data capability) are
+  illustrative, not weighted, and the existing "user value... not
+  sufficient alone" language is untouched.
+- Evidence discipline reads intact throughout: every new section closes by
+  re-anchoring to the observed/inference/speculation tiers rather than
+  introducing a separate standard.
+
+**Net result:** revision adopted. See the top-level report for the exact
+SKILL.md diff, full rationale per edit, and remaining risks/ambiguities.
