@@ -1,97 +1,85 @@
-# Skill usage report — design
+# Skill usage report — design (first slice)
 
-**Date:** 2026-08-04
-**Status:** Approved (design), pre-implementation
+**Date:** 2026-08-05 (rewritten; original design 2026-08-04)
+**Status:** Implemented
 
 ## Problem
 
-This repo's skills (`skills/*/SKILL.md`) are meant to be used from Claude Code sessions in other project directories, distributed via a personal `~/.claude/skills/` symlink. Once that's true, there's no visibility into whether it's working: which skills actually get invoked, how often, and — the case that matters most for maintenance — skills that quietly never fire, either because they're unneeded (archive candidates) or because their trigger description isn't matching real prompts (needs a description fix).
+This repo's skills (`skills/*/SKILL.md`) are meant to be used from Claude Code sessions in other project directories, distributed via a personal `~/.claude/skills/` symlink. Once that's true, there's no visibility into whether it's working at all: which skills actually get invoked, how often, and how recently.
 
-The goal is a quantitative usage signal that's cheap enough to check regularly, used to *triage* where to spend the more valuable qualitative effort (reading actual transcripts to judge whether a skill's output was good), not to replace it.
+## What this slice proves
+
+Running one local command answers exactly one question: **which of this repo's skills have actually been invoked in local Claude Code sessions, how often, and how recently?** That's a cheap, quantitative signal for deciding where to spend the more valuable qualitative effort — reading actual transcripts to judge whether a skill's output was any good.
+
+## What this slice does not prove
+
+- Whether a skill's output was correct or useful when it did fire.
+- Whether a skill *should have* fired but didn't (a missed-trigger problem) — answering that would require extracting and semantically analyzing prompt text. This slice reads transcript files only to locate `Skill` tool invocations; it never extracts, retains, or analyzes prompt content.
+- Usage across other machines — this is single-machine, single-user only.
+- Whether a low-usage skill should be archived. Usage frequency is one maintenance signal among several; a rarely invoked skill may still be highly valuable. This tool reports counts and recency, nothing more — it never labels a skill an "archive candidate" or takes any action on skill files.
 
 ## Scope
 
 - Tracks only skills defined in this repo (`skills/*/SKILL.md`), matched by name at run time — no hardcoded skill list.
-- Single machine, single user. No OTel, no collector, no multi-machine aggregation. This was an explicit simplification: "local store... I am the only customer."
-- Quantitative only. Missed-trigger detection is a manual-review digest (prompts + what fired), not an automated judge — chosen over an LLM-judge pass or keyword-overlap heuristic to avoid false-positive/negative noise and token cost at this stage. Can be revisited once volume data shows where attention is needed.
-- Archiving is a flag in the report, never an automated action. The script never moves, deletes, or modifies skill files.
+- Single machine, single user, no aggregation.
+- Quantitative counts and timestamps only. Transcript files are read locally, in memory, solely to locate `Skill` tool invocations — prompt text within them is never extracted, retained, displayed, persisted, analyzed, or transmitted. The tool performs no semantic analysis of prompts, and no prompt-derived information is written anywhere.
+- The script never moves, deletes, or modifies skill files, and never takes any action based on the counts — it only prints them.
 
 ## Architecture
 
-One script: `scripts/skill-usage-report.py`, a `uv run --script` single-file script (same convention as `scripts/check-skill-frontmatter.py`: PEP 723 inline dependency block, stdlib-only otherwise — `sqlite3` is stdlib so no new dependency).
-
-Running it with no arguments does two phases in sequence:
-
-### 1. Ingest
-
-- Discover tracked skill names by reading `skills/*/SKILL.md` frontmatter (`name:` field) in this repo at run time. Adding a new skill directory makes it tracked automatically; no script changes needed.
-- Glob `~/.claude/projects/*/*.jsonl` (every session transcript across every project on this machine).
-- For each transcript file, look up its last-scanned position in the `scanned_files` table (keyed by path, storing `mtime` and `byte_offset`). If the file's `mtime` and size are unchanged since last scan, skip it entirely. Otherwise read only the bytes after `byte_offset`.
-- Parse each new line as JSON. Skip lines that fail to parse (partial trailing line from a session still being written) — log a one-line warning to stderr, continue.
-- For `assistant`-type entries, inspect `message.content` for blocks where `type == "tool_use"` and `name == "Skill"`. If `input.skill` matches a tracked skill name, insert a row into `invocations`. Uniqueness is enforced on the transcript line's `uuid`, so re-ingesting an already-seen file (or overlapping byte ranges) is a no-op rather than a duplicate.
-- After processing a file, update its `scanned_files` row to the new `mtime`/`byte_offset`.
-
-### 2. Report
-
-- Query `invocations` grouped by `skill_name` for: total count, count within the last 30 days (a fixed constant for at-a-glance recency, independent of `--archive-window`), and most recent `ts` (or "never" if zero rows) — all from the DB, no transcript re-reading needed.
-- Archive candidates: tracked skills with zero rows in `invocations` within `--archive-window` days (default 60).
-- Recent-session digest: **not** sourced from the DB. Re-glob `~/.claude/projects/*/*.jsonl`, filter to files modified within `--digest-days` (default 7), parse `user`-type entries for prompt text and `assistant` Skill tool_use entries for what fired, and print them grouped by session (project `cwd`, timestamp, truncated prompts, skills fired or "none"). This is deliberately computed fresh each run rather than persisted (see Data model below for why).
-
-## Data model
-
-SQLite database at `~/.claude/skill-usage/store.db`, created on first run if the directory/file don't exist.
-
-```sql
-CREATE TABLE invocations (
-  id           INTEGER PRIMARY KEY,
-  skill_name   TEXT NOT NULL,
-  session_id   TEXT NOT NULL,
-  cwd          TEXT,               -- from the transcript line's "cwd"
-  project_slug TEXT,               -- the ~/.claude/projects/<slug>/ directory name the transcript file lives under
-  ts           TEXT NOT NULL,       -- ISO 8601, from the transcript line's "timestamp"
-  source_uuid  TEXT NOT NULL UNIQUE -- the transcript line's "uuid"; dedup key
-);
-
-CREATE TABLE scanned_files (
-  path        TEXT PRIMARY KEY,
-  mtime       REAL NOT NULL,
-  byte_offset INTEGER NOT NULL
-);
-```
-
-**Deliberately no prompt text is persisted.** Only skill names and metadata (session id, cwd, timestamp) go into the long-term store. The recent-session digest, which needs actual prompt text, reads it live from transcripts that are still on disk — those are inherently recent (still within the digest window), so there's no need to duplicate that content into a second store. This keeps `store.db` small and free of cross-project conversation content, which matters since it aggregates data from every project on the machine, not just this repo.
-
-## CLI
+One script: `scripts/skill-usage-report.py`, a `uv run --script` single-file script (same convention as `scripts/check-skill-frontmatter.py`: PEP 723 inline dependency block, stdlib-only, no third-party dependencies).
 
 ```
-uv run scripts/skill-usage-report.py [--archive-window N] [--digest-days N] [--skill NAME] [--json]
+discover skills (skills/*/SKILL.md)
+    ↓
+scan JSONL transcripts (~/.claude/projects/**/*.jsonl)
+    ↓
+aggregate in memory (per skill: total, sessions, projects, last invoked)
+    ↓
+print report
 ```
 
-- `--archive-window` (default 60): rolling-window size in days for the archive-candidate check.
-- `--digest-days` (default 7): how far back the recent-session digest looks.
-- `--skill NAME`: filter the volume table and digest to a single skill.
-- `--json`: emit only the volume table and archive candidates as JSON instead of a formatted table (for future scripting). The digest is omitted entirely in JSON mode — not printed to stdout or stderr — since it's a manual-review aid meant for human reading, not machine consumption.
+Every run does a **full, stateless scan** — no database, no byte-offset bookkeeping, no incremental ingest. Every `.jsonl` file under `~/.claude/projects/` is re-read and re-parsed on every invocation, including nested subagent transcripts (`rglob`, not a top-level-only `glob`).
 
-No subcommands. Ingest always runs before report — it's incremental and cheap, so there's nothing to remember to run separately.
+Discovery: `discover_tracked_skills(repo_root)` returns the set of directory names under `skills/` that contain a `SKILL.md` — `check-skill-frontmatter.py` already enforces `name == directory name`, so the directory name is a reliable, YAML-parse-free source of truth.
+
+Parsing: `parse_skill_invocations(text, tracked_skills)` inspects `assistant`-type transcript lines for `message.content` blocks where `type == "tool_use"` and `name == "Skill"`, yielding `(skill_name, session_id, timestamp)` for each block whose `input.skill` matches a tracked name. Malformed JSON lines and unexpected record shapes are skipped, never fatal.
+
+Aggregation: `scan_transcripts(projects_root, tracked_skills)` walks every transcript, calls the parser on each, and accumulates per-skill totals, distinct session IDs, distinct project slugs (the first path component under `projects_root`), and the lexicographically-greatest timestamp seen (transcript timestamps are consistently formatted ISO 8601 with a fixed-width millisecond `Z` suffix, so string comparison correctly selects the most recent one without a parsing step).
+
+## Why stateless is sufficient (measured, not assumed)
+
+Measured on this machine (2026-08-05) against real transcript history:
+
+- **483 files**, **167.5 MB** total, under `~/.claude/projects/**/*.jsonl`
+- **~2.1–2.7 seconds** wall-clock for a full scan (via the standalone measurement script and via the actual CLI)
+- **12** matching tracked-skill invocations found
+
+A ~2-second full scan run on demand is well within "fast enough for one local command." There is no observed performance problem to justify persistent state, incremental byte-offset scanning, or a database. If usage or transcript volume grows enough that this stops being true, that's a concrete, measurable trigger to revisit — not something to build in advance of evidence.
 
 ## Error handling
 
-- Malformed/partial JSON line → skip with a stderr warning, continue processing the rest of the file. Never fatal.
-- `~/.claude/projects/` missing or no matching transcripts → report prints an explicit "no data" state for each section, not a crash or empty output.
-- `~/.claude/skill-usage/` directory and `store.db` are created on first run if absent.
-- A transcript file that shrinks or whose `mtime` predates the stored `scanned_files` row (e.g. a file replaced out from under us) is treated as changed and rescanned from byte 0; duplicate rows are prevented by the `source_uuid` unique constraint regardless.
+- Malformed/partial JSON line → skipped silently, never fatal to the rest of the file.
+- Unexpected record shapes (missing `message`, non-list `content`, non-dict blocks, etc.) → skipped.
+- `~/.claude/projects/` missing → `scan_transcripts` returns zeroed stats for every tracked skill; the report prints an explicit "no transcript directory found" note instead of crashing or printing nothing.
+- A tracked skill with zero invocations prints `never invoked`, not a blank or missing row.
 
-## Out of scope / explicitly deferred
+## Terminology
 
-- OpenTelemetry export, collectors, or any multi-machine aggregation.
-- Automated missed-trigger detection (LLM-judge or heuristic scoring) — the digest is manual-review only for now.
-- Automatic archiving action (moving/deleting skill directories) — the report only flags candidates.
-- Adding this script to `scripts/check.sh` — it's an on-demand report, not a correctness gate, so it stays outside the mandatory pre-commit/CI path described in `AGENTS.md`.
+Report output uses neutral language only: `total`, `last invoked` / `never invoked`, `sessions`, `projects`. Nothing in this tool is labeled an "archive candidate" — usage volume is one input to a maintenance decision, not a verdict.
 
-## Verification approach
+## Verification
 
-No dedicated unit-test suite, consistent with the existing `scripts/check-*.py` scripts in this repo, which verify themselves against real repo/transcript state rather than fixtures. Verification before considering this done:
+`scripts/test-skill-usage-report.py` — a stdlib-only, fixture-based script (no third-party test framework, consistent with the rest of `scripts/`) covering: tracked-skill discovery, matching invocation parsing, ignoring untracked skill names, malformed-JSON tolerance, duplicate invocations across separate transcript records counting separately, unused skills reporting zero, most-recent-timestamp selection among several, a missing transcript root, and full CLI output against a temporary fixture. Run with `python3 scripts/test-skill-usage-report.py`; wired into `scripts/check.sh` since it only touches synthetic fixtures (no dependency on real machine state), so it's cheap and safe to run on every check.
 
-1. Run against real transcript history on this machine; manually cross-check a couple of the reported per-skill counts against `grep -c '"name":"Skill"' <file>` plus a `skill` field match, to confirm the parsing logic agrees with ground truth.
-2. Run twice in a row; confirm the second run's report is identical to the first (ingest is idempotent, no double-counting).
-3. Confirm behavior on a machine/directory state with zero prior transcripts (clean `~/.claude/skill-usage/`) produces the "no data" path cleanly rather than erroring.
+Additionally verified directly against this machine's real transcript history (see "Why stateless is sufficient" above) and confirmed idempotent — rerunning produces an identical report, since there is no state to drift.
+
+## Out of scope / deferred
+
+Deferred, not designed against, and not present as disabled scaffolding in the implementation — revisit only if real usage of this tool demonstrates a need:
+
+- **Persistence** (SQLite, any store) and **incremental scanning** (byte offsets, mtime-based skip) — no observed performance problem to justify either; see measurement above.
+- **Missed-trigger analysis**, automated or manual-digest — requires extracting and analyzing prompt text. This slice reads transcript files only to locate `Skill` tool invocations and never extracts, retains, or analyzes prompt content.
+- **`--json` output, `--skill` filter** — no current consumer; add if/when something needs to script against this.
+- **Archive-candidate classification or any archival action** — usage counts inform a human decision; this tool doesn't make one.
+- **Multi-machine aggregation, OpenTelemetry/collectors** — single-machine local tool only.
