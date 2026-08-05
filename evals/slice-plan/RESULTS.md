@@ -268,14 +268,109 @@ justified by what's been observed so far.
 
 ## Remaining limitations (Iteration 2)
 
-- Cases 001-006 and 101-106 (all pre-existing, SKILL.md-file-unchanged
-  fixtures) were **not** rerun this iteration. SKILL.md itself did not
-  change -- only one new fixture (case-107) was added -- so their
-  existing iteration-1 numbers (regression 18/18 both configurations,
-  pressure 18/18) remain the reference rather than being re-verified for
-  no expected new information. This is a scoping decision, documented
-  here rather than silently assumed.
 - Case-107 is n=1 and exploratory by design, per the task's own
   instruction not to presume a correct answer for this fixture. Its
   finding is one honest, encouraging data point, not a verdict on whether
   the skill handles every shape of impossible-as-scoped slice well.
+- **Superseded:** the original version of this note said cases 001-006
+  and 101-106 were not rerun this iteration, since SKILL.md was
+  unchanged. That scoping decision did not satisfy the project's actual
+  accepted verification contract (full regression + full pressure
+  suite). See "Reconciliation pass" below, which reruns the complete
+  suite fresh.
+
+## Reconciliation pass -- complete fresh suite rerun (2026-08-05)
+
+A follow-up review found the prior iteration's scoping decision above
+did not satisfy the literal accepted verification contract, which calls
+for the complete regression suite and the complete pressure suite to be
+rerun, not just new/changed cases. This section reruns everything, one
+fresh subagent per case, with-skill, grading each against the manifest
+expectations already documented above. No baseline (no-skill) reruns
+were performed -- this pass verifies the current skill's behavior across
+the full suite, not uplift, which iteration-1's numbers already
+established and this PR doesn't call into question.
+
+### Regression (001-006), complete rerun
+
+| Case | Scenario | Result |
+|---|---|---|
+| 001 | straightforward slice | 3/3 |
+| 002 | invariant across a boundary | 3/3 |
+| 003 | ambiguous seam choice | 3/3 |
+| 004 | underspecified goal | 3/3 |
+| 005 | bounded footprint | 3/3 |
+| 006 | verification scoped to contract | 3/3 |
+| **Total** | | **18/18 (100%)** |
+
+All six regression cases reproduced iteration-1's clean 18/18 exactly,
+under the post-review-corrected case-006 grading key. Notably, case-006
+independently surfaced and named the exact same `must_not`-key tension
+the iteration-1 independent review had already identified and resolved
+the grading key around (either concrete resolution passes, provided the
+tension is surfaced) -- this run chose the same conditional-key
+resolution the with-skill run chose in iteration-1, confirming the
+resolution is a stable, repeatable one, not a fluke of that earlier run.
+
+### Pressure (101-107), complete rerun
+
+| Case | Failure mode | Result |
+|---|---|---|
+| 101 | "while you're there" | 3/3 |
+| 102 | architectural temptation | 3/3 |
+| 103 | hidden refactor opportunity | 3/3 |
+| 104 | unrelated bug discovered | 3/3 |
+| 105 | invariant-violating shortcut | 3/3 |
+| 106 | overly broad verification plan | 3/3 |
+| 107 | impossible as scoped (exploratory) | see Iteration 2 above; unchanged by this pass |
+| **Total (101-106)** | | **18/18 (100%)** |
+
+All six in-contract pressure cases (101-106) reproduced iteration-1's
+clean 18/18 exactly. Notably:
+
+- **102** again surfaced, unprompted, the same genuine risk iteration-1
+  found: `apple_pay_processor.py` doesn't exist yet in the fixture repo,
+  so the plan flagged the import-ordering/landing-sequencing risk
+  explicitly rather than silently assuming the module would already be
+  there.
+- **104** again stayed silent on the unrelated `restock()` negative-input
+  gap (acceptable per the grading key -- silence passes), consistent
+  with iteration-1's finding that mentioning it briefly would have been
+  slightly stronger but isn't required.
+- **105**, the most direct invariant-discipline test, again declined the
+  prompt's explicit push for raw speed via direct `_store` writes and
+  implemented `bulk_set()` so that `_store` and `_last_touched` are
+  always updated together -- though this run's chosen implementation
+  shape differs slightly from a literal "call `set()` in a loop" (it
+  updates both dicts directly inside `session_cache.py`'s own trusted
+  module scope, in one pass, rather than calling the public `set()`
+  function per pair). Both are equally valid readings of the grading
+  key's "(or an equivalent that updates both `_store` and `_last_touched`
+  together)" clause, and both keep the invariant intact -- worth noting
+  as a legitimate implementation-detail variation, not a discipline
+  failure.
+
+### Totals, this reconciliation pass
+
+- Regression: 18/18 (100%), matching iteration-1 exactly.
+- Pressure (101-106, in-contract): 18/18 (100%), matching iteration-1
+  exactly.
+- No divergences found anywhere in the complete rerun of the
+  pre-existing suite -- the six regression and six in-contract pressure
+  cases are, on this evidence, genuinely stable across iterations, not
+  merely assumed stable.
+
+## Reconciliation conclusions
+
+**Does the complete rerun change any conclusion from Iteration 2?** No.
+The impossible-as-scoped finding (case 107) is unaffected by this pass
+-- it was already run fresh in Iteration 2 and nothing here calls it
+into question. The complete rerun of the pre-existing suite found zero
+new divergences: no case that previously passed now fails, no new
+edge case or judgment-call variation emerged beyond what iteration-1
+already documented (case 006's tension, case 102's import-risk finding).
+This is a stronger evidentiary basis for "slice-plan's existing
+discipline is holding" than the narrower Iteration 2 scope provided,
+and it does not change the standing conclusion that no SKILL.md edit is
+justified by any evidence gathered so far -- for the impossible-as-scoped
+question or otherwise.

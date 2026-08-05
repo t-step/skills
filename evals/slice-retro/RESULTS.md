@@ -369,3 +369,18 @@ the same shape, not acted on now.
 - Case 110 is intentionally unscored (exploratory) — see grading file.
   Treat its finding as a single, honest data point, not a verdict on
   SKILL.md's current sufficiency for Remaining uncertainty.
+
+## Reconciliation note (2026-08-05)
+
+A follow-up review of this branch's overall verification found that
+slice-review and slice-plan's RESULTS.md had each skipped rerunning
+their pre-existing, unaffected suites (reusing older numbers instead),
+which didn't satisfy the project's accepted verification contract (full
+regression + full pressure suite, not just new/changed cases) — see
+their own RESULTS.md for the reconciliation reruns that fixed this.
+**slice-retro did not have this problem**: Iteration 3 above already
+reran the complete suite fresh (all 6 regression cases, all 10 pressure
+cases, one fresh subagent per case), because SKILL.md itself changed
+this iteration and a full rerun was the correct scope from the start.
+Nothing further was rerun for this reconciliation; Iteration 3's numbers
+above stand as the complete, current verification for this skill.
