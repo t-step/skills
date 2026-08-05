@@ -323,19 +323,42 @@ def main() -> int:
     if not tracked_skills:
         print("skill-usage-report: no skills/*/SKILL.md found in this repo", file=sys.stderr)
         return 1
-    print("tracked skills:")
-    for name in sorted(tracked_skills):
-        print(f"  - {name}")
+
     conn = init_db(args.db_path)
     files_scanned, rows_inserted = ingest(conn, args.projects_root, tracked_skills)
-    print(f"scanned {files_scanned} transcript file(s), {rows_inserted} new invocation(s)")
 
     now = datetime.now(timezone.utc)
     volume = compute_volume_table(conn, tracked_skills, now)
     candidates = archive_candidates(volume, now, args.archive_window)
     conn.close()
 
+    digest = build_digest(args.projects_root, now, args.digest_days)
+
+    if args.skill:
+        volume = {args.skill: volume[args.skill]} if args.skill in volume else {}
+        digest = [e for e in digest if args.skill in e.skills_fired]
+
+    if args.json:
+        payload = {
+            "volume": [
+                {
+                    "skill_name": s.skill_name,
+                    "total": s.total,
+                    "recent_30d": s.recent_count,
+                    "last_used": s.last_used.isoformat() if s.last_used else None,
+                }
+                for s in volume.values()
+            ],
+            "archive_candidates": candidates,
+        }
+        print(json.dumps(payload, indent=2))
+        return 0
+
+    print(f"skill-usage-report: scanned {files_scanned} transcript file(s), {rows_inserted} new invocation(s)")
+
     print(f"\n{'skill':<28} {'total':>6} {'30d':>6}  last used")
+    if not volume:
+        print("  (no matching tracked skills)")
     for stats in volume.values():
         last = stats.last_used.date().isoformat() if stats.last_used else "never"
         print(f"{stats.skill_name:<28} {stats.total:>6} {stats.recent_count:>6}  {last}")
@@ -347,7 +370,6 @@ def main() -> int:
     else:
         print("  (none)")
 
-    digest = build_digest(args.projects_root, now, args.digest_days)
     print(f"\nrecent sessions (last {args.digest_days}d):")
     if not digest:
         print("  (none)")
