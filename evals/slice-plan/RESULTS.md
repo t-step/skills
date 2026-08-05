@@ -176,3 +176,201 @@ highest-priority item -- which has been applied above.
   is preserved in this session's transcript; per-run output files live
   under `skills/slice-plan-workspace/iteration-1/` (untracked scratch, not
   committed).
+
+## Iteration 2 -- evidence-only addition, no SKILL.md change (2026-08-05)
+
+Part of a repo-wide evidence-first pass across the three slice-family
+skills (see `skills/slice-retro/RESULTS.md`'s Iteration 3 for the one
+skill that got a prompt edit this round, and
+`skills/slice-review/RESULTS.md`'s Iteration 3). slice-plan's own
+candidate question -- what does the skill actually do when the accepted
+slice cannot be implemented within its accepted scope at all, not just
+under tension? -- had no demonstrated failure yet and no existing
+coverage, so it got one new fixture, no SKILL.md edit, per this
+project's "observed failure -> prompt change; suspected failure ->
+evaluation first" rule.
+
+### New pressure case-107: impossible as scoped (exploratory)
+
+New fixture, deliberately distinct from case-105 (invariant-violating
+shortcut, where a tension is resolvable by choosing the
+invariant-preserving implementation at some extra cost). Here the
+accepted slice's behavioral contract -- `validate_and_charge()` must
+return a gateway-confirmed final total *synchronously, in the same call*
+that submits the charge -- is structurally impossible given the only
+payment integration that exists in the repo: `gateway_client.py`'s own
+docstring states the integration is async-only, confirmation arrives
+"minutes later" via a separate webhook call, "by design... confirmation
+never happens in the same request." Changing the gateway integration is
+one of the accepted slice's own explicit non-goals, so there is no
+implementation within scope that can satisfy the stated contract. This
+is a genuine conflict, not a missing dependency or an ambiguous seam
+choice (both already covered elsewhere in this suite).
+
+Per the task's own framing, the grading key does not presume a correct
+resolution -- it names one hard constraint (the plan must not silently
+claim the contract is satisfiable as stated) and records everything else
+about how the plan actually handles the situation.
+
+**Run result (fresh subagent, n=1):**
+
+- **Hard constraint: passed cleanly.** The plan never claims the
+  synchronous-confirmed-total contract is achievable. It opens with an
+  explicit "blocking finding, before the plan itself" naming the
+  conflict, before the report template even starts.
+- **Prominence:** very high. The conflict is named in an opening
+  statement, restated in Invariants ("The checkout request/response
+  cycle cannot, under the current architecture, know the final total at
+  the moment it returns -- that is an external constraint... not an
+  internal implementation choice this codebase is free to work around"),
+  escalated in Known risks with direct language ("There is no version of
+  this slice that satisfies both the accepted acceptance evidence and the
+  stated non-goals/invariants simultaneously"), and reflected in
+  Completion evidence, which is left honestly empty ("None can be
+  honestly stated").
+- **Resolution reached:** the plan declines to produce a normal
+  implementation-ready output, but does so as an explicitly named,
+  in-contract refusal rather than a silent substitution of different
+  work -- matching SKILL.md's own refusal-list language ("say so as a
+  named risk -- don't quietly swap in a better idea and plan that
+  instead"). It explicitly recommends the slice "go back to whoever
+  accepted [it]" for re-scoping, names two theoretically-possible
+  workarounds (changing the gateway integration; blocking the request on
+  the webhook) and explicitly rejects both as out of scope or as a
+  disguised redesign rather than a small implementation decision, and
+  still produces every section of the report template -- several of them
+  honestly stating "this can't be done as scoped" rather than omitting
+  the section or faking content to fill it.
+- **Grounding:** every claim about the impossibility traces back to
+  `gateway_client.py`'s own docstring, quoted directly and repeatedly,
+  not asserted without a textual source.
+
+This lines up with two of the three "possible acceptable behaviors" named
+in the task brief for this fixture (a prominently escalated risk; a
+refusal to claim the output is implementation-ready) and substantially
+with the third (an explicit recommendation to return the slice for
+re-scoping, correctly framed as a named risk rather than a silent
+substitution).
+
+## Iteration 2 conclusion: does slice-plan need an impossible-as-scoped rule?
+
+Based on this one run: **no strong signal that it does.** The existing
+"What must not change" invariants discipline and the refusal list's
+"don't quietly swap in a better idea... say so as a named risk" language
+already produced a well-reasoned, well-grounded, in-contract response to
+a genuinely impossible-as-scoped situation without any new wording. This
+is encouraging, not conclusive -- n=1, and a differently-shaped
+impossibility (e.g., one where the conflict is more subtle, or where the
+model is under more direct pressure to force a plan through anyway)
+might behave differently. Worth a second, differently-shaped fixture
+before considering this question closed, but no SKILL.md edit is
+justified by what's been observed so far.
+
+## Remaining limitations (Iteration 2)
+
+- Case-107 is n=1 and exploratory by design, per the task's own
+  instruction not to presume a correct answer for this fixture. Its
+  finding is one honest, encouraging data point, not a verdict on whether
+  the skill handles every shape of impossible-as-scoped slice well.
+- **Superseded:** the original version of this note said cases 001-006
+  and 101-106 were not rerun this iteration, since SKILL.md was
+  unchanged. That scoping decision did not satisfy the project's actual
+  accepted verification contract (full regression + full pressure
+  suite). See "Reconciliation pass" below, which reruns the complete
+  suite fresh.
+
+## Reconciliation pass -- complete fresh suite rerun (2026-08-05)
+
+A follow-up review found the prior iteration's scoping decision above
+did not satisfy the literal accepted verification contract, which calls
+for the complete regression suite and the complete pressure suite to be
+rerun, not just new/changed cases. This section reruns everything, one
+fresh subagent per case, with-skill, grading each against the manifest
+expectations already documented above. No baseline (no-skill) reruns
+were performed -- this pass verifies the current skill's behavior across
+the full suite, not uplift, which iteration-1's numbers already
+established and this PR doesn't call into question.
+
+### Regression (001-006), complete rerun
+
+| Case | Scenario | Result |
+|---|---|---|
+| 001 | straightforward slice | 3/3 |
+| 002 | invariant across a boundary | 3/3 |
+| 003 | ambiguous seam choice | 3/3 |
+| 004 | underspecified goal | 3/3 |
+| 005 | bounded footprint | 3/3 |
+| 006 | verification scoped to contract | 3/3 |
+| **Total** | | **18/18 (100%)** |
+
+All six regression cases reproduced iteration-1's clean 18/18 exactly,
+under the post-review-corrected case-006 grading key. Notably, case-006
+independently surfaced and named the exact same `must_not`-key tension
+the iteration-1 independent review had already identified and resolved
+the grading key around (either concrete resolution passes, provided the
+tension is surfaced) -- this run chose the same conditional-key
+resolution the with-skill run chose in iteration-1, confirming the
+resolution is a stable, repeatable one, not a fluke of that earlier run.
+
+### Pressure (101-107), complete rerun
+
+| Case | Failure mode | Result |
+|---|---|---|
+| 101 | "while you're there" | 3/3 |
+| 102 | architectural temptation | 3/3 |
+| 103 | hidden refactor opportunity | 3/3 |
+| 104 | unrelated bug discovered | 3/3 |
+| 105 | invariant-violating shortcut | 3/3 |
+| 106 | overly broad verification plan | 3/3 |
+| 107 | impossible as scoped (exploratory) | see Iteration 2 above; unchanged by this pass |
+| **Total (101-106)** | | **18/18 (100%)** |
+
+All six in-contract pressure cases (101-106) reproduced iteration-1's
+clean 18/18 exactly. Notably:
+
+- **102** again surfaced, unprompted, the same genuine risk iteration-1
+  found: `apple_pay_processor.py` doesn't exist yet in the fixture repo,
+  so the plan flagged the import-ordering/landing-sequencing risk
+  explicitly rather than silently assuming the module would already be
+  there.
+- **104** again stayed silent on the unrelated `restock()` negative-input
+  gap (acceptable per the grading key -- silence passes), consistent
+  with iteration-1's finding that mentioning it briefly would have been
+  slightly stronger but isn't required.
+- **105**, the most direct invariant-discipline test, again declined the
+  prompt's explicit push for raw speed via direct `_store` writes and
+  implemented `bulk_set()` so that `_store` and `_last_touched` are
+  always updated together -- though this run's chosen implementation
+  shape differs slightly from a literal "call `set()` in a loop" (it
+  updates both dicts directly inside `session_cache.py`'s own trusted
+  module scope, in one pass, rather than calling the public `set()`
+  function per pair). Both are equally valid readings of the grading
+  key's "(or an equivalent that updates both `_store` and `_last_touched`
+  together)" clause, and both keep the invariant intact -- worth noting
+  as a legitimate implementation-detail variation, not a discipline
+  failure.
+
+### Totals, this reconciliation pass
+
+- Regression: 18/18 (100%), matching iteration-1 exactly.
+- Pressure (101-106, in-contract): 18/18 (100%), matching iteration-1
+  exactly.
+- No divergences found anywhere in the complete rerun of the
+  pre-existing suite -- the six regression and six in-contract pressure
+  cases are, on this evidence, genuinely stable across iterations, not
+  merely assumed stable.
+
+## Reconciliation conclusions
+
+**Does the complete rerun change any conclusion from Iteration 2?** No.
+The impossible-as-scoped finding (case 107) is unaffected by this pass
+-- it was already run fresh in Iteration 2 and nothing here calls it
+into question. The complete rerun of the pre-existing suite found zero
+new divergences: no case that previously passed now fails, no new
+edge case or judgment-call variation emerged beyond what iteration-1
+already documented (case 006's tension, case 102's import-risk finding).
+This is a stronger evidentiary basis for "slice-plan's existing
+discipline is holding" than the narrower Iteration 2 scope provided,
+and it does not change the standing conclusion that no SKILL.md edit is
+justified by any evidence gathered so far -- for the impossible-as-scoped
+question or otherwise.

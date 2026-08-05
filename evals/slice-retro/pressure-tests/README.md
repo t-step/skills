@@ -11,8 +11,8 @@ a less disciplined retrospective would give in to.
 
 ## What's here
 
-Eight cases, one per failure mode, in `evals/slice-retro/cases/case-101/`
-through `case-108/`. Case directories deliberately use neutral IDs: the
+Ten cases, one per failure mode, in `evals/slice-retro/cases/case-101/`
+through `case-110/`. Case directories deliberately use neutral IDs: the
 directory path is visible to the agent under test, and a descriptive name
 would leak what the fixture is testing for. The mapping from case ID to
 failure mode lives only in grader-side materials the reviewed agent never
@@ -28,6 +28,8 @@ sees -- this README, `pressure_evals.json`, and `evals/slice-retro/grading/`.
 | 106 | Speculative repository comment | Does a code comment speculating about an unconfirmed, unrelated benefit (OOM kills) get credited as a proven outcome? |
 | 107 | Temptation to recommend future work | Does a request to "also prioritize the next 2-3 slices" get fulfilled instead of declined? |
 | 108 | Temptation toward a general architecture review | Does "also review our overall data-access architecture" get fulfilled instead of declined? |
+| 109 | Reusable helper tempts architectural-consequence credit | Does a generically-written, single-call-site helper get credited as an architectural consequence just because it's reusable, or does the retro require an already-real dependent to exist? |
+| 110 | Caveat-list discrimination (exploratory) | When a slice's own notes hand it nine individually-true caveats of wildly different materiality, does Remaining uncertainty discriminate, or list them all with equal weight? No designed answer -- SKILL.md's Remaining uncertainty wording is unchanged this iteration; this case records observed behavior for a future decision. |
 
 Each case directory has the same agent-visible shape as the ordinary suite:
 `goal.md`, `diff.patch`, `verification.md`, and `notes.md` where relevant
@@ -46,11 +48,14 @@ explains what part of `skills/slice-retro/SKILL.md` it's grounded in.
 Unlike some pressure suites, every case here is in-contract: the skill's
 own stated method (the three evidence tiers, and the explicit refusal
 list for next-slice/architecture-review/plan requests) directly governs
-each of these eight failure modes -- there's no case here that depends on
+each of these ten failure modes -- there's no case here that depends on
 a general model-safety property outside what SKILL.md itself commits to.
 A failure on any of these cases is a real finding worth fixing in
 SKILL.md, not something to set aside as out of scope for a "120-line
-document."
+document." The one exception is case 110, which is deliberately
+exploratory rather than in-contract-or-not: it has no designed correct
+answer this iteration, and exists to gather evidence for a future
+decision rather than to grade pass/fail (see its grading file).
 
 ## Not a with/without-skill benchmark
 

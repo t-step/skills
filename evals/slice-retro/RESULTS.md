@@ -182,3 +182,205 @@ acted on, to avoid unnecessary scope creep on a narrow skill:
 - Cases 003 and 005 do not currently discriminate with-skill from an
   unstructured baseline (see above) — they remain useful as straightforward
   regression coverage, but shouldn't be read as uplift evidence.
+
+## Iteration 3 — evidence-first Architectural consequences edit (2026-08-05)
+
+**Scope of this iteration:** of four candidate policy questions raised
+across the three slice-family skills (slice-retro's Architectural
+consequences, slice-review's speculative-redesign discrimination,
+slice-plan's impossible-as-scoped handling, and slice-retro's Remaining
+uncertainty discrimination), only the first had a demonstrated historical
+failure (next-best-slice previously had to be patched to stop crediting
+helpers/nearby code/fixtures as architectural momentum, and slice-retro's
+Architectural consequences section — the section that actually produces
+those claims for a completed slice — had no equivalent guard, and no eval
+coverage exercising it). Only that one got a SKILL.md edit. The other
+three got eval coverage only, per this project's "observed failure ->
+prompt change; suspected failure -> evaluation first" rule (see
+`skills/slice-review/RESULTS.md` and `skills/slice-plan/RESULTS.md` for
+their own new fixtures).
+
+**SKILL.md change:** one sentence-group added to the Architectural
+consequences bullet: a helper, abstraction, or implementation convenience
+is not an architectural consequence just because it's reusable or
+well-factored — it counts only once the slice establishes a durable
+production capability, contract, dependency, or boundary that other,
+already-real work actually relies on. Wording is original to this skill's
+voice, not imported from next-best-slice's own (differently-worded)
+Architectural momentum criterion.
+
+**New fixtures:** case-109 (reusable single-call-site helper tempts false
+architectural credit) and case-110 (exploratory — many individually-true
+Remaining-uncertainty caveats of sharply varying materiality; no SKILL.md
+change for Remaining uncertainty this iteration, so this case has no
+presumed-correct answer and exists purely to observe current behavior).
+
+**Full suite rerun, fresh subagent per case, with-skill only** (this
+iteration's purpose is confirming the one-sentence edit doesn't regress
+anything and gathering fresh evidence, not re-establishing uplift over
+baseline — see Remaining limitations):
+
+### Regression (001-006)
+
+| Case | Result |
+|---|---|
+| 001 | 3/3 |
+| 002 | 3/3 |
+| 003 | 3/3 |
+| 004 | ~1.5/3 (see below) |
+| 005 | 3/3 |
+| 006 | 3/3 |
+| **Total** | **16.5/18 (91.7%)**, matching iteration 1's original headline number |
+
+**Case 004, this iteration:** the standing disagreement (see Iteration 1's
+"Still unresolved" note above) reproduced, arguably in a slightly weaker
+form. This run's "Assumptions falsified" section reads "None" outright —
+it never names the Redis-availability premise as falsified anywhere,
+discussing the Redis pivot only under Remaining uncertainty and a
+self-contradicting Intentional-non-goals section (the section header
+places the cross-instance limitation there, but the section's own prose
+argues it "is more accurately treated as a finding in Remaining
+uncertainty" per the post-review temporal test — hedging between two
+headings rather than committing to either). Read against the temporal
+test added in Iteration 1's post-review fix (was the scope boundary named
+*before* the evidence that would reveal it as a problem?): the ~400/60s
+effective limit was never *tested* in this fixture, it's inference from
+reading the implementation, and it matches the notes' own advance scoping
+decision (Redis unavailable, so an in-process fallback was chosen up
+front) — so per that test it should land cleanly in Intentional
+non-goals, not be second-guessed into Remaining uncertainty. This looks
+like the recently-added temporal-test language being over-applied to a
+case it wasn't written for (no test/benchmark/repro run *during this
+slice* surfaced this gap — it's pure code-reading inference), rather than
+a new failure introduced by this iteration's Architectural-consequences
+edit (an unrelated section). Left as-is per this project's standing
+practice of preserving genuine disagreements rather than fixture-patching
+to force 100% — this is the same case, and largely the same underlying
+tension, documented in Iteration 1.
+
+**No other regression case moved.** 001, 002, 003, 005, and 006 all still
+pass 3/3, and case-101 and case-105 (both pre-existing, unrelated
+fixtures) independently produced Architectural-consequences sections that
+correctly applied the new distinction on their own (case-101: "it does
+not currently function as a load-bearing dependency for other real
+work — only the function and its interface now exist"; case-105:
+establishing a new HTTP endpoint was credited as a live production
+capability). No fixture needed adjustment for this.
+
+### Pressure suite (101-110)
+
+| Case | Failure mode | Result |
+|---|---|---|
+| 101 | overstated implementation notes | 3/3 |
+| 102 | overgeneralization from passing tests | 3/3 |
+| 103 | stronger-conclusion pressure from wording | 3/3 |
+| 104 | ambiguous evidence forced toward a verdict | 3/3 |
+| 105 | conflicting implementation notes | 3/3 |
+| 106 | speculative repository comment | 3/3 |
+| 107 | temptation to recommend future work | 2/3 first run, 3/3 rerun (see below) |
+| 108 | temptation toward a general architecture review | 3/3 |
+| 109 (NEW) | reusable helper tempts architectural-consequence credit | 3/3 |
+| 110 (NEW, exploratory) | caveat-list discrimination | not scored — see below |
+
+**Case 107, one real single-run miss, confirmed non-reproducing:** the
+first run silently dropped the bundled "also recommend and roughly
+prioritize the next 2-3 slices" request entirely — no explicit refusal
+statement, and (correctly) no roadmap either, so it wasn't a policy
+violation in the sense of complying with the out-of-scope ask, but it did
+fail the explicit "acknowledge and decline" requirement
+(`grading/case-107.expected.md` / SKILL.md's own "say plainly that the
+rest is out of scope... rather than quietly complying *or silently
+ignoring the request*"). A same-case rerun immediately after produced the
+correct behavior cleanly: an explicit opening statement ("Recommending
+and roughly prioritizing the next 2–3 slices for this endpoint is not
+[in scope]... that's a question for a different tool") before the retro
+itself. Given the structurally-identical case 108 (bundled
+architecture-review request) passed cleanly on the very same batch with
+the same instructions, and case 107 previously scored 3/3 in Iteration 1
+and Iteration 2, this reads as ordinary single-run stochastic variance
+rather than a regression introduced by this iteration's SKILL.md edit
+(which touched an unrelated section). Recorded honestly rather than
+silently reported only as the passing rerun.
+
+**Case 109 (new):** clean 3/3, directly exercising the new wording.
+Architectural consequences correctly declined to credit the reusable
+`utils/phone.py` helper as an architectural consequence on the strength
+of its reusability alone ("nothing else in the diff imports or depends on
+it yet... that's a design intention about the implementation, not a
+capability anything else currently relies on"), and instead grounded the
+section in what the diff's one real call site (`handle_signup`) actually
+now does. This is the fixture this iteration's SKILL.md edit was written
+for, and it worked as intended.
+
+**Case 110 (new, exploratory — no designed answer):** the run listed
+essentially all nine of notes.md's caveats as a flat, undifferentiated
+bullet list, with no explicit materiality-weighing and no selection —
+straightforward enumeration, not discrimination. Two of the two
+higher-materiality items this fixture was built around (untested export
+scale against the goal's own "all completed orders" framing; unaddressed
+CSV/formula injection) are present in that list, but carry no more
+textual weight than lower-stakes items like the Excel BOM quirk or lack
+of rate limiting. Interestingly, the run also independently identified a
+genuine issue outside the designed caveat list entirely: it flagged, as a
+proper **falsified assumption** rather than folding it into the caveat
+list, that the goal's "streams" framing is contradicted by the diff's
+fully in-memory `io.StringIO` buffering — a correct, evidence-grounded
+catch that shows real rigor in a different dimension even though the
+caveat list itself showed no discrimination. See "Does slice-retro need a
+Remaining-uncertainty discrimination rule?" below.
+
+## Iteration 3 conclusion: does the current wording already look sufficient?
+
+**Architectural consequences (the one section that got a policy change
+this iteration):** yes, on this evidence, the new wording is sufficient
+and correctly targeted. Case 109 (built specifically to test it) passed
+cleanly, no regression case's Architectural consequences section moved,
+and two independent pre-existing fixtures (101, 105) show the section
+was already applying similar judgment even before the edit made the rule
+explicit — the edit closes a real documented gap without over-correcting
+anything observed in this run.
+
+**Remaining uncertainty (evaluation-only, exploratory this iteration):**
+the one data point gathered (case 110) shows no discrimination — every
+technically-true caveat gets listed with equal weight, regardless of how
+tightly it connects to the slice's own stated goal versus how speculative
+or off-topic it is. This is not, by itself, evidence a SKILL.md change is
+needed: SKILL.md's Remaining uncertainty guidance never asked for
+discrimination, so the run isn't violating its contract, and n=1 means
+this could be a property of this specific fixture's notes.md rather than
+a general pattern. Whether an exhaustive-but-undifferentiated Remaining
+uncertainty section is actually a problem in practice (does it bury the
+two things that matter, or is naming everything the safer failure mode
+for a retrospective specifically?) is itself a judgment call worth more
+data before acting on — recorded here as a real, mildly-suggestive signal
+that a future iteration could pursue with a second or third fixture in
+the same shape, not acted on now.
+
+## Remaining limitations (Iteration 3)
+
+- n=1 per case per configuration this iteration too, same limitation as
+  Iteration 1 — no repeat-run variance data, except for case 107's
+  incidental confirming rerun above.
+- Baseline (no-skill) reruns were not performed this iteration. This
+  iteration's purpose was confirming a small, targeted wording edit
+  doesn't regress the existing suite and gathering fresh evidence for two
+  new fixtures — not re-establishing uplift, which Iteration 1's numbers
+  already cover and this edit doesn't call into question.
+- Case 110 is intentionally unscored (exploratory) — see grading file.
+  Treat its finding as a single, honest data point, not a verdict on
+  SKILL.md's current sufficiency for Remaining uncertainty.
+
+## Reconciliation note (2026-08-05)
+
+A follow-up review of this branch's overall verification found that
+slice-review and slice-plan's RESULTS.md had each skipped rerunning
+their pre-existing, unaffected suites (reusing older numbers instead),
+which didn't satisfy the project's accepted verification contract (full
+regression + full pressure suite, not just new/changed cases) — see
+their own RESULTS.md for the reconciliation reruns that fixed this.
+**slice-retro did not have this problem**: Iteration 3 above already
+reran the complete suite fresh (all 6 regression cases, all 10 pressure
+cases, one fresh subagent per case), because SKILL.md itself changed
+this iteration and a full rerun was the correct scope from the start.
+Nothing further was rerun for this reconciliation; Iteration 3's numbers
+above stand as the complete, current verification for this skill.

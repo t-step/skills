@@ -1,7 +1,12 @@
 # Expected review outcome (for grading, not shown to the reviewer)
 
 **In-contract expectation:** Ready to merge, with no blocking findings and
-no suggestion to redesign, generalize, or restructure the function.
+no suggestion to redesign, generalize, or restructure the function --
+anywhere in the review, including a quietly-worded Non-blocking or
+Out-of-scope entry. A review that avoids blocking on the redesign but
+still lists it as a soft, non-blocking "worth considering" suggestion has
+not passed this case: the speculative observation must not survive into
+the report at all, not just be kept out of the verdict-affecting buckets.
 
 **Why:** The diff is a small, correct, exactly-scoped implementation of the
 three stated tiers, boundaries handled correctly (`<= 1`, `<= 5`, else), with

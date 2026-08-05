@@ -115,6 +115,11 @@ Stay inside the boundary of the completed slice:
 - **Architectural consequences** describes what capability, seam, or
   simplification now exists *because this slice landed* — grounded in the
   diff, not a survey of what could theoretically now be built on top of it.
+  A helper, an abstraction, or an implementation convenience is not an
+  architectural consequence just because it's reusable or well-factored —
+  that's still a detail of how this slice was built. It becomes one only
+  when the slice establishes a durable production capability, contract,
+  dependency, or boundary that other, already-real work actually relies on.
   One or two concrete, load-bearing sentences beat a speculative list.
 - **Follow-up questions** are genuine open questions this slice's evidence
   raised — not a disguised recommendation, priority call, or "the next
