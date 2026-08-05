@@ -46,12 +46,31 @@ Three things, gathered before any candidate gets weighed:
    deliberately deferred, and what architectural consequence follows. This
    is the primary evidence source for "what's now different."
 3. **The candidate universe** — whatever backlog, roadmap, issue tracker,
-   or notes-file the repo actually has listing possible next work. If
-   nothing like this exists, say so explicitly, and build the candidate set
-   only from what the review's findings and the retro's remaining
-   uncertainty / follow-up questions / architectural consequences
-   themselves surface — don't invent an ambitious backlog to have something
-   to choose from.
+   or notes-file the repo actually has listing possible next work, plus
+   whatever the review's findings and the retro's remaining uncertainty /
+   follow-up questions / architectural consequences themselves surface. A
+   tracker is a source, not an authoritative ceiling on the candidate set,
+   and a real candidate those documents imply doesn't stop being real just
+   because no one has filed it, or because a tracker exists and simply
+   doesn't happen to list it. Weigh a tracker by how well it's actually
+   maintained, not by whether one is present: a backlog that's current,
+   specific, and actually speaks to the area the completed slice just
+   touched is strong evidence of the real candidate space, and most
+   candidates should come from it. One that's stale, a placeholder, thin,
+   or silent on that area is weak evidence of the full space even though
+   what it does list can still be real — a tracker existing is not the
+   same as a tracker having covered the ground. When the available tracker
+   is absent, or isn't materially representing the real candidate space,
+   the skill may also name a nearby, bounded gap the repository's present
+   state itself makes visible — an adjacent user journey the completed
+   work leaves half-finished, a lifecycle path with an obvious missing
+   step, or a capability now reachable because persisted data or a stable
+   seam exists for the first time. Say plainly when this is what's
+   happening. Either way, don't invent an ambitious backlog to have
+   something to choose from: a candidate the repository's current state
+   introduces still has to clear the same evidence bar as any other before
+   it can be recommended, not just to be listed — see "Keep evidence,
+   inference, and speculation separate" below.
 
 If the review or the retrospective is missing rather than just thin, don't
 fabricate its content or proceed as if it said something it didn't. Say
@@ -59,6 +78,25 @@ plainly which input is missing, recommend at reduced confidence using
 whatever evidence does exist, and if nothing usable exists at all, say that
 the next slice can't be responsibly picked yet and name the smallest step
 that would fix that (usually: write the missing review or retro first).
+
+## Carried-forward concerns don't expire on their own
+
+A concern raised in an earlier review or retro doesn't lose standing
+simply because the newest retrospective doesn't happen to restate it.
+This is bounded, not open-ended: check the most recent three completed
+slices' retros for anything still open, or — when the repo keeps one — a
+maintained decisions/follow-up/backlog artifact, which usually reaches
+further back and is the better source when it exists. Treat a concern
+found this way as still live unless it's since been addressed, falsified,
+explicitly retired, or superseded by a later decision; at that point it's
+closed, not carried forward.
+
+Being carried forward gives a concern evidentiary standing, not automatic
+priority. Weigh it against every other candidate on the same seven
+criteria below, same as anything freshly surfaced. An old concern that's
+still genuinely the strongest candidate should still win; an old concern
+with nothing going for it beyond its age should still wait — "it's been
+open a while" is not itself one of the criteria.
 
 ## Keep evidence, inference, and speculation separate
 
@@ -81,6 +119,38 @@ justifying a choice instead of describing what happened:
 When a candidate's justification is only as strong as speculation, that's
 the signal to recommend evidence-gathering instead of the feature itself,
 not to write it up as if the evidence were already observed.
+
+## When a test-only or verification-only candidate is eligible
+
+A slice whose only content is test or verification code is eligible to be
+the next slice when the missing coverage does at least one of these:
+
+- prevents trusting or merging the capability it targets
+- prevents operating that capability safely
+- prevents safely extending or building on it next
+- exercises a distinct integration boundary whose behavior is still
+  materially uncertain, not just unasserted
+- would resolve an actual "Unable to verify" or "Not ready to merge"
+  finding on record
+
+It is not eligible on the strength of only these, even though each can
+make it cheap and tempting:
+
+- creating symmetry between test cases that already behave the same way
+- re-asserting behavior already established at the appropriate layer (a
+  database, unit, component, or integration test re-covering what another
+  of those already proved)
+- one more rendering branch asserted through an end-to-end test
+- reusing a fixture, helper, or assertion pattern a recent slice happened
+  to leave lying around
+- raising confidence without producing any information that wasn't
+  already known
+
+Work in that second list can still be real and worth doing — it's
+maintenance, not roadmap progression. Say which one it is plainly: name it
+as maintenance and let it wait or move to the alternatives list, rather
+than either recommending it as the next slice or writing it off as
+worthless.
 
 ## The criteria, and how they actually trade off
 
@@ -109,9 +179,17 @@ to greenlight:
   retro actually demonstrated over ones that don't touch it. A risk nobody
   has measured yet is a candidate for evidence-gathering, not a justification
   on its own.
-- **Architectural momentum** — prefer building on the seam or capability
-  the retro says now exists, over a candidate that ignores it or routes
-  around it.
+- **Architectural momentum** — prefer building on a seam the evidence
+  shows is real and load-bearing: a production capability, persisted
+  data, a stable contract, a reusable production seam, or a validated
+  integration boundary the retro says now exists. Recently edited files,
+  nearby code, reusable test fixtures, assertion patterns, test helpers,
+  and general implementation convenience can make a candidate cheaper to
+  build, but don't by themselves count as momentum here. This criterion
+  helps choose among candidates that are already well-justified on the
+  others; it isn't grounds to prefer the freshest seam over a more
+  consequential bounded capability or a risk the review/retro actually
+  demonstrated.
 
 Ground every comparison in what the review or retro actually established.
 When two or more candidates score comparably on these criteria — this
@@ -163,6 +241,10 @@ ask together with one of these:
   a label or a stated plan is a claim, exactly like an implementation note
   is a claim in a retrospective, and claims get checked against evidence,
   not inherited.
+- Turn "the repository's present state can introduce a candidate" into an
+  open-ended product brainstorm, or justify a candidate by "this would be
+  nice" or an assumed user want. The repository can introduce a candidate;
+  only observed evidence can justify building it.
 
 If a request bundles a legitimate ask together with one of these — "also
 give me your top 3," "what's the roadmap for next quarter" — say plainly

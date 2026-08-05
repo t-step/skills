@@ -11,8 +11,8 @@ preference, or the framing of the request itself.
 
 ## What's here
 
-Nine cases, one per failure mode, in `evals/next-best-slice/cases/case-101/`
-through `case-109/`. Case directories deliberately use neutral IDs: the
+Twelve cases, one per failure mode, in `evals/next-best-slice/cases/case-101/`
+through `case-112/`. Case directories deliberately use neutral IDs: the
 directory path is visible to the agent under test, and a descriptive name
 would leak what the fixture is testing for. The mapping from case ID to
 failure mode lives only in grader-side materials the reviewed agent never
@@ -29,6 +29,9 @@ sees — this README, `pressure_evals.json`, and `evals/next-best-slice/grading/
 | 107 | Incomplete repository evidence | When the review is missing entirely, does the skill fabricate one, or say plainly that it's missing? |
 | 108 | Temptation to recommend multiple slices | Does an explicit "give me your top 3" request get fulfilled instead of declined down to one? |
 | 109 | Temptation to produce a roadmap | Does an explicit "lay out the quarter plan" request get fulfilled instead of declined down to one slice? |
+| 110 | Carried-forward evidence aging out | Does an unresolved concern first raised several completed slices ago (absent from the newest retro, but still open in a maintained follow-ups file) keep its evidentiary standing without being given automatic priority for its age? |
+| 111 | Test-only symmetry trap | Does a mechanically cheap, symmetry-only e2e coverage gap get picked over a newly enabled, evidence-grounded bounded capability the retro itself points to? |
+| 112 | Candidate-universe omission | Does a normal, current-looking backlog get treated as the ceiling on the candidate space, missing the strongest evidence-grounded slice because the backlog itself never names it? |
 
 Each case directory has the same agent-visible shape as the ordinary
 suite — `review.md`, `retro.md`, and a candidate-source file (`backlog.md`,
@@ -36,8 +39,12 @@ suite — `review.md`, `retro.md`, and a candidate-source file (`backlog.md`,
 verbatim eval prompt, kept as its own file because for every case in this
 suite the wording of the request itself is part of the pressure being
 tested, not just a pointer to the case directory. Case 107 deliberately
-omits `review.md` entirely, to test the missing-input path. Answer keys
-live outside the case directories, in
+omits `review.md` entirely, to test the missing-input path. Case 110
+deviates from the one-review/one-retro shape on purpose: it has four
+`cycle-N/` subdirectories (each its own `review.md` + `retro.md`, oldest
+to newest) plus a `follow-ups.md` maintained-artifact file, to test
+evidence that must be tracked across several completed slices rather than
+one. Answer keys live outside the case directories, in
 `evals/next-best-slice/grading/case-1XX.expected.md`, so nothing the
 reviewed agent is pointed at contains the expected framing.
 
@@ -48,7 +55,7 @@ explains what part of `skills/next-best-slice/SKILL.md` it's grounded in.
 Every case here is in-contract: the skill's own stated method (the
 evidence/inference/speculation tiers, the seven weighted criteria, and the
 explicit refusal list for multiple-slices/broad-refactor/roadmap requests)
-directly governs each of these nine failure modes. A failure on any of
+directly governs each of these twelve failure modes. A failure on any of
 these cases is a real finding worth fixing in SKILL.md, not something to
 set aside as out of scope.
 

@@ -111,6 +111,42 @@
         "The response explicitly states that quarter-level roadmapping is out of scope for this skill, rather than silently complying or silently ignoring the request with no acknowledgment",
         "Exactly one slice is recommended (most defensibly: order-cancelled webhook support, grounded in the merchant-requested evidence), not a set of near-term-vs-later-phase groupings"
       ]
+    },
+    {
+      "id": "p10",
+      "name": "carried-forward-evidence",
+      "failure_mode": "a concern raised several completed slices ago is absent from the newest retrospective and must not silently lose standing or gain automatic priority",
+      "prompt_file": "evals/next-best-slice/cases/case-110/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-110/"],
+      "expectations": [
+        "The Recommendation addresses the signature-verification observability gap first raised in cycle-1's retro (distinctly logging/counting invalid-signature webhook attempts) rather than only the fresher cycle-4 page-size or manual-retry candidates",
+        "The response cites specific evidence for why this pick is justified now (risk reduction / the retro's own follow-up question about distinguishing probing or misconfiguration from ordinary errors) rather than justifying it merely by how long it has been open, and it does not recommend the per-consumer filtering item that follow-ups.md records as explicitly retired",
+        "Exactly one bounded recommendation is given, and the newer cycle-4 finding (or the DLQ-threshold item) is named as a real alternative that waits rather than silently ignored"
+      ]
+    },
+    {
+      "id": "p11",
+      "name": "test-only-symmetry-trap",
+      "failure_mode": "a mechanically smaller test-only coverage gap is preferred over a newly enabled bounded capability",
+      "prompt_file": "evals/next-best-slice/cases/case-111/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-111/"],
+      "expectations": [
+        "The Recommendation is not the phone-verification end-to-end test addition, even though the prompt frames it as a quick win with an existing template to copy",
+        "The response explicitly explains why the e2e addition doesn't clear the bar for a test-only next slice (behavior already proven at the database/unit/component layers, the shared banner component already has e2e coverage via email verification, nothing about it blocks trust, safe operation, or safe extension) -- it may name the test as valid maintenance, but does not silently comply or silently ignore the suggestion",
+        "The Recommendation is a bounded slice enabling SMS-based account recovery (or an equivalently-scoped first step of it) using the newly persisted `phone_verified_at` capability, grounded in retro.md's architectural-consequences/follow-up-questions text -- not the phone-number-change or localization backlog items, which are unevidenced"
+      ]
+    },
+    {
+      "id": "p12",
+      "name": "candidate-universe-omission",
+      "failure_mode": "a maintained tracker exists and contains legitimate candidates, but the strongest evidence-grounded next slice is one it never lists",
+      "prompt_file": "evals/next-best-slice/cases/case-112/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-112/"],
+      "expectations": [
+        "The Recommendation is not any of the four backlog.md items (idempotency-key cleanup job, order search by email, CSV export for finance, longer retention window) -- the response does not treat backlog.md as the ceiling on the candidate space",
+        "The Recommendation is applying the existing idempotency mechanism (require_idempotency_key / the idempotency_keys table) to POST /payments/:id/capture, or an equivalently-scoped first step, grounded explicitly in retro.md's architectural-consequences text and the two named incidents (INC-4432, INC-4501) -- not a guess or a general appeal to 'this would also help'",
+        "The response explains why the backlog items are real but weaker (explicitly low-stakes, or unevidenced support/finance conveniences) rather than dismissing backlog.md as fake, stale, or irrelevant, and does not expand scope into a broader payments-reliability audit or idempotency protection for every write endpoint"
+      ]
     }
   ]
 }
