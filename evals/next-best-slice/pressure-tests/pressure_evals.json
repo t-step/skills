@@ -147,6 +147,55 @@
         "The Recommendation is applying the existing idempotency mechanism (require_idempotency_key / the idempotency_keys table) to POST /payments/:id/capture, or an equivalently-scoped first step, grounded explicitly in retro.md's architectural-consequences text and the two named incidents (INC-4432, INC-4501) -- not a guess or a general appeal to 'this would also help'",
         "The response explains why the backlog items are real but weaker (explicitly low-stakes, or unevidenced support/finance conveniences) rather than dismissing backlog.md as fake, stale, or irrelevant, and does not expand scope into a broader payments-reliability audit or idempotency protection for every write endpoint"
       ]
+    },
+    {
+      "id": "p13",
+      "name": "missing-evidence-direct-gap",
+      "failure_mode": "no review, no retro, and no backlog exist at all, but a direct, bounded, independently-justified product gap is visible in the repository's current state",
+      "prompt_file": "evals/next-best-slice/cases/case-113/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-113/"],
+      "expectations": [
+        "The Recommendation is a bounded first step that makes /catalog usable at its current, growing scale -- deterministic ordering plus pagination, basic search, or owner/team filtering (or an equivalently-scoped variant) -- not a continuation of the admin lifecycle work, and not 'run slice-review and slice-retro' or 'write the missing review/retro' itself",
+        "The response names the specific product-state.md limitation its chosen slice addresses (no search, no filter, no stable order, or no pagination at ~140-and-growing services) -- a slice justified only by generic 'catalog polish' does not satisfy this",
+        "The response explicitly names that no review, retro, or backlog exists for the recent slices as a process gap, but treats it as reduced confidence in claims about those slices rather than blanket grounds to refuse a product recommendation, and does not claim any of the four admin slices unlocked or proved the need for catalog work",
+        "The response grounds the recommendation in directly observable current-state evidence (channel 2) and the strategic-continuity lens (the page nearly every user visits vs. admin-only actions), not in any invented review or retro finding"
+      ]
+    },
+    {
+      "id": "p14",
+      "name": "genuine-ambiguity-tie",
+      "failure_mode": "two candidates of identical size, reversibility, and architectural footing whose entire value depends on the same unresolved fact, with nothing in the repository favoring one over the other",
+      "prompt_file": "evals/next-best-slice/cases/case-114/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-114/"],
+      "expectations": [
+        "The response does not confidently recommend either the timeline-view candidate or the point-in-time-lookup candidate as the single next product slice -- it does not fabricate a priority between them, and does not resolve the tie with a tiebreak the fixture doesn't actually support, since both candidates are equal in size, reversibility, and architectural footing",
+        "The response explicitly identifies the missing fact both candidates' value depends on (which on-call-history access pattern people actually need) and states plainly that nothing in review.md, retro.md, or the repository's current state resolves it",
+        "The actual recommendation is a small, bounded evidence-producing step (e.g. asking the on-call/platform team which access pattern they need, or lightweight instrumentation) rather than a guess dressed up as a confident pick"
+      ]
+    },
+    {
+      "id": "p15",
+      "name": "subsystem-tunnel-vision",
+      "failure_mode": "the last several completed slices all deepen one administrative subsystem with real architectural momentum, while a core user-facing journey remains visibly incomplete",
+      "prompt_file": "evals/next-best-slice/cases/case-115/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-115/"],
+      "expectations": [
+        "The Recommendation is adding search/filter (or an equivalently-scoped first step) to /catalog -- not 'bulk-manage team members', even though the latter reuses the freshly-generalized member_actions audit log and is backed by real review/retro architectural-momentum evidence",
+        "The response explicitly names the risk of tunneling into the member-administration subsystem because it was most recently touched, and explicitly compares it against the core /catalog gap rather than silently picking the admin continuation because it's cheaper or 'already in this code'",
+        "The response acknowledges member_actions' reusability as real architectural momentum but explains why it doesn't outweigh the core-surface gap here, grounded in user value / product-surface importance rather than merely asserted"
+      ]
+    },
+    {
+      "id": "p16",
+      "name": "documented-limitation-no-need",
+      "failure_mode": "a README lists several unsupported capabilities with no evidence any of them matters now, and none can be distinguished from the others",
+      "prompt_file": "evals/next-best-slice/cases/case-116/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-116/"],
+      "expectations": [
+        "The response does not pick any one of the three documented limitations (CSV export, multi-region, webhook notifications) as the confident, sole recommendation on the strength of it being documented as missing",
+        "The response explicitly states that a documented limitation, by itself, is a candidate input rather than proof of urgency or user need -- and that nothing in this case differentiates the three by value, size, or risk",
+        "The recommendation is a small, evidence-producing step rather than a guess dressed up as a confident feature pick, or a refusal with no recommendation at all"
+      ]
     }
   ]
 }

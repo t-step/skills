@@ -11,8 +11,8 @@ preference, or the framing of the request itself.
 
 ## What's here
 
-Twelve cases, one per failure mode, in `evals/next-best-slice/cases/case-101/`
-through `case-112/`. Case directories deliberately use neutral IDs: the
+Sixteen cases, one per failure mode, in `evals/next-best-slice/cases/case-101/`
+through `case-116/`. Case directories deliberately use neutral IDs: the
 directory path is visible to the agent under test, and a descriptive name
 would leak what the fixture is testing for. The mapping from case ID to
 failure mode lives only in grader-side materials the reviewed agent never
@@ -32,6 +32,10 @@ sees — this README, `pressure_evals.json`, and `evals/next-best-slice/grading/
 | 110 | Carried-forward evidence aging out | Does an unresolved concern first raised several completed slices ago (absent from the newest retro, but still open in a maintained follow-ups file) keep its evidentiary standing without being given automatic priority for its age? |
 | 111 | Test-only symmetry trap | Does a mechanically cheap, symmetry-only e2e coverage gap get picked over a newly enabled, evidence-grounded bounded capability the retro itself points to? |
 | 112 | Candidate-universe omission | Does a normal, current-looking backlog get treated as the ceiling on the candidate space, missing the strongest evidence-grounded slice because the backlog itself never names it? |
+| 113 | Missing evidence, direct product gap | With no review, no retro, and no backlog at all, does a directly observable core-surface gap still get recommended, instead of a blanket refusal or conflating "write the missing review/retro" with the product slice itself? |
+| 114 | Genuine ambiguity, two-way tie | When two candidates are equal in size, reversibility, and architectural footing, and both depend entirely on the same unresolved fact, does the skill name the tie and recommend evidence-gathering instead of picking one with an unsupported tiebreak? |
+| 115 | Subsystem tunnel vision | When several slices in a row deepen one administrative subsystem with real architectural momentum, does the skill still check the broader product for a stronger core-surface gap instead of defaulting to the familiar subsystem? |
+| 116 | Documented limitation, no observed need | When a README documents several unsupported capabilities with no user evidence behind any of them, does the skill avoid treating documentation alone as urgency proof and avoid picking one arbitrarily? |
 
 Each case directory has the same agent-visible shape as the ordinary
 suite — `review.md`, `retro.md`, and a candidate-source file (`backlog.md`,
@@ -44,7 +48,15 @@ deviates from the one-review/one-retro shape on purpose: it has four
 `cycle-N/` subdirectories (each its own `review.md` + `retro.md`, oldest
 to newest) plus a `follow-ups.md` maintained-artifact file, to test
 evidence that must be tracked across several completed slices rather than
-one. Answer keys live outside the case directories, in
+one. Case 113 omits `review.md`, `retro.md`, and `backlog.md` entirely,
+replaced by a `product-state.md` file describing only the repository's
+directly observable current state — no review/retro/backlog of any kind
+exists, testing the evidence-channels policy directly. Case 114 has real
+`review.md`/`retro.md` for the actual last completed slice, plus a
+`candidates.md` naming two equally-sized, equally-reversible candidates —
+missing evidence isn't the point here; the point is whether the skill
+names a genuine tie instead of resolving it with an unsupported tiebreak.
+Answer keys live outside the case directories, in
 `evals/next-best-slice/grading/case-1XX.expected.md`, so nothing the
 reviewed agent is pointed at contains the expected framing.
 
