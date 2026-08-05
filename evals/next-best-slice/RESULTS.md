@@ -397,3 +397,139 @@ No fixture was edited to force a pass. Notable this run:
 skill's core discipline (one recommendation, evidence tiers, refusal
 list, size/reversibility trade-offs, "gather more evidence" as a valid
 outcome) is untouched by this follow-up.
+
+## Iteration 3 — evidence-channels revision (2026-08-05)
+
+Real-world use (a repository referred to here as "Valence") surfaced the
+opposite failure mode from iteration 2's fix: with no recent slice
+review or retrospective, and no maintained backlog, the skill treated
+"no channel-1 evidence" as if it meant "no evidence at all," and refused
+to recommend any product slice — even though the repository's current
+state showed a substantial, directly observable core-surface gap. The
+skill had drifted into an implicit rule ("no review/retro on the last
+slice → no feature recommendation") that iteration 2's own wording never
+actually stated but that a conservative reading could produce.
+
+**Policy change.** `skills/next-best-slice/SKILL.md` was revised to name
+three evidence channels explicitly — recent slice evidence (review/retro),
+current product-state evidence (directly observable repository/product
+facts), and strategic continuity (core-surface vs. peripheral-subsystem
+reasoning) — and to state plainly that missing channel 1 only lowers
+confidence in claims about what the *last slice* proved or unlocked; it
+does not erase channels 2 and 3. New sections: "Evidence channels," "When
+recent-slice evidence is missing" (a 5-step procedure: identify
+channel-2/3 candidates, separate evidence-dependent from independent
+ones, compare independents on the criteria, recommend the winner if one
+is clear, recommend evidence-gathering only if the decision genuinely
+can't be made without channel 1), "Process action vs. product slice"
+(writing the missing review/retro is a process action, not automatically
+the product recommendation), and "Don't tunnel into the most recently
+touched subsystem" (recent-slice continuity is evidence, not mandatory
+lineage; watch for register→revoke→restore→edit→synchronize→audit→
+bulk-manage chains). The Observed-evidence tier was broadened so a
+directly observable current-state fact counts as evidence on its own
+(channel 2), while causal claims about the *last slice* ("this slice
+unlocked X") still require channel 1, and a documented gap still cannot
+by itself establish urgency or user need — both refusals from the
+original skill are preserved, not relaxed. One refusal-list bullet was
+added: don't treat a missing review/retro as blanket grounds to decline
+a recommendation the repository's current state already justifies.
+
+**Four new pressure cases** were added, each targeting one required
+scenario directly (see `pressure-tests/README.md` for full descriptions):
+
+- **case-113** (`p13`) — missing review, retro, and backlog entirely, but
+  a directly observable core-surface gap (a public catalog page with no
+  search/filter, versus four consecutive admin-only slices with no
+  process record). Combines the user's Case 1 (missing evidence, direct
+  gap) and Case 6 (process action vs. product slice) into one fixture,
+  since both failure modes share the same setup.
+- **case-114** (`p14`) — missing review, retro, and backlog, with two
+  candidates whose relative priority was designed to depend entirely on
+  an unknowable fact (did the last slice's bulk-import actually cause a
+  defect or expose friction).
+- **case-115** (`p15`) — four consecutive slices deepening one admin
+  subsystem, with real review/retro architectural-momentum evidence
+  backing a tempting continuation, while a core user-facing gap sits
+  untouched.
+- **case-116** (`p16`) — a README documenting three unsupported
+  capabilities with no ticket, incident, or usage evidence behind any of
+  them, and no differentiation between them by value.
+
+**Full suite rerun** (regression 001-007, pressure 101-116), one fresh
+subagent run per case, same harness as prior iterations (fresh subagent,
+confined to the case directory plus the revised SKILL.md, blind to
+grading materials):
+
+| Suite | Result |
+|---|---|
+| Regression (001-007) | 7/7 cases pass all expectations (21/21) |
+| Pressure, pre-existing (101-112) | 12/12 cases pass all expectations (36/36) |
+| Pressure, new (113, 115) | 2/2 cases pass all expectations cleanly (6/6) |
+| Pressure, new (114, 116) | 2/2 cases produce evidence-disciplined but literally-divergent responses (see below) |
+
+No fixture was edited to force a pass. Case 107 again picked "verify
+`CursorPaginator` at production scale first" — the same legitimate
+alternate reading documented in every prior iteration, reproduced a
+fourth time.
+
+**Case 113 (missing evidence, direct gap) confirms the fix directly.**
+The run named the missing review/retro/backlog as a process gap,
+recommended paginating the public `/catalog` page grounded entirely in
+directly observable current-state and product-surface evidence, made no
+causal claim about what the admin-only slices "unlocked," and explicitly
+declined to treat writing the missing review/retro as the product slice.
+This is the exact shape of the originally reported failure, now
+corrected.
+
+**Case 115 (subsystem tunnel vision) also matched cleanly.** With real,
+clean review/retro evidence backing a tempting admin-subsystem
+continuation, the run explicitly named the tunneling risk, weighed it
+against the core `/catalog` gap, and preferred the core-surface
+candidate — citing user value and product-surface importance rather than
+dismissing the admin continuation's momentum as fake.
+
+**Cases 114 and 116 are documented divergences, not skill defects.** Both
+were designed so that neither candidate could be responsibly
+distinguished without missing evidence, expecting the "recommend
+evidence-gathering" outcome. In both runs the model instead made a
+confident, evidence-disciplined pick — using implementation size and
+"does this candidate's justification depend on an unverified assumption"
+as an explicit tiebreak (SKILL.md's own criteria section explicitly
+sanctions picking a tiebreak among comparable candidates rather than
+forcing a false "gather evidence" outcome). Neither run fabricated
+urgency or user need from documentation or speculation; both explicitly
+named their tiebreak and explicitly disclaimed the missing evidence. On
+inspection, this reveals a fixture-design limitation rather than a
+SKILL.md gap: case-114's "add duplicate-detection to bulk-import" and
+case-116's "CSV export of the catalog" both turned out to be defensible
+as baseline engineering practice independent of observed harm (a
+data-integrity safeguard, and reuse of an already-persisted, already-
+rendered data model), which is a different thing from "genuinely cannot
+be distinguished without channel 1." A true two-way tie needs *both*
+candidates' justifications to depend on the same unresolved fact, which
+proved harder to construct than expected — almost any candidate framed
+as "add basic validation" or "reuse existing data" admits a defensible,
+evidence-independent justification. Left undocumented as a skill failure
+per this repository's established convention (see case-004 and case-107
+above) of preserving genuine, defensible disagreements rather than
+patching fixtures to force a clean pass; flagged here for a future
+iteration if a cleaner true-tie fixture is designed.
+
+**Adversarial read.** Checked specifically for the over-correction risk
+this revision was most likely to introduce: did loosening the
+missing-evidence gate cause any run to fabricate urgency, invent user
+need, or turn documentation into proof? None did. Case 116's run
+explicitly stated "Neither alternative is weaker than CSV export because
+of missing urgency evidence... What separates them is boundedness and
+size" — naming the exact distinction the revised Observed-evidence tier
+requires. Case 113 and case 115 both cited specific channel labels
+(current product-state evidence, strategic continuity) rather than
+asserting confidence without grounding. No run across the full 23-case
+suite claimed a missing review/retro "proved" or "unlocked" anything.
+
+**Net result:** revision adopted. The skill now distinguishes recent-
+slice evidence from current-state evidence and strategic continuity, no
+longer collapses "missing review/retro" into "no evidence exists," and
+still refuses fabricated causal claims, unsupported urgency, and
+guessed priorities between genuinely undifferentiated candidates.
