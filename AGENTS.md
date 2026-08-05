@@ -15,9 +15,11 @@ This repository uses projectmem for persistent memory and workflow rules.
 - Log while working:
   - bug or unexpected behavior → `log_issue` / `pjm log`
   - each fix attempt → `record_attempt` / `pjm attempt`
-  - confirmed fix → `record_fix` / `pjm fix`
+  - confirmed fix → `record_fix(summary, issue_id=...)` / `pjm fix` — always pass the explicit issue id; never let the tool infer the target from "most recent open issue" (that default once attached a fix to the wrong issue, #0003)
   - design choice → `add_decision` / `pjm decision`
   - gotcha or setup detail → `add_note` / `pjm note`
+- After a meaningful investigation or fix, briefly consider whether a failed approach produced reusable negative knowledge; if so, record it with `record_attempt` — failed approaches are the one thing git history cannot preserve.
+- Do not copy commit messages or ordinary code changes into projectmem; git is canonical for those. An event earns its place only by preserving rationale, an assumption change, an unresolved risk, or reusable negative knowledge. `add_note` is a fallback for durable context, not a second git log.
 - Never edit `.projectmem/summary.md` or `events.jsonl` directly — the summary regenerates from the event log, and direct edits break audit replay. `PROJECT_MAP.md` and `plan.md` may be edited directly.
 - Prefer these tools over re-scanning source files when they answer the same question.
 
