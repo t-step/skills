@@ -132,7 +132,8 @@ def parse_new_invocations(
             continue
         if entry.get("type") != "assistant":
             continue
-        content = entry.get("message", {}).get("content")
+        message = entry.get("message")
+        content = message.get("content") if isinstance(message, dict) else None
         if not isinstance(content, list):
             continue
         session_id = entry.get("sessionId") or entry.get("session_id") or ""
@@ -144,7 +145,8 @@ def parse_new_invocations(
                 continue
             if block.get("type") != "tool_use" or block.get("name") != "Skill":
                 continue
-            skill_name = block.get("input", {}).get("skill")
+            inp = block.get("input")
+            skill_name = inp.get("skill") if isinstance(inp, dict) else None
             if skill_name not in tracked_skills:
                 continue
             rows.append(
@@ -182,7 +184,7 @@ def ingest(conn: sqlite3.Connection, projects_root: pathlib.Path, tracked_skills
     files_scanned = 0
     for project_dir in sorted(p for p in projects_root.iterdir() if p.is_dir()):
         project_slug = project_dir.name
-        for transcript in sorted(project_dir.glob("*.jsonl")):
+        for transcript in sorted(project_dir.rglob("*.jsonl")):
             path_str = str(transcript)
             stat = transcript.stat()
             stored_mtime, stored_offset = get_scan_state(conn, path_str)
@@ -218,11 +220,11 @@ def compute_volume_table(
     for skill_name, ts in conn.execute("SELECT skill_name, ts FROM invocations"):
         if skill_name not in tracked_skills:
             continue
+        totals[skill_name] += 1
         try:
             when = datetime.fromisoformat(ts.replace("Z", "+00:00"))
         except ValueError:
             continue
-        totals[skill_name] += 1
         if when >= cutoff:
             recents[skill_name] += 1
         if last_used[skill_name] is None or when > last_used[skill_name]:
@@ -254,7 +256,7 @@ def build_digest(
     scored: list[tuple[datetime, SessionDigestEntry]] = []
     for project_dir in sorted(p for p in projects_root.iterdir() if p.is_dir()):
         project_slug = project_dir.name
-        for transcript in sorted(project_dir.glob("*.jsonl")):
+        for transcript in sorted(project_dir.rglob("*.jsonl")):
             stat = transcript.stat()
             mtime = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
             if mtime < cutoff:
@@ -271,7 +273,8 @@ def build_digest(
                     continue
                 cwd = entry.get("cwd") or cwd
                 entry_type = entry.get("type")
-                content = entry.get("message", {}).get("content")
+                message = entry.get("message")
+                content = message.get("content") if isinstance(message, dict) else None
                 if entry_type == "user":
                     if isinstance(content, str):
                         prompts.append(content[:prompt_truncate])
@@ -286,7 +289,8 @@ def build_digest(
                             and block.get("type") == "tool_use"
                             and block.get("name") == "Skill"
                         ):
-                            skill_name = block.get("input", {}).get("skill")
+                            inp = block.get("input")
+                            skill_name = inp.get("skill") if isinstance(inp, dict) else None
                             if skill_name:
                                 skills_fired.append(skill_name)
             if prompts:
@@ -336,6 +340,7 @@ def main() -> int:
 
     if args.skill:
         volume = {args.skill: volume[args.skill]} if args.skill in volume else {}
+        candidates = [c for c in candidates if c == args.skill]
         digest = [e for e in digest if args.skill in e.skills_fired]
 
     if args.json:

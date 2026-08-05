@@ -70,7 +70,7 @@ uv run scripts/skill-usage-report.py [--archive-window N] [--digest-days N] [--s
 - `--archive-window` (default 60): rolling-window size in days for the archive-candidate check.
 - `--digest-days` (default 7): how far back the recent-session digest looks.
 - `--skill NAME`: filter the volume table and digest to a single skill.
-- `--json`: emit the volume table as JSON instead of a formatted table (for future scripting; the digest and archive sections stay human-readable text regardless, since they're read by a person, not parsed).
+- `--json`: emit only the volume table and archive candidates as JSON instead of a formatted table (for future scripting). The digest is omitted entirely in JSON mode — not printed to stdout or stderr — since it's a manual-review aid meant for human reading, not machine consumption.
 
 No subcommands. Ingest always runs before report — it's incremental and cheap, so there's nothing to remember to run separately.
 
