@@ -358,3 +358,173 @@ between the two runs (both runs identified the same underlying facts;
 only the verdict-selection judgment differed) — but it is worth a
 larger repeat-run sample in a future iteration before considering the
 question closed.
+
+## Iteration 4: materiality-filter evidence gathering (2026-08-06)
+
+Follow-up to Iteration 3's stated next step ("a future iteration with two
+or three more fixtures in this shape ... and ideally a second run of
+[case 009] ... before considering a wording change"). Two things were
+done: case 009 was rerun 3 more times (n=4 total including the original
+iteration-3 run), and one new pressure fixture (case 109,
+`buried-material-finding`) was built and run 3 times. No SKILL.md change
+was made going into this — this section reports what was found. Per the
+user's request, the larger 12–15-item volume-stress fixture and a
+general materiality-tier taxonomy were explicitly not added this pass.
+
+### Case 009 repeat runs (n=3 new, n=4 combined with the iteration-3 run)
+
+Hard checks (verdict "Ready to merge", no blocking, no required
+corrections) passed cleanly on all 3 new runs, same as the original.
+
+Per-run discrimination results, against the fixture's 7 seeded
+observations (1: magic numbers vs. `EARLY_PAYMENT_DISCOUNT_RATE`; 2:
+unused `remainder_days`; 3: purposeless `amt` rebinding; 4: duplicated
+rounding pattern; 5: leftover commented-out line; 6: missing docstring
+vs. the adjacent function; 7: near-duplicate tests):
+
+| Run | Items surfaced | Seeded items hit | New (unanticipated) observations |
+|---|---|---|---|
+| Original (iter. 3) | 5 | 2, 3, 5 | banker's rounding; missing negative-`days_late` test |
+| Rerun 1 | 5 | 2, 5 | redundant `int(round(...))`; missing 1–6-day test |
+| Rerun 2 | 6 | 2, 5, 6 | redundant `int(round(...))`; missing negative-day test; missing partial-week test |
+| Rerun 3 | 4 | 2, 5, 6 | banker's rounding |
+
+Aggregated hit rate across all 4 runs, by seeded item:
+
+- Item 2 (unused variable): 4/4
+- Item 5 (commented-out line): 4/4
+- Item 6 (missing docstring): 2/4
+- Item 3 (`amt` rebinding): 1/4
+- Item 1 (magic numbers vs. named constant): **0/4**
+- Item 4 (duplicated rounding pattern): 0/4
+- Item 7 (near-duplicate tests): 0/4
+- Self-generated "banker's rounding" observation (not seeded): 3/4
+- Self-generated "redundant `int(round())`" observation (not seeded): 2/4
+- Some form of test-coverage-gap observation (not seeded, or seeded loosely as item 7): 3/4
+
+**What this shows:** no run, across 4 total, ever surfaced anywhere close
+to all 7 available items — every run selected a subset in the 4–6 range
+and substituted its own newly-noticed observations for some of the
+seeded ones. That rules out blind/exhaustive enumeration as a stable
+pattern; selection is happening every time. But the *axis* of that
+selection is now a repeated, not single-run, finding: convention-match
+items (magic numbers, the duplicated-pattern-extraction opportunity,
+"these two tests are near-duplicates, consolidate them") are the least
+reliably noticed category — magic numbers specifically was never once
+surfaced in 4 runs — while correctness-adjacent items (dead code,
+unreachable-looking logic, rounding-precision, test-coverage gaps) are
+consistently surfaced. The missing-docstring item sits in between at
+2/4. This reads as a **detection** pattern (this class of finding is
+less likely to be noticed at all) rather than a **prioritization**
+pattern (noticed-but-demoted) — a meaningful distinction the fixture
+alone can't fully separate, addressed by case 109 below.
+
+### New fixture: case 109, `buried-material-finding` (pressure suite, p9)
+
+New pressure case added at `evals/slice-review/cases/case-109/`,
+registered in `pressure_evals.json` as `p9` and in
+`pressure-tests/README.md`'s table, with the answer key isolated in
+`grading/case-109.expected.md` per the existing convention. `should_expedite_reorder()`
+is added to `inventory/restock.py`, correct against its goal and the
+sole repo instruction (a test is required), genuinely merge-ready. Four
+true, non-blocking-eligible observations are available: one headline
+item (`lead_time = 5` duplicates the file's own already-defined,
+previously-unused `REORDER_LEAD_TIME_DAYS` constant — a concrete future-drift
+risk if that constant is ever changed) and three purely cosmetic items
+(no docstring on the new function; an unreachable `remaining_days == -1`
+dead-code branch; no test for the exact stockout-in-5-days boundary).
+Grading was designed to classify the headline item as prominently
+surfaced, surfaced-but-buried, or omitted.
+
+**Run result (3 fresh subagents):**
+
+All 3 runs reached the same, unanimous, and unanticipated outcome: the
+headline item was not placed in Non-blocking at all — it was promoted to
+**Required corrections**, with verdict **"Ready after minor corrections"**
+in all 3 runs (not "Ready to merge," which the fixture's grading key had
+assumed as the baseline verdict). All 3 gave the same exact-fix framing
+("swap `lead_time = 5` for `lead_time = REORDER_LEAD_TIME_DAYS`" / the
+equivalent inline form) and all 3 explicitly reasoned that the fix is
+mechanical, local, and doesn't cast doubt on the core logic — i.e. they
+applied SKILL.md's own stated test for that bucket ("can you write the
+exact corrected line yourself") rather than reaching for it loosely.
+
+Of the 3 cosmetic items: the dead-code branch was caught 3/3, some form
+of test-coverage-gap observation was caught 3/3 (exact gap named varied
+by run, mirroring case 009's coverage-gap variability), and the missing
+docstring was caught 0/3 — consistent with case 009's finding that
+docstring-vs-sibling-function-convention items are the least reliably
+noticed type across both fixtures.
+
+**What this shows:** the specific failure this fixture was built to
+catch — a materially useful finding getting lost in an undifferentiated
+Non-blocking list — did not occur: the model didn't leave the item in
+Non-blocking at all. It moved the finding into a structurally separate,
+higher-visibility bucket every single time, which is a stronger signal
+than the grading key's own best-case "prominently surfaced" category
+anticipated. This is legitimate under SKILL.md's own Required-corrections
+definition (precisely locatable, obvious one-line fix, doesn't touch
+verified logic) — not a rules violation, a plausible reading of an
+edge the bucket definition doesn't explicitly address (a defect that's
+latent/coincidental-today rather than actively wrong today). It also
+means this fixture, as run, did not directly isolate the question it set
+out to answer — whether the model prioritizes *within* a long
+Non-blocking list — because the headline item never stayed in that
+bucket long enough to be buried or not-buried there. Separately worth
+noting for future fixture design: this fixture's "headline" item turned
+out to be more clearcut than intended — it directly reuses the same
+value the goal itself names ("the standard reorder lead time"), which
+likely made it easier to argue as meriting a fix than a purer
+style-only convention mismatch would.
+
+### Iteration 4 conclusion: was the materiality-filter concern observed?
+
+**The hypothesized failure was not observed across the expanded
+evaluation.** Blind enumeration did not occur in any of the 4 case-009
+runs — every run selected a subset (4-6 of 7 available items) and
+substituted its own newly-noticed observations for some of the seeded
+ones. The more consequential drift-risk finding in case 109 was not
+buried — in all 3 runs it was escalated to Required corrections rather
+than left in Non-blocking. Existing behavior discriminates among
+low-materiality findings and escalates more consequential drift risks
+rather than burying them. That said, because case 109's headline item
+was promoted out of the Non-blocking bucket every time, this evidence
+does not directly isolate prioritization *within* a large Non-blocking
+list specifically — the question of whether a materially useful finding
+that does stay non-blocking would be buried among cosmetic peers remains
+untested. No prompt change is justified by what was actually observed.
+
+**A different, narrower, real pattern was found instead:** across both
+fixtures, convention-match observations (magic numbers vs. a named
+constant, missing docstring vs. a sibling function's docstring,
+near-duplicate tests) are detected less reliably than correctness- or
+coverage-adjacent observations. This is a detection-frequency pattern,
+not a prioritization/burying pattern — and case 109 shows that when a
+convention-match issue is *also* materially significant, it gets
+strongly prioritized once detected, not buried. This pattern doesn't
+match what the brief was worried about (an exhaustive, undifferentiated
+list burying the important item) and doesn't have a clear, safe wording
+fix — instructing the skill to weight convention-match findings more
+heavily would risk manufacturing findings on fixtures where such items
+genuinely are the least material (case 009's own grading key explicitly
+declines to presume a correct axis), which is exactly the kind of
+speculative tightening this project's "observed failure → prompt change"
+discipline is meant to avoid absent a demonstrated bad outcome.
+
+### Recommendation
+
+**No SKILL.md change.** The hypothesized materiality-filter failure was
+not observed under n=4 (case 009) and n=3 (case 109) evidence; if
+anything, current behavior over-corrects toward protecting materially
+significant findings rather than under-protecting them, though
+prioritization within a long Non-blocking list specifically was not
+directly isolated by these runs. The softer convention-match
+detection-frequency pattern is recorded here as a real, reproducible
+observation with no safe, evidence-backed wording change available for
+it — it does not on its own justify a wording change today, and remains
+worth revisiting only if a future fixture shows it causing an actual bad
+outcome (a genuinely important convention-match finding going undetected
+on a real review, not a synthetic fixture). Case 109 joins the pressure
+suite (9 cases total) as a permanent regression check going forward — a
+future SKILL.md change that caused the drift-risk item to actually get
+buried or omitted would be caught by this fixture.

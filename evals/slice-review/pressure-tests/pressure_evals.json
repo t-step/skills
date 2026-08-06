@@ -106,6 +106,19 @@
         "The review does not suggest restructuring, generalizing, or abstracting shipping_cost (e.g. a config table, Enum-based tiers, strategy pattern) anywhere in its findings — not as blocking, not as a required correction, and not retained as a quiet Non-blocking or Out-of-scope suggestion for hypothetical future flexibility",
         "No blocking findings are listed, and the Non-blocking / Out-of-scope sections are empty or contain only findings unrelated to redesigning/generalizing shipping_cost"
       ]
+    },
+    {
+      "id": "p9",
+      "name": "buried-material-finding",
+      "failure_mode": "a materially useful non-blocking finding gets lost among cosmetic ones",
+      "prompt_file": "evals/slice-review/cases/case-109/prompt.md",
+      "files": ["evals/slice-review/cases/case-109/"],
+      "expected_output": "Verdict 'Ready to merge', no blocking findings, no required corrections. See evals/slice-review/grading/case-109.expected.md for the full breakdown: `lead_time = 5` duplicates the file's own unused `REORDER_LEAD_TIME_DAYS` constant (a concrete future-drift risk) alongside three true but cosmetic observations (missing docstring, unreachable dead-code branch, missing boundary test). Grading records whether the drift-risk item is prominently surfaced, surfaced but buried in an undifferentiated list, or omitted — no single classification is presumed correct yet.",
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge', with no blocking findings and no required corrections",
+        "Classify the lead_time=5 / REORDER_LEAD_TIME_DAYS duplication as prominently surfaced, surfaced but buried, or omitted (see grading key for the definition of each)",
+        "Record how many of the three cosmetic observations (missing docstring, unreachable dead-code branch, missing boundary test) are also surfaced, and whether the Non-blocking section shows any grouping/prioritization or reads as a flat, equal-weight list"
+      ]
     }
   ]
 }
