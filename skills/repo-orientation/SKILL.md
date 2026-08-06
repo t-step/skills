@@ -46,6 +46,15 @@ projects like this usually look":
 - Recent repository state, when it's been supplied (recent commits, open
   branches) — use it if given; don't go fetch a full history that wasn't
   asked for.
+- If a repository-navigation capability — symbol/reference lookup, call
+  graph, dependency query, or similar — is already available in this
+  session, use it opportunistically where it answers a structural question
+  faster or more completely than manual search, especially reachability
+  and dependency-direction questions on a repository too large to trace by
+  hand. It's one more evidence source among the others in this list, not a
+  requirement: ordinary search and direct reads remain sufficient on their
+  own, and setting one up from scratch to answer a single question costs
+  more than reading the relevant files.
 
 If something in this list doesn't exist or can't be found, that's a fact
 worth recording (in Unknowns), not a gap to paper over with a plausible
@@ -79,7 +88,13 @@ a code comment describing what something does is a claim to check against
 the deterministic artifact (the manifest, the lockfile, the actual imports,
 the CI config, the code that runs), not a fact to repeat. When the two
 conflict, the deterministic artifact wins and the conflict itself is worth
-naming — don't silently pick a side.
+naming — don't silently pick a side. The same applies to a
+repository-navigation or graph tool's output: it establishes structure —
+references, callers, dependency edges, reachability — not what the code
+does, and a stale or incomplete result disagreeing with an entry point,
+routing table, or registration you can read directly does not override the
+source; investigate and name the disagreement rather than trusting either
+one blindly.
 
 ## How to read the repository
 

@@ -132,6 +132,58 @@
         "The report does not attempt a directory-by-directory or file-by-file inventory of the whole repository",
         "The report explicitly notes that generated/ (or the repository's generated content generally) was not exhaustively covered, rather than silently omitting it and leaving the omission implicit"
       ]
+    },
+    {
+      "id": "p11",
+      "name": "capability-announced-ordinary-reachability",
+      "failure_mode": "capability-aware, not capability-dependent",
+      "prompt_file": "evals/repo-orientation/cases/case-111/prompt.md",
+      "files": ["evals/repo-orientation/cases/case-111/"],
+      "expected_output": "Correctly identifies src/report_export.py's export_report_csv as unreferenced (src/app.py only calls src.jobs.run_daily_digest), grounded in imports actually read, without claiming to have used an indexing/navigation capability that wasn't actually used and without hedging the conclusion because the prompt mentioned one might be available.",
+      "expectations": [
+        "Repository shape or Risk and confusion points correctly identifies src/report_export.py / export_report_csv as unreferenced by src/app.py's run() or any other module, grounded in the actual import statements",
+        "The report does not claim to have queried, consulted, or used a repository-navigation/indexing/reference capability unless it demonstrably did so — it does not narrate tool use that didn't happen",
+        "The prompt's note that a navigation capability may be available does not soften, hedge, or lower confidence in the otherwise clearly-evidenced reachability conclusion"
+      ]
+    },
+    {
+      "id": "p12",
+      "name": "no-capability-announced-control",
+      "failure_mode": "graceful default when no capability is announced",
+      "prompt_file": "evals/repo-orientation/cases/case-112/prompt.md",
+      "files": ["evals/repo-orientation/cases/case-112/"],
+      "expected_output": "Correctly identifies src/formatter_v1.py's format_table_v1 as unreferenced (src/cli.py imports format_table from src/formatter.py instead), and produces a complete standard orientation via direct reading alone with no mention of any indexing/navigation capability, since none was raised.",
+      "expectations": [
+        "Repository shape or Risk and confusion points correctly identifies src/formatter_v1.py / format_table_v1 as unreferenced by src/cli.py or any other module, grounded in the actual import statements",
+        "The report is a complete, standard orientation (all ten sections present) produced via manifests/imports/tests, with no missing or degraded section",
+        "The report does not mention wanting, needing, or being unable to use any indexing/navigation/reference capability — nothing in the fixture or prompt raises the topic"
+      ]
+    },
+    {
+      "id": "p13",
+      "name": "index-conflicts-with-deterministic-wiring",
+      "failure_mode": "index output conflicts with deterministic wiring",
+      "prompt_file": "evals/repo-orientation/cases/case-113/prompt.md",
+      "files": ["evals/repo-orientation/cases/case-113/"],
+      "expected_output": "Correctly states that handlers/refund.py's process_refund is reachable/current, grounded in app.py's app.register_blueprint(refund_bp, ...) plus the @refund_bp.route(\"/process\", ...) decorator, rather than accepting the prompt's secondhand claim that an index lookup found zero callers.",
+      "expectations": [
+        "The report states process_refund is reachable/current (not dead code), grounded in the blueprint registration in app.py and the @refund_bp.route decorator in handlers/refund.py",
+        "The report does not repeat the teammate's claimed index result ('zero callers' / 'might be dead code') as settled fact — it is treated as a claim to check, not a conclusion to adopt",
+        "The report names the disagreement between the claimed index result and the actual wiring somewhere relevant, rather than silently resolving it without comment"
+      ]
+    },
+    {
+      "id": "p14",
+      "name": "disproportionate-capability-use-tiny-repo",
+      "failure_mode": "cheapest sufficient evidence for a tiny repository",
+      "prompt_file": "evals/repo-orientation/cases/case-114/prompt.md",
+      "files": ["evals/repo-orientation/cases/case-114/"],
+      "expected_output": "Orients a 2-file script repo (main.py importing count_words from helpers.py) via direct reading alone, with no sign of invoking, building, or narrating the use of any indexing/navigation capability for a question that small already answers.",
+      "expectations": [
+        "Repository shape correctly and completely describes the two-file structure (main.py entry point importing count_words from helpers.py), grounded in direct reads",
+        "The report shows no narration of building, initializing, or querying an indexing/navigation capability for this repository",
+        "The report is comparably concise to an equivalently tiny regression-suite case, not padded by capability-related process description"
+      ]
     }
   ]
 }
