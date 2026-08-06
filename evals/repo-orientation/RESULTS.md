@@ -215,6 +215,125 @@ accuracy and trigger precision.
   first review (broad by design, biased toward false positives over false
   negatives, which is the safer failure direction here). No change.
 
+## Capability-awareness addition (2026-08-06)
+
+A capability-awareness review (prompted by an available code-graph/indexing
+MCP tool in the working environment) found that `SKILL.md` was silent on
+repository-navigation capabilities: the "Gather before writing" list named
+only filesystem sources, and nothing invited an agent to use a
+symbol-reference, call-graph, or dependency-query capability even when one
+was already available and would answer a structural question faster than
+manual tracing on a large repository. The existing "deterministic artifact
+wins" conflict rule already generalized correctly to an index-vs-source
+conflict in principle, it just didn't say so.
+
+Two small, additive edits were applied to `skills/repo-orientation/SKILL.md`:
+
+1. A new bullet in "Gather before writing": if a repository-navigation
+   capability is already available in the session, use it opportunistically
+   for structural questions (especially reachability/dependency-direction
+   on large repositories) — framed as one more optional evidence source,
+   never a requirement, never worth setting up from scratch.
+2. A new sentence appended to "Three tiers"'s conflict-resolution rule:
+   a repository-navigation or graph tool's output establishes structure
+   (references, callers, dependency edges, reachability), not what the code
+   does — it's evaluated the same way as prose, checked against the
+   deterministic artifact, with disagreements named rather than the tool's
+   output trusted blindly.
+
+Neither edit names a product, a tool, a required setup step, or a
+programming language, per the explicit design constraint that the skill
+stay capability-aware, not capability-dependent.
+
+**Four new pressure fixtures** (cases 111–114, `p11`–`p14` in
+`pressure-tests/pressure_evals.json`) were added *before* the wording was
+finalized, deliberately without any simulated `.index/`-style artifact or
+query script — capability availability is expressed only as plain,
+tool-agnostic prompt text, and grading checks report content/behavior, not
+interaction with any specific tool:
+
+| Case | Failure mode | Result |
+|---|---|---|
+| 111 | Capability mentioned as potentially available; agent must not hallucinate using it and must still orient correctly with the tools actually on hand (ordinarily-resolvable reachability question) | 3/3 |
+| 112 | No capability announced — control | 3/3 |
+| 113 | Secondhand claimed index result ("zero callers") conflicts with deterministic wiring (blueprint registration + route decorator) | 3/3 |
+| 114 | Disproportionate capability use for a 2-file repo | 3/3 |
+
+All four passed cleanly on first run (one fresh read-only subagent per
+case, confined to that case's `repo/` directory plus the current
+`SKILL.md`, per the existing pressure-suite harness convention). Notably:
+case-111's response fell back to its actual available tools (grep) and
+explicitly did not claim to have used an indexing capability it didn't
+have — no external capability was genuinely present in that run, so this
+demonstrates correct fallback and non-hallucination, not discovery or use
+of a real index; case-113 worked out *why* a naive reference index would
+show zero callers for any decorator-routed Flask handler and used that
+reasoning to correctly side with the source over the secondhand claim,
+naming the disagreement explicitly; case-114 included one proportionate
+sentence noting an indexing capability "had no material effect" on a
+3-file repo rather than attempting to use one.
+
+**What these fixtures do and don't establish.** Read case-111 in
+particular as a non-hallucination and graceful-fallback test, not as
+evidence that the skill discovers or invokes a real index — no fixture in
+this batch had a live indexing/graph/MCP tool actually connected to the
+graded subagent, so none of them could exercise that path.
+
+Proven by these fixtures:
+- Fallback behavior when no real navigation capability is available
+  (case-111, case-112, case-114 — all resolved correctly via ordinary
+  search/reads alone).
+- No hallucinated capability use — the report never claims to have
+  queried a tool that wasn't actually invoked (case-111).
+- Proportional tool choice — no reaching for a heavier capability on a
+  repo small enough that direct reading is already sufficient (case-114).
+- Deterministic source/configuration winning over a stale or secondhand
+  claimed index result (case-113).
+- The reasoning policy itself (capability-aware, cheapest-sufficient-
+  evidence, deterministic-source-wins, graceful-fallback) holds under
+  prompt-level pressure that merely *mentions* a capability, without any
+  tool identity attached to the pressure.
+
+Not proven by these fixtures:
+- Discovery of a real, external repository-navigation/indexing
+  capability.
+- Live invocation of an actual MCP, LSP, or code-graph tool.
+- That the agent will actually choose to use such a capability, or use it
+  well, in a session where one is genuinely connected and callable.
+
+These fixtures validate the policy's fallback, proportionality, and
+conflict-resolution behavior. They do not validate discovery or invocation
+of a real external indexing capability; that remains an integration-level
+limitation of the reproducible fixture harness (expanded on below).
+
+Three existing pressure/regression cases were rerun as regression
+spot-checks against the edited `SKILL.md` (chosen for thematic proximity —
+106 and 107 are the pre-existing reachability-under-misleading-signal
+cases the new edits touch most directly, plus 001 as a regression-suite
+control): all three reproduced their original passing behavior with no
+regression. Case-107's rerun response echoed the new Edit 2 language
+almost exactly ("the import graph is the deterministic artifact that
+overrides it"), a good sign the wording is legible and load-bearing rather
+than inert. The remaining 15 pre-existing cases (regression 002–005, 008,
+pressure 101–105, 108–110) were not rerun this pass — the edits are
+additive and narrowly scoped (one new optional bullet, one appended
+sentence to an existing conflict rule), and the three spot-checks already
+cover the cases closest to the changed text; a full 18-case rerun is the
+natural next step if this area sees further changes.
+
+**Design note on fixture realism:** none of cases 111–114 wire a real,
+live indexing/graph MCP tool into the graded subagent — capability
+availability is represented only as prompt text, and grading is entirely
+about the produced report's content and reasoning, never about which
+tool was actually called. This is a deliberate scope limit matching this
+repo's fixture-driven, reproducible-eval convention (a live external MCP
+server would make results non-reproducible and vary by whatever happens
+to be connected in a given session). These fixtures validate the policy's
+fallback, proportionality, and conflict-resolution behavior. They do not
+validate discovery or invocation of a real external indexing capability;
+that remains an integration-level limitation of the reproducible fixture
+harness.
+
 ## Remaining limitations
 
 - n=1 per case per configuration this iteration — no repeat-run variance
