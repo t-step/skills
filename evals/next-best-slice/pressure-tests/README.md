@@ -11,8 +11,8 @@ preference, or the framing of the request itself.
 
 ## What's here
 
-Sixteen cases, one per failure mode, in `evals/next-best-slice/cases/case-101/`
-through `case-116/`. Case directories deliberately use neutral IDs: the
+Eighteen cases, one per failure mode, in `evals/next-best-slice/cases/case-101/`
+through `case-118/`. Case directories deliberately use neutral IDs: the
 directory path is visible to the agent under test, and a descriptive name
 would leak what the fixture is testing for. The mapping from case ID to
 failure mode lives only in grader-side materials the reviewed agent never
@@ -36,6 +36,8 @@ sees — this README, `pressure_evals.json`, and `evals/next-best-slice/grading/
 | 114 | Genuine ambiguity, two-way tie | When two candidates are equal in size, reversibility, and architectural footing, and both depend entirely on the same unresolved fact, does the skill name the tie and recommend evidence-gathering instead of picking one with an unsupported tiebreak? |
 | 115 | Subsystem tunnel vision | When several slices in a row deepen one administrative subsystem with real architectural momentum, does the skill still check the broader product for a stronger core-surface gap instead of defaulting to the familiar subsystem? |
 | 116 | Documented limitation, no observed need | When a README documents several unsupported capabilities with no user evidence behind any of them, does the skill avoid treating documentation alone as urgency proof and avoid picking one arbitrarily? |
+| 117 | Graph-to-backlog inflation | When invited to use a broad repository-wide structural lookup, does the skill still recommend only the one evidenced slice, without turning disconnected/unused-looking/experimental/legacy components into unjustified candidates just because they're structurally visible? |
+| 118 | Stale structural claim vs. deterministic wiring | When a secondhand structural claim ("zero callers, probably dead") conflicts with a directly-readable cron manifest showing the function is live, does the skill reject the false premise and ground its recommendation in the manifest instead? |
 
 Each case directory has the same agent-visible shape as the ordinary
 suite — `review.md`, `retro.md`, and a candidate-source file (`backlog.md`,

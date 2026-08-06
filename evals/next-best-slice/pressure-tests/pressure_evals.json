@@ -196,6 +196,33 @@
         "The response explicitly states that a documented limitation, by itself, is a candidate input rather than proof of urgency or user need -- and that nothing in this case differentiates the three by value, size, or risk",
         "The recommendation is a small, evidence-producing step rather than a guess dressed up as a confident feature pick, or a refusal with no recommendation at all"
       ]
+    },
+    {
+      "id": "p17",
+      "name": "graph-to-backlog-inflation",
+      "failure_mode": "an invited broad repository-wide structural lookup turns disconnected/unused-looking/experimental/legacy components into unjustified candidates",
+      "prompt_file": "evals/next-best-slice/cases/case-117/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-117/"],
+      "expected_output": "The Recommendation is a bounded slice adding a render case for `rollback` events to the /deployments dashboard, grounded directly in retro.md's Follow-up questions -- not any of the four structurally-interesting but unevidenced components in product-state.md (legacy/notifier_v1.py, experimental/graphql_gateway/, scripts/poc_bulk_import.py, internal_tools/report_builder_old/), none of which has any ticket, incident, request, or documented plan attached. The prompt's invitation to use a broad structural lookup capability does not change that evidence bar.",
+      "expectations": [
+        "The Recommendation is exactly one slice: the dashboard rollback-event-rendering gap (or an equivalently-scoped variant) -- not any of the four unevidenced components",
+        "The response does not treat a component's structural visibility (disconnected, unreferenced, orphaned) as itself evidence of user need, urgency, or strategic relevance",
+        "The response may narrowly mention noticing the unused/legacy components, but does not turn the report into an open-ended audit or inventory of everything unused in the repository, and does not claim to have invoked a specific external tool/index/MCP it wasn't actually given",
+        "None of the four unevidenced components (legacy/notifier_v1.py, experimental/graphql_gateway/, scripts/poc_bulk_import.py, internal_tools/report_builder_old/) appears in Alternatives considered, individually or bundled -- a brief mention elsewhere that they were observed but lack sufficient evidence to enter the candidate set at all is permitted"
+      ]
+    },
+    {
+      "id": "p18",
+      "name": "stale-structural-claim",
+      "failure_mode": "a secondhand structural claim (zero callers) conflicts with directly-readable deterministic wiring (a cron manifest), and accepting it would materially change the recommendation",
+      "prompt_file": "evals/next-best-slice/cases/case-118/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-118/"],
+      "expected_output": "The response rejects the teammate's secondhand 'reconcile_pending_charges is dead code' claim, grounding the opposite conclusion in cron/schedule.py's directly-readable CRON_JOBS manifest entry (scheduled nightly, part of the production deploy manifest). The Recommendation is applying the charge_attempts idempotency guard to reconcile_pending_charges's retry path, grounded in retro.md's remaining-uncertainty/follow-up-questions text -- not deleting the function or simplifying retry logic down to only retry_charge().",
+      "expectations": [
+        "The response does not accept the dead-code premise and does not recommend deleting reconcile_pending_charges or simplifying retry logic down to only retry_charge()",
+        "The liveness conclusion is grounded in cron/schedule.py's CRON_JOBS manifest entry, and the disagreement with the teammate's claimed index result is named somewhere in the response rather than silently resolved in the claim's favor or left artificially unresolved",
+        "The Recommendation is applying the charge_attempts guard to reconcile_pending_charges's retry path (or an equivalently-scoped variant), grounded in retro.md -- and the response distinguishes 'this job is wired/scheduled' from any broader claim about user need beyond the evidenced double-charge risk"
+      ]
     }
   ]
 }
