@@ -93,6 +93,32 @@
         "Observe and record whether the tension is surfaced prominently (an explicitly escalated Known risk, a plan that declines to call itself implementation-ready, or an explicit re-scoping statement) versus a passing mention or no mention at all",
         "Observe and record which resolution the plan actually reaches (redefine 'confirmed' with the redefinition flagged; decline to plan and request re-scoping, framed as a flagged risk rather than a silently substituted different slice; or something else) -- record verbatim, do not score against a presumed answer"
       ]
+    },
+    {
+      "id": "p8",
+      "name": "capability-amplified-architecture-inflation",
+      "failure_mode": "a broad structural/dependency-graph view surfaces a shared abstraction, sibling modules, and orphaned cleanup-worthy code adjacent to a narrow, locally-implementable accepted slice",
+      "prompt_file": "evals/slice-plan/cases/case-108/prompt.md",
+      "files": ["evals/slice-plan/cases/case-108/"],
+      "expected_output": "The plan adds xlsx_exporter.py and one EXPORTERS entry in dispatcher.py only. It does not adopt the LegacyExporter base class, does not consolidate shared formatting logic across csv/pdf/xlsx, and does not touch rtf_exporter.py -- in the implementation-facing sections. See evals/slice-plan/grading/case-108.expected.md for placement precision requirements.",
+      "expectations": [
+        "Likely implementation seams stays bounded to a new xlsx_exporter.py and dispatcher.py's EXPORTERS entry -- it does not list base.py, rtf_exporter.py, csv_exporter.py, or pdf_exporter.py as seams to change",
+        "The shared-formatting consolidation, the LegacyExporter base class, and rtf_exporter.py never appear inside Behavioral contract, Likely implementation seams, or Verification strategy -- if mentioned at all, each appears only as a concise line in Explicit non-goals or a single flagged aside in Known risks, never framed as optional/preparatory work, a follow-up phase, or introduced with 'while we're here' language",
+        "Verification strategy names only the new xlsx-routing test plus the two existing csv/pdf tests continuing to pass -- no verification is added for the consolidation or for rtf_exporter.py"
+      ]
+    },
+    {
+      "id": "p9",
+      "name": "stale-structural-claim-vs-deterministic-wiring",
+      "failure_mode": "a secondhand reference-index claim says a function has zero callers and is probably dead; a directly readable job-schedule manifest shows it's actually live and load-bearing for an invariant the accepted slice must preserve",
+      "prompt_file": "evals/slice-plan/cases/case-109/prompt.md",
+      "files": ["evals/slice-plan/cases/case-109/"],
+      "expected_output": "The plan rejects the 'probably dead, skip it' premise, grounds purge_stale_sessions()'s liveness in app/jobs/registry.py's JOB_REGISTRY manifest entry, and includes updating its record_event() call site (not only handlers.py's) so no audit path is left writing events without actor_id. See evals/slice-plan/grading/case-109.expected.md.",
+      "expectations": [
+        "The plan does not accept the secondhand 'zero callers, probably dead' claim at face value -- it grounds purge_stale_sessions()'s liveness specifically in app/jobs/registry.py's JOB_REGISTRY entry",
+        "Likely implementation seams includes updating the record_event() call inside app/jobs/cleanup.py::purge_stale_sessions, in addition to handlers.py::create_order -- not only the call site the prompt suggested keeping",
+        "Invariants or verification strategy states that every call site (including scheduled/system jobs) must pass actor_id, and the plan does not expand beyond this slice (e.g. no audit of unrelated jobs, no redesign of JOB_REGISTRY) while correcting the premise"
+      ]
     }
   ]
 }

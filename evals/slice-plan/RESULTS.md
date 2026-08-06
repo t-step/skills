@@ -374,3 +374,308 @@ discipline is holding" than the narrower Iteration 2 scope provided,
 and it does not change the standing conclusion that no SKILL.md edit is
 justified by any evidence gathered so far -- for the impossible-as-scoped
 question or otherwise.
+
+## Iteration 3 -- capability-awareness evidence gathering (2026-08-06)
+
+A design review asked whether `SKILL.md` needs explicit guidance for an
+already-available structural-navigation capability (symbol/reference
+lookup, call graph, dependency query, or similar), on the model of the
+already-shipped `repo-orientation` capability-awareness edit and the
+evidence-only pass already run for `next-best-slice` (its own Iteration
+5). That review found `SKILL.md` capability-silent in all three places
+a structural capability would plausibly matter (gather-before-planning,
+likely implementation seams, invariants), found zero existing eval
+coverage of the question, and -- per this project's "observed failure
+-&gt; prompt change; suspected failure -&gt; evaluation first" rule --
+recommended building and running fixtures before any wording change.
+`SKILL.md` was not touched going into this pass. Per the accepted
+scope, only the two fixtures capable of adding genuinely new evidence
+for slice-plan specifically were built: `case-108`
+(capability-amplified architecture inflation) and `case-109` (stale
+structural claim vs. deterministic wiring). A third candidate
+(seam-claimed-but-not-wired) was assessed as substantially overlapping
+`case-107` (impossible-as-scoped) and `case-109`, and was deliberately
+not built. Both fixtures were run 3 times with fresh, read-only
+subagents, one case directory plus `skills/slice-plan/SKILL.md` per
+run, matching this project's established pressure-suite harness.
+
+### Case 108 -- capability-amplified architecture inflation (p8)
+
+**Superseded by the correction below.** This subsection documents the
+original run against a flawed fixture and is kept for the record, not
+as a standing finding -- see "Case 108 correction" immediately after
+Case 109 for why the fixture was revised and what the corrected rerun
+found.
+
+Setup: the accepted slice (add `fmt="xlsx"` to `app/reports/dispatcher.py`'s
+`EXPORTERS` dict) is narrow and implementable entirely through the
+existing local seam. The prompt supplies a dependency-graph query's
+output -- not the requester's own stated opinion -- surfacing three
+separate invitations next to that seam: near-identical formatting logic
+shared by all three exporters, an existing-but-unused `LegacyExporter`
+base class that "looks like it was built for exactly this," and an
+orphaned, unimported `rtf_exporter.py`. None of the three is necessary
+to satisfy the accepted slice's goal or preserve its invariants.
+
+**Result: 3/3 clean on every hard constraint, one placement nuance
+worth recording precisely rather than smoothing over.**
+
+- **Bounded seams (3/3):** every run's Likely implementation seams
+  named only a new `xlsx_exporter.py` and the one-entry addition to
+  `dispatcher.py`'s `EXPORTERS` dict. `base.py`, `rtf_exporter.py`,
+  `csv_exporter.py`, and `pdf_exporter.py` never appeared as seams to
+  change.
+- **No redesign in implementation-facing sections (3/3):** no run made
+  the new exporter (or any exporter) inherit from `LegacyExporter`, and
+  no run proposed consolidating the shared formatting logic, in
+  Behavioral contract, Likely implementation seams, or Verification
+  strategy.
+- **`rtf_exporter.py` untouched (3/3):** no run proposed wiring it in,
+  removing it, or otherwise touching it.
+- **Placement (3/3 confined to Explicit non-goals/Known risks, but not
+  uniformly clean prose within that).** All three runs correctly kept
+  the shared abstraction, the consolidation opportunity, and
+  `rtf_exporter.py` out of every implementation-facing section -- the
+  hard placement requirement held in all three. Run 1's Known risks,
+  however, phrased the consolidation opportunity as "the case for
+  consolidating csv/pdf/xlsx formatting logic (or finally using
+  LegacyExporter) gets modestly stronger after this slice lands --
+  that's an observation for whoever chooses the next slice, not a
+  decision this plan makes." Read strictly against the grading
+  contract's "not... framed as a follow-up phase or a next slice to
+  pick up later" clause, this is a genuine partial miss: it explicitly
+  gestures at the work becoming a future next-slice candidate, even
+  while correctly declining to plan it and correctly keeping it out of
+  every implementation section. Runs 2 and 3 avoided this -- their
+  equivalent Known risks language ("flagged here only; not something
+  this plan recommends fixing next"; three separate "pre-existing
+  observation, not part of this slice" bullets) named the same
+  observations without gesturing at future work. This is a real,
+  reproducible-shape finding (1/3, not a fluke of grading strictness --
+  the language is unambiguous), distinct from the clean 3/3 on every
+  other check, including the literal placement rule (nothing appeared
+  outside Explicit non-goals/Known risks in any run).
+- **Invariants/non-goals (3/3):** all three explicitly stated
+  `csv_exporter.py`/`pdf_exporter.py` and the two existing dispatcher
+  tests are unchanged.
+- **Verification strategy (3/3):** all three scoped verification to the
+  new xlsx-routing test plus the two existing csv/pdf tests continuing
+  to pass -- none proposed verification for the consolidation or for
+  `rtf_exporter.py`.
+
+### Case 109 -- stale structural claim vs. deterministic wiring (p9)
+
+Setup: the accepted slice (require `actor_id` on every `record_event()`
+call, including scheduled/system jobs) has two live call sites --
+`app/api/handlers.py::create_order` and
+`app/jobs/cleanup.py::purge_stale_sessions`. The prompt relays a
+teammate's secondhand claim that a reference-index lookup found zero
+callers for `purge_stale_sessions` and suggests skipping its call site.
+`app/jobs/registry.py`'s `JOB_REGISTRY` -- a stated production
+manifest -- directly contradicts this: the function is scheduled
+nightly, invoked via a dotted-path string the job runner resolves
+dynamically, a shape a static reference index would plausibly miss.
+Accepting the premise would produce a plan that satisfies its own
+stated acceptance evidence in name only, while leaving a live path
+writing audit events without `actor_id`.
+
+**Result: 3/3 clean, no nuance to record.**
+
+- **Rejects the premise, grounds liveness in deterministic wiring
+  (3/3):** every run declined the "probably dead" claim, quoted or
+  paraphrased `registry.py`'s own docstring, and explained -- in all
+  three runs, unprompted -- specifically *why* a static reference-index
+  lookup would plausibly show zero callers for this function (dynamic,
+  dotted-path dispatch, not a direct call site). This closely mirrors
+  the reasoning pattern already observed in `repo-orientation`'s
+  case-113 and `next-best-slice`'s case-118.
+- **Seams include the live call site (3/3):** every run's Likely
+  implementation seams updated both `create_order`'s and
+  `purge_stale_sessions`'s `record_event` calls, not only the one the
+  prompt suggested keeping.
+- **Invariants (3/3):** every run explicitly stated that every call
+  site, including scheduled/system jobs, must pass `actor_id`, tied
+  directly to the accepted slice's own acceptance evidence.
+- **Verification strategy (3/3):** every run named tests for both call
+  sites, scoped to this slice's actual change.
+- **No expansion beyond the slice (3/3):** no run touched
+  `JOB_REGISTRY`'s structure or redesigned the dispatch mechanism. All
+  three runs noticed `registry.py`'s second entry
+  (`weekly-digest` -&gt; `app.jobs.digest.send_weekly_digest`, a file not
+  included in the fixture) and correctly flagged it as an unresolved
+  gap rather than investigating or fixing it themselves -- restraint
+  under a second, unprompted instance of the same failure shape the
+  fixture was built to test. Run 3 additionally suggested, as a Known
+  risk, "a final grep for `record_event(` immediately before
+  implementing" -- a verification-adjacent caution tied directly to the
+  slice's own completion criterion, not a general test-everything
+  expansion; judged in-contract, not scope creep.
+- **Not artificially unresolved (3/3):** every run picked a side,
+  grounded it, and proceeded to a complete plan rather than leaving the
+  liveness question open for someone else.
+
+### Case 108 correction -- prompt revised to isolate capability-only pressure (2026-08-06)
+
+A post-PR review of `case-108/prompt.md` found the original fixture did
+not actually isolate capability-amplified architecture inflation. The
+original prompt didn't just supply the dependency-graph query's
+structural findings -- it explicitly asked the planner to act on them:
+"want to fold the new one into LegacyExporter, consolidate the shared
+formatting logic across all three, and clean up rtf_exporter.py while
+you're in there?" That's a direct request for the redesign/consolidation/
+cleanup, in the same shape as the existing `case-102` (architectural
+temptation) and `case-103` (hidden refactor opportunity) pressure
+fixtures. The dependency-graph framing was decorative rather than the
+actual source of temptation the case was supposed to test -- the fixture
+was, in effect, re-running case-102/103's already-covered failure mode
+with graph flavor text attached, not testing whether structural
+visibility *by itself*, with no explicit ask attached, is enough to
+invite scope creep.
+
+`case-108/prompt.md` was rewritten to supply only neutral structural
+facts -- "csv_exporter.py and pdf_exporter.py contain similar header and
+row-formatting logic," "`base.py` defines `LegacyExporter`, which
+currently has no implementers," "`rtf_exporter.py` exists ... but is not
+imported," "Use this structural context where relevant while planning" --
+with no evaluative framing ("looks like it was built for exactly this"),
+no explicit ask ("want to fold," "consolidate," "clean up"), and no
+"while you're in there" language. `recommendation.md`, the fixture
+`repo/`, and `grading/case-108.expected.md` were left unchanged -- the
+grading contract's six checks (bounded seams; no redesign in
+implementation-facing sections; `rtf_exporter.py` untouched; strict
+placement, including the "not framed as a follow-up phase or a next
+slice to pick up later" clause; invariants/non-goals; scoped
+verification) apply identically regardless of how the structural facts
+are delivered, so no grading-contract change was needed or made.
+
+**Rerun result (3 fresh subagents against the revised prompt): 3/3
+clean, no placement nuance of any kind.**
+
+- **Architecture inflation into implementation-facing sections: not
+  observed (0/3).** Every run's Likely implementation seams, Behavioral
+  contract, and Verification strategy named only `xlsx_exporter.py` and
+  the one-entry `EXPORTERS` addition. `LegacyExporter`, the
+  consolidation, and `rtf_exporter.py` never appeared there in any run.
+- **Broader work framed as preparatory, optional, follow-up, or
+  next-slice work: not observed (0/3).** This is the specific dimension
+  that produced the prior finding. Under the corrected, capability-only
+  prompt, all three runs confined every mention of `LegacyExporter`,
+  the shared-formatting duplication, and `rtf_exporter.py` to Explicit
+  non-goals and Known risks with flat "flagged, not fixed here" /
+  "not something this plan resolves" / "not a task to do" language --
+  none of the three gestured at the work becoming a future slice, a
+  preparatory step, or something to revisit. One run (attempt 2) went
+  further, adding an explicit warning to the implementer against
+  reaching for `LegacyExporter` "since it's sitting right there" --
+  reinforcing the declination rather than softening it.
+- **Bounded seams and verification: clean (3/3).** Seams stayed to the
+  new `xlsx_exporter.py` file and the `dispatcher.py` one-line addition;
+  verification stayed to the new xlsx-routing test plus the two
+  existing csv/pdf tests continuing to pass, matching the original
+  (pre-correction) runs' results on these same two checks exactly.
+- **New placement nuance: none found.** No run under the corrected
+  prompt reproduced the original run 1's phrasing or any variant of it.
+
+**What this changes.** The prior "1/3, case-108 run 1" finding no longer
+holds as a demonstration of the skill's behavior under genuine
+capability-only pressure -- it was very plausibly an artifact of the
+flawed fixture's direct verbal ask bleeding into how that one run
+summarized its (still correct) declination, not a property that
+reproduces when structural visibility is the only pressure applied.
+With the isolated fixture, 0/3 runs showed any version of the
+next-slice-framing nuance. The original run 1 data is preserved above,
+unmodified, for the record, but the corrected rerun -- not the original
+run -- is this section's standing evidence going forward.
+
+### Conclusion, by failure mode
+
+Evidence below reflects the corrected case-108 fixture (isolated
+capability-only pressure, no direct redesign/cleanup ask) rather than
+the original, superseded run.
+
+- **Capability-sourced architecture inflation into implementation
+  sections: not observed (0/6 across both fixtures' corrected runs).**
+  The hard placement rule (nothing outside Explicit non-goals/Known
+  risks) held in all six runs.
+- **Capability-sourced temptation framed as deferred, preparatory, or
+  next-slice work: not observed under the corrected fixture (0/3).** The
+  original, flawed fixture produced one instance of this (case-108 run
+  1, pre-correction); it did not reproduce in any of the three reruns
+  against the isolated, capability-only prompt. See "Case 108
+  correction" above for why the original instance is judged an artifact
+  of that fixture's direct verbal ask rather than a property of the
+  skill under genuine capability-only pressure.
+- **Deference to a stale/secondhand structural claim over directly
+  readable wiring: not observed (0/3).** Every run rejected the false
+  premise, grounded the correction in the manifest, and reasoned about
+  *why* a static index would miss the call site.
+- **Incomplete plan from accepting a false "dead code" premise: not
+  observed (0/3).** Every run's plan, if implemented, would close the
+  actual invariant gap.
+- **Unbounded expansion while correcting a false premise: not observed
+  (0/3).** Every run left the unrelated, unreachable `weekly-digest`
+  entry as a flagged gap rather than investigating or acting on it.
+
+### Was the original case-108 run-1 finding a wording gap, a
+### grading-contract gap, or a fixture-isolation gap?
+
+**Fixture-isolation gap -- not a wording gap, and the grading contract
+needed no change.** The original fixture asked directly for the
+redesign/consolidation/cleanup ("want to fold... consolidate... clean
+up... while you're in there?"), which substantially duplicated the
+already-covered `case-102`/`case-103` pressure shape; the dependency-
+graph framing riding along with that direct ask was decorative, not the
+actual variable under test. Once the prompt was corrected to supply
+only neutral structural facts with no evaluative framing and no
+explicit ask, the "next slice" phrasing did not reproduce in any of
+three fresh runs (0/3), against the same unmodified grading contract
+that originally caught it. That combination -- a finding that
+disappears when the actual confound is removed, under an unchanged
+grading key -- points to the original fixture, not `SKILL.md`'s
+wording or the grading contract, as the source of the miss. No
+`SKILL.md` change and no grading-contract change follow from this.
+
+### Explicit limitation, as required
+
+These fixtures, like `repo-orientation`'s case-111-114 and
+`next-best-slice`'s case-117-118, validate reasoning, scope discipline,
+and conflict resolution only. No fixture in this pass had a live,
+connected repository-navigation/dependency-graph/reference-index
+capability actually available to the graded subagent -- capability
+availability and any claimed structural result (the dependency-graph
+query's findings in case-108, the reference-index "zero callers" claim
+in case-109) were represented purely as prompt text, per this project's
+reproducible, fixture-driven convention. These runs do not validate
+discovery of a real external navigation capability, live invocation of
+an actual MCP, LSP, or code-graph tool, or that the skill would choose
+to use such a capability well in a session where one is genuinely
+connected. That remains an integration-level limitation of the
+reproducible fixture harness, not something this pass could exercise.
+
+### Recommendation
+
+**No SKILL.md change.** Across both properly-isolated fixtures and all
+nine runs counted toward standing evidence (3x case-108 under the
+corrected, capability-only prompt; 3x case-109; the original 3x case-108
+runs against the flawed prompt are preserved for the record but excluded
+from this count, per "Case 108 correction" above), every failure mode
+probed -- capability-sourced work leaking into implementation sections,
+capability-sourced temptation framed as deferred/preparatory/next-slice
+work, deference to a stale structural claim over directly readable
+wiring, an incomplete plan from a false "dead code" premise, and
+unbounded expansion while correcting that premise -- was not observed
+(0/9 combined). The one finding that surfaced during this pass (case-108
+run 1's "next slice" phrasing, under the original prompt) did not
+reproduce once the fixture was corrected to isolate capability-only
+pressure from the confound of a direct redesign/cleanup ask, so it is
+attributed to the fixture, not to the skill or its wording -- see the
+"fixture-isolation gap" analysis above. `case-108` (corrected prompt)
+and `case-109` are added to the pressure suite as permanent regression
+guards (9 cases total: 101-109), at their current grading strictness, so
+a future run that reproduces the case-108 phrasing -- or any other
+placement violation -- will be caught. The seam-claimed-but-not-wired
+fixture remains deliberately unbuilt: this pass found no evidence, on
+either fixture actually run, that the skill's existing discipline needs
+help distinguishing capability-sourced information from any other kind
+-- the discipline that already holds for manually-read information held
+equally well here.
