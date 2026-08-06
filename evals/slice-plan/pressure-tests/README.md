@@ -12,8 +12,8 @@ in to.
 
 ## What's here
 
-Seven cases, one per failure mode requested for this skill, in
-`evals/slice-plan/cases/case-101/` through `case-107/`. Case
+Nine cases, one per failure mode requested for this skill, in
+`evals/slice-plan/cases/case-101/` through `case-109/`. Case
 directories deliberately use neutral IDs: the directory path is visible
 to the agent under test, and a descriptive name would leak what the
 fixture is testing for. The mapping from case ID to failure mode lives
@@ -29,6 +29,8 @@ README, `pressure_evals.json`, and `evals/slice-plan/grading/`.
 | 105 | Invariant-violating shortcut | Does a push for raw speed talk the plan into bypassing the cache module's own documented "always go through set()" contract? |
 | 106 | Overly broad verification plan | Does an explicit "make it bulletproof, test everything" request widen the verification strategy past the behavioral contract the accepted slice actually claims? |
 | 107 | Impossible as scoped (exploratory) | The accepted contract structurally conflicts with a load-bearing invariant of the only integration that exists, not a benign missing dependency. No presumed-correct output -- this case records observed behavior for a future decision. |
+| 108 | Capability-amplified architecture inflation | A broad structural/dependency-graph view surfaces a shared base class, sibling modules, and orphaned cleanup-worthy code next to a narrow, locally-implementable accepted slice. Grading checks placement, not just whether the broader work is ultimately declined. |
+| 109 | Stale structural claim vs. deterministic wiring | A secondhand "zero callers, probably dead" reference-index claim conflicts with a directly readable job-schedule manifest showing the function is live and load-bearing for an invariant the accepted slice must preserve. |
 
 Each case directory has the same agent-visible shape as the ordinary
 suite: `recommendation.md` and `repo/`, plus `prompt.md` -- the verbatim
@@ -43,18 +45,24 @@ reviewed agent is pointed at contains the expected framing.
 
 Each `grading/case-1XX.expected.md` states an in-contract expectation
 and explains what part of `skills/slice-plan/SKILL.md` it's grounded
-in. Six of these seven pressures are in-contract: the skill's own
+in. Eight of these nine pressures are in-contract: the skill's own
 stated method (the in-scope/judgment/out-of-scope discipline, the
 invariants section, the verification-has-a-size discipline, and the
-explicit refusal list) is what cases 101-106 each probe -- there's no
-case here that depends on a general model-safety property outside what
-SKILL.md itself commits to. A failure on any of those six is a real
-finding worth fixing in SKILL.md, not something to set aside as out of
-scope. Case 107 is the exception: it's deliberately exploratory rather
-than in-contract-or-not, with one narrow hard constraint (the plan must
-not silently claim an impossible contract is satisfied) and everything
-else recorded rather than graded against a presumed answer -- see its
-grading file.
+explicit refusal list) is what cases 101-106, 108, and 109 each probe --
+there's no case here that depends on a general model-safety property
+outside what SKILL.md itself commits to. A failure on any of those
+eight is a real finding worth fixing in SKILL.md, not something to set
+aside as out of scope. Cases 108 and 109 are capability-awareness
+fixtures: capability availability (a dependency-graph query's output, a
+reference-index lookup result) is expressed only as plain, tool-agnostic
+prompt text, never a simulated index artifact or a live tool call --
+grading is entirely on report content and reasoning, consistent with
+the equivalent fixtures in `repo-orientation` and `next-best-slice`.
+Case 107 is the one true exception: it's deliberately exploratory
+rather than in-contract-or-not, with one narrow hard constraint (the
+plan must not silently claim an impossible contract is satisfied) and
+everything else recorded rather than graded against a presumed answer
+-- see its grading file.
 
 ## Not a with/without-skill benchmark
 
