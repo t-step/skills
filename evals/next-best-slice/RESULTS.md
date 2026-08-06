@@ -740,3 +740,177 @@ divergence (case 107) is the same independently-reconfirmed legitimate
 alternate reading documented in every prior iteration, re-verified
 against this iteration's revised wording rather than inherited by
 precedent. `bash scripts/check.sh` passes.
+
+## Iteration 5 — capability-awareness evidence gathering (2026-08-06)
+
+A design review asked whether `SKILL.md` needs explicit guidance for
+repository-navigation capabilities (symbol/reference lookup, call graph,
+dependency query, or similar), on the model of the already-shipped
+`repo-orientation` capability-awareness edit. That review found zero
+existing eval coverage of the question and, per this project's
+evidence-first discipline, recommended building and running fixtures
+before any wording change. `SKILL.md` was not touched going into this
+pass, and per the accepted scope, only the two fixtures capable of
+actually revealing next-best-slice-specific behavior were built —
+`case-117` (graph-to-backlog inflation) and `case-118` (stale structural
+claim vs. deterministic wiring) — each run 3 times with fresh,
+read-only subagents.
+
+### Case 117 — graph-to-backlog inflation (p17)
+
+Setup: a completed slice (add a `rollback` endpoint) and its retro give
+clear, singular evidence for one next slice — the `/deployments`
+dashboard has no render case for the new `rollback` event type,
+producing a blank row. `product-state.md` also lists four unrelated,
+disconnected/unused-looking components (a superseded notifier module, an
+unregistered GraphQL-gateway prototype, an unfinished POC script, an
+old, unimported reporting tool), each explicitly stated to have zero
+ticket, incident, request, or documented-plan evidence behind it. The
+prompt invites broad use of a repository-wide structural-lookup
+capability before deciding.
+
+**Result: mixed, not fully clean.** This fixture actually probes three
+distinct failure modes, and they need separate scores rather than one
+combined "clean" verdict:
+
+- **Recommendation inflation — not observed (0/3).** All three runs
+  recommended exactly the dashboard rollback-render-case slice,
+  correctly grounded in the retro's own follow-up question and
+  corroborated by `product-state.md`. None recommended any of the four
+  unevidenced components.
+- **Unsupported user-need inference — not observed (0/3).** No run
+  treated a component's structural visibility (unreferenced, orphaned,
+  disconnected) as itself evidence of user need, urgency, or strategic
+  relevance — the same distinction `SKILL.md` already draws for
+  channel-2(b) facts generally, applied correctly here to
+  structurally-discovered facts specifically. No run claimed to have
+  invoked a specific external tool/index/MCP that wasn't actually
+  available.
+- **Candidate-set leakage into "Alternatives considered" — observed in
+  3/3 runs.** `SKILL.md` defines that section narrowly: "not a backlog
+  dump... only the candidates that were genuine close calls... ones that
+  scored well on at least one criterion." A component with zero
+  ticket, incident, request, or documented-plan evidence attached
+  hasn't cleared the evidence bar at all, so it was never eligible for
+  that section regardless of outcome. All three runs listed one or more
+  of the four unevidenced components there anyway (bundled as one item
+  in two runs; run 3 both bundled them *and* separately listed
+  "continue building out the GraphQL gateway prototype" as its own
+  numbered alternative) — correctly rejected each time, but the
+  rejection happening *inside* the reserved section is itself the
+  leakage this corrected check targets, distinct from whether the
+  rejection reasoning was sound. Re-scored against the tightened
+  contract in `grading/case-117.expected.md`, all three runs fail this
+  specific check while passing the other four.
+
+This is a real, repeated (3/3) miss against an existing, already-written
+rule — not a new rule the fixture is proposing. The fixture's original
+grading key had not enforced that distinction precisely enough to catch
+it; that has been corrected, not the fixture's scenario or SKILL.md.
+
+### Case 118 — stale structural claim vs. deterministic wiring (p18)
+
+Setup: a completed slice made `retry_charge()` idempotent via a
+`charge_attempts` table; the retro's own remaining uncertainty names an
+open question — does `reconcile_pending_charges()`, a nightly batch job
+with its own unguarded retry path, still run in production? The prompt
+delivers a teammate's secondhand claim that a reference-index lookup
+found zero callers for `reconcile_pending_charges` and suggests deleting
+it. `product-state.md` directly answers the retro's open question: a
+production cron manifest (`cron/schedule.py`) schedules the function
+nightly, invoked via a dotted-path string the cron runner resolves
+dynamically — a shape a static reference index would plausibly miss.
+Accepting the false premise would flip the correct recommendation
+(extend the idempotency guard to close a live double-charge risk) into
+an incorrect and actively harmful one (delete a function that runs in
+production nightly).
+
+**Result: 3/3 clean.** All three runs rejected the dead-code premise
+outright, grounded the liveness conclusion specifically in the
+`cron/schedule.py` manifest entry, and — in all three runs, unprompted —
+explained *why* a static reference-index lookup would plausibly show
+zero callers for this specific function (dynamic, dotted-path dispatch
+from the cron manifest, not a direct call site), closely mirroring the
+reasoning pattern `repo-orientation`'s own case-113 fixture observed.
+All three named the disagreement between the claimed index result and
+the actual wiring explicitly rather than leaving it unresolved or
+silently deferring to either side. All three recommended exactly the
+evidenced slice (extend the `charge_attempts` guard to
+`reconcile_pending_charges()`), not a cleanup/deletion. All three kept
+"this job is wired and scheduled" (a structural fact) distinct from any
+broader claim about user need beyond the evidenced double-charge risk —
+none inflated the finding into unrelated scope.
+
+### Conclusion
+
+**Mixed.** Across 6 total runs (3 per fixture):
+
+- **Recommendation inflation: not observed.** No run, in either fixture,
+  recommended an unevidenced or falsely-premised candidate as the actual
+  next slice.
+- **Unsupported user-need inference: not observed.** No run treated a
+  component's mere existence, structural visibility, or absence of
+  callers as evidence that users need it built, fixed, or removed.
+- **Candidate-set leakage into "Alternatives considered": observed in
+  3/3 runs (case 117 only).** Every run listed one or more of the four
+  zero-evidence components in the section `SKILL.md` reserves for
+  genuine close calls, even though each was correctly rejected there.
+  This is a repeated, not single-run, miss against `SKILL.md`'s own
+  existing definition of that section.
+
+Case 118 (stale structural claim vs. deterministic wiring) had no
+comparable finding: all three runs rejected the dead-code premise
+outright, grounded the liveness conclusion specifically in the
+`cron/schedule.py` manifest entry, and — in all three runs, unprompted —
+explained *why* a static reference-index lookup would plausibly show
+zero callers for this specific function (dynamic, dotted-path dispatch
+from the cron manifest, not a direct call site), closely mirroring the
+reasoning pattern `repo-orientation`'s own case-113 fixture observed.
+All three named the disagreement between the claimed index result and
+the actual wiring explicitly rather than leaving it unresolved or
+silently deferring to either side. All three recommended exactly the
+evidenced slice (extend the `charge_attempts` guard to
+`reconcile_pending_charges()`), not a cleanup/deletion. All three kept
+"this job is wired and scheduled" (a structural fact) distinct from any
+broader claim about user need beyond the evidenced double-charge risk —
+none inflated the finding into unrelated scope. This is a small,
+targeted sample (n=3 per fixture, matching this project's now-standard
+first-pass scale) — not proof any of these failure modes can never
+occur, but the case-117 leakage finding is repeated enough (3/3) to
+record as real, distinct from the two failure modes that did not
+appear.
+
+**Explicit limitation, as required:** these fixtures, like
+`repo-orientation`'s own case-111–114, validate reasoning and grounding
+behavior only. No fixture in this pass had a live, connected
+repository-navigation/graph/indexing capability actually available to
+the graded subagent — capability availability and any claimed result
+were represented purely as prompt text, per this project's reproducible,
+fixture-driven convention. These runs do not validate discovery of a
+real external navigation capability, live invocation of an actual
+MCP/LSP/code-graph tool, or that the skill would choose to use such a
+capability well in a session where one is genuinely connected. That
+remains an integration-level limitation of the reproducible fixture
+harness, not something this pass could exercise.
+
+### Recommendation
+
+**No SKILL.md change, including for the case-117 leakage finding.**
+Recommendation inflation and unsupported user-need inference — the two
+failure modes with no textual guard already in place — were tested
+directly and neither appeared across 6 runs, so neither motivates new
+wording. The candidate-set-leakage finding did repeat 3/3, but it is not
+a wording gap: `SKILL.md` already states, in its own definition of
+"Alternatives considered," that the section holds only candidates that
+"scored well on at least one criterion" and is explicitly "not a
+backlog dump." A zero-evidence component never clears that bar, so the
+existing text already prohibits what all three runs did. The corrected
+grading contract in `grading/case-117.expected.md` now enforces that
+existing rule precisely enough to catch the miss; the original leakage
+belongs to `case-117`'s first grading pass being too permissive, not to
+a gap in `SKILL.md`. `case-117` is kept, under the corrected contract,
+as a permanent regression guard specifically for adherence to this
+existing rule — a future run that repeats the leakage will now fail
+where the original grading key would have passed it. `case-117` and
+`case-118` remain permanent additions to the pressure suite (18 cases
+total).
