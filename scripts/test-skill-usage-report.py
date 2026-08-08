@@ -46,6 +46,28 @@ def assistant_line(skill, session_id="sess-1", ts="2026-08-01T10:00:00.000Z", uu
     )
 
 
+def slash_command_line(skill, session_id="sess-1", ts="2026-08-01T10:00:00.000Z", uuid="u1"):
+    """Mirrors the real transcript shape for a user-typed `/skill-name` slash
+    command: a `type: "user"` record whose message content is a plain string
+    containing `<command-name>/skill-name</command-name>` — no Skill tool_use
+    block anywhere, since the harness expands the command directly."""
+    return json.dumps(
+        {
+            "type": "user",
+            "sessionId": session_id,
+            "timestamp": ts,
+            "uuid": uuid,
+            "message": {
+                "content": (
+                    f"<command-message>{skill}</command-message>\n"
+                    f"<command-name>/{skill}</command-name>\n"
+                    "<command-args></command-args>"
+                )
+            },
+        }
+    )
+
+
 def test_discover_tracked_skills():
     mod = load_module()
     with tempfile.TemporaryDirectory() as tmp:
@@ -74,6 +96,44 @@ def test_ignores_untracked_skill():
     text = assistant_line("untracked-skill") + "\n"
     rows = list(mod["parse_skill_invocations"](text, {"tracked-skill"}))
     check("parse_skill_invocations ignores untracked skill names", rows == [])
+
+
+def test_parse_slash_command_invocation():
+    mod = load_module()
+    text = slash_command_line("tracked-skill", session_id="sess-2", ts="2026-08-02T10:00:00.000Z") + "\n"
+    rows = list(mod["parse_skill_invocations"](text, {"tracked-skill"}))
+    check(
+        "parse_skill_invocations detects a /skill-name slash-command invocation "
+        "(no Skill tool_use block involved)",
+        rows == [("tracked-skill", "sess-2", "2026-08-02T10:00:00.000Z")],
+    )
+
+
+def test_ignores_untracked_slash_command():
+    mod = load_module()
+    text = slash_command_line("clear") + "\n"
+    rows = list(mod["parse_skill_invocations"](text, {"tracked-skill"}))
+    check("parse_skill_invocations ignores slash commands that aren't tracked skills", rows == [])
+
+
+def test_counts_both_invocation_paths_in_same_session():
+    mod = load_module()
+    with tempfile.TemporaryDirectory() as tmp:
+        projects_root = pathlib.Path(tmp) / "projects" / "proj-a"
+        projects_root.mkdir(parents=True)
+        transcript = projects_root / "session1.jsonl"
+        transcript.write_text(
+            slash_command_line("tracked-skill", session_id="sess-1", ts="2026-08-01T10:00:00.000Z", uuid="u1")
+            + "\n"
+            + assistant_line("tracked-skill", session_id="sess-1", ts="2026-08-01T10:05:00.000Z", uuid="u2")
+            + "\n"
+        )
+        stats = mod["scan_transcripts"](pathlib.Path(tmp) / "projects", {"tracked-skill"})
+        check(
+            "a slash-command invocation and a Skill tool_use invocation in the "
+            "same session both count, without double-counting either",
+            stats["tracked-skill"].total == 2 and len(stats["tracked-skill"].sessions) == 1,
+        )
 
 
 def test_malformed_json_tolerance():
@@ -176,6 +236,9 @@ def main():
     test_discover_tracked_skills()
     test_parse_matching_invocation()
     test_ignores_untracked_skill()
+    test_parse_slash_command_invocation()
+    test_ignores_untracked_slash_command()
+    test_counts_both_invocation_paths_in_same_session()
     test_malformed_json_tolerance()
     test_duplicate_invocations_in_separate_records_count_separately()
     test_unused_skill_shows_zero()
