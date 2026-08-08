@@ -17,11 +17,18 @@ Run with `uv run scripts/skill-usage-report.py`.
 import argparse
 import json
 import pathlib
+import re
 import sys
 from dataclasses import dataclass, field
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_PROJECTS_ROOT = pathlib.Path.home() / ".claude" / "projects"
+
+# A user-typed `/skill-name` slash command is expanded by the harness into a
+# `type: "user"` record whose message content is plain text containing this
+# tag — no Skill tool_use block is ever produced for that invocation path, so
+# it needs its own detection alongside the assistant tool_use path below.
+COMMAND_NAME_RE = re.compile(r"<command-name>/([a-zA-Z0-9_-]+)</command-name>")
 
 
 @dataclass
@@ -42,8 +49,11 @@ def discover_tracked_skills(repo_root: pathlib.Path) -> set[str]:
 
 
 def parse_skill_invocations(text: str, tracked_skills: set[str]):
-    """Yield (skill_name, session_id, timestamp) for each tracked Skill
-    tool_use found in this already-decoded transcript text.
+    """Yield (skill_name, session_id, timestamp) for each tracked skill
+    invocation found in this already-decoded transcript text, via either
+    invocation path: the model calling the Skill tool, or the user typing a
+    `/skill-name` slash command directly (which never produces a Skill
+    tool_use block).
 
     Malformed lines and unexpected record shapes are skipped, not fatal.
     """
@@ -54,23 +64,43 @@ def parse_skill_invocations(text: str, tracked_skills: set[str]):
             entry = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if not isinstance(entry, dict) or entry.get("type") != "assistant":
+        if not isinstance(entry, dict):
+            continue
+        entry_type = entry.get("type")
+        if entry_type not in ("assistant", "user"):
             continue
         message = entry.get("message")
         content = message.get("content") if isinstance(message, dict) else None
-        if not isinstance(content, list):
-            continue
         session_id = entry.get("sessionId") or entry.get("session_id") or ""
         ts = entry.get("timestamp") or ""
-        for block in content:
-            if not isinstance(block, dict):
+
+        if entry_type == "assistant":
+            if not isinstance(content, list):
                 continue
-            if block.get("type") != "tool_use" or block.get("name") != "Skill":
-                continue
-            inp = block.get("input")
-            skill_name = inp.get("skill") if isinstance(inp, dict) else None
-            if skill_name in tracked_skills:
-                yield skill_name, session_id, ts
+            for block in content:
+                if not isinstance(block, dict):
+                    continue
+                if block.get("type") != "tool_use" or block.get("name") != "Skill":
+                    continue
+                inp = block.get("input")
+                skill_name = inp.get("skill") if isinstance(inp, dict) else None
+                if skill_name in tracked_skills:
+                    yield skill_name, session_id, ts
+            continue
+
+        # entry_type == "user": look for a `/skill-name` slash-command tag.
+        texts = []
+        if isinstance(content, str):
+            texts.append(content)
+        elif isinstance(content, list):
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    texts.append(block.get("text") or "")
+        for t in texts:
+            for m in COMMAND_NAME_RE.finditer(t):
+                skill_name = m.group(1)
+                if skill_name in tracked_skills:
+                    yield skill_name, session_id, ts
 
 
 def scan_transcripts(projects_root: pathlib.Path, tracked_skills: set[str]) -> dict[str, SkillStats]:
