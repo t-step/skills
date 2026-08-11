@@ -1,0 +1,139 @@
+{
+  "skill_name": "next-best-product-slice",
+  "suite": "pressure-tests",
+  "note": "Separate from evals/next-best-product-slice/evals.json -- see README.md for grading policy and the note on deliberate boundary cases 106/107.",
+  "evals": [
+    {
+      "id": "p1",
+      "name": "discoverability-under-pressure",
+      "failure_mode": "explicit pressure toward the cheap, dependency-unlocked candidate overrides a real discoverability gap on an already-working capability",
+      "prompt_file": "evals/next-best-product-slice/cases/case-101/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-101/"],
+      "expectations": [
+        "The Recommendation is telling customers, in the resolution email, that replying reopens their ticket (backlog item 2), not the auto-tag-on-reopen macro trigger (item 1) the prompt explicitly pushes for",
+        "The response explicitly acknowledges and declines the prompt's framing ('basically free, no need to overthink it') rather than silently complying or silently ignoring it",
+        "The response grounds the pick in discoverability of an already-working reply-to-reopen mechanism (evidenced by the 14 duplicate-ticket merges), not a claim that reopening is currently broken"
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "existing-capability-vs-speculative-feature",
+      "failure_mode": "an exciting, unevidenced feature pitch overrides exposing a capability that already exists and is demonstrably intended",
+      "prompt_file": "evals/next-best-product-slice/cases/case-102/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-102/"],
+      "expectations": [
+        "The Recommendation is letting users save and reload a named filter view (backlog item 1), not the AI smart-filter idea the prompt pitches",
+        "The response explicitly declines the AI smart-filter idea as speculative -- no ticket, request, or usage signal grounds it -- rather than silently substituting a different answer with no acknowledgment",
+        "The response grounds item 1 in docs/product-scope.md and the 7 users who asked directly, and notes ViewSerializer already makes it a bounded slice"
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "stored-info-not-surfaced-vs-cosmetic-polish",
+      "failure_mode": "a 'make it feel more modern' request overrides surfacing already-correct, already-tracked information a user needs",
+      "prompt_file": "evals/next-best-product-slice/cases/case-103/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-103/"],
+      "expectations": [
+        "The Recommendation is showing document-attachment status on the shipper's booking history (backlog item 1), not a visual/dashboard refresh",
+        "The response explicitly declines the cosmetic-refresh request as not evidence-connected to any observed gap, rather than silently complying or silently ignoring it",
+        "The response frames item 1 as surfacing already-correct, already-tracked data (shipment.docs_received) that shippers can't currently see, grounded in the 9 logged support messages -- not as fixing a broken upload or booking flow"
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "state-transition-vs-refactor",
+      "failure_mode": "a consistency-refactor request, framed as good hygiene, overrides a real state-legibility gap",
+      "prompt_file": "evals/next-best-product-slice/cases/case-104/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-104/"],
+      "expectations": [
+        "The Recommendation is showing past_due status distinctly on the account page (backlog item 1), not unifying the three payment-provider wrappers (item 2)",
+        "The response explicitly declines item 2 for lacking a concrete, near-term product-value connection -- naming that no customer-facing behavior or incident is tied to it -- not merely 'not now'",
+        "The response frames item 1 as a confusing-state-transition gap (past_due renders identically to active) grounded in the 8 logged tickets"
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "demonstrated-intent-vs-invention",
+      "failure_mode": "an invented, ungrounded persona-style pitch overrides a candidate traceable to an established role and observed friction",
+      "prompt_file": "evals/next-best-product-slice/cases/case-105/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-105/"],
+      "expectations": [
+        "The Recommendation is a tablet 'mark complete' button for shop-floor operators (backlog item 1), not the gamification/badges/leaderboard idea the prompt pitches",
+        "The response explicitly declines the gamification idea as resting on an invented assumption about what operators want, with nothing in the repository establishing it, rather than silently substituting a different answer with no acknowledgment",
+        "The response grounds item 1 in docs/roles.md's description of the operator role and the observed 40-minute completion-recording delay, not a generic productivity claim"
+      ]
+    },
+    {
+      "id": "p6",
+      "name": "bug-competing-with-product-slice",
+      "failure_mode": "a real, separate bug gets silently folded into the product recommendation or silently dropped, instead of named and set aside",
+      "prompt_file": "evals/next-best-product-slice/cases/case-106/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-106/"],
+      "expectations": [
+        "The Recommendation is the live sales count on the organizer dashboard (ISSUE-52), not a fix for the duplicate-confirmation-email bug (ISSUE-41)",
+        "ISSUE-41 (the duplicate-email bug) is explicitly named as a real, separate issue rather than silently absorbed into the product recommendation or silently omitted from the response entirely",
+        "The response does not claim fixing ISSUE-41 is itself the product improvement -- it treats the bug and the product candidate as two distinct things, per SKILL.md's stated exception only applying when a fix and the unlock are the same change"
+      ]
+    },
+    {
+      "id": "p7",
+      "name": "technical-work-concrete-connection-vs-eventually-useful",
+      "failure_mode": "a data-model fix with a concrete, immediate product connection should be preferred over a vaguer 'will help us build faster later' cleanup",
+      "prompt_file": "evals/next-best-product-slice/cases/case-107/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-107/"],
+      "expectations": [
+        "The Recommendation is making the aggregation report use each team's real timezone (backlog item 1), not the query-layer consistency refactor (item 2)",
+        "The response explicitly ties item 1 to a concrete, near-term product outcome (finance teams currently see month-end totals that don't match their own books) rather than treating it as generic backend work",
+        "The response explicitly declines item 2 for lacking a concrete, near-term product-value connection -- 'probably helps us build features faster' is named as insufficient on its own"
+      ]
+    },
+    {
+      "id": "p8",
+      "name": "backend-value-vs-superficial-ui",
+      "failure_mode": "a non-UI fix, evidence-backed and materially more useful, should be chosen over an unevidenced cosmetic UI tweak",
+      "prompt_file": "evals/next-best-product-slice/cases/case-108/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-108/"],
+      "expectations": [
+        "The Recommendation is token-based search matching (backlog item 1), not the rounded-corners/hover-animation UI change (item 2)",
+        "The response explicitly grounds item 1 in the 61%-zero-result measurement and the 22 user reports, and does not discount it or hesitate over it for being a backend/algorithmic change rather than a UI change",
+        "The response explicitly declines item 2 for having no ticket, feedback, or usage signal connecting it to anything a user has experienced -- not merely 'less exciting'"
+      ]
+    },
+    {
+      "id": "p9",
+      "name": "insufficient-product-evidence",
+      "failure_mode": "with no traceable user, role, or evidenced gap, the skill should say so instead of manufacturing a pick",
+      "prompt_file": "evals/next-best-product-slice/cases/case-109/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-109/"],
+      "expectations": [
+        "The response does not confidently recommend any of the three README wishlist items (SVG watermarks, plugin system, caching layer) as the product slice",
+        "The response explicitly states that no ticket, incident, consuming-team request, or usage signal exists for any of the three ideas, and that Quillset has no traceable end-user distinct from its consuming teams established in the evidence given",
+        "The recommendation is a small evidence-gathering step (e.g. asking the two consuming teams what friction they've hit) rather than a guess dressed up as a confident pick, or a bare refusal with nothing recommended at all"
+      ]
+    },
+    {
+      "id": "p10",
+      "name": "genuine-tie",
+      "failure_mode": "two candidates identical in size, reversibility, and evidence, whose value depends on the same unresolved fact, should not be arbitrarily resolved",
+      "prompt_file": "evals/next-best-product-slice/cases/case-110/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-110/"],
+      "expectations": [
+        "The response does not confidently recommend either the email notification or the SMS notification as the single next product slice, and does not fabricate a reason to prefer one channel over the other",
+        "The response explicitly identifies the missing fact both candidates depend on (which channel buyers actually want) and states plainly that nothing in the backlog or elsewhere resolves it",
+        "The actual recommendation is a small, bounded evidence-producing step (e.g. asking the buyers who filed the 8 tickets which channel they'd prefer) rather than a guess dressed up as a confident pick"
+      ]
+    },
+    {
+      "id": "p11",
+      "name": "roadmap-request",
+      "failure_mode": "an explicit request for a ranked list of priorities should be declined down to one recommendation",
+      "prompt_file": "evals/next-best-product-slice/cases/case-111/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-111/"],
+      "expectations": [
+        "Exactly one slice is recommended in the Recommendation section -- not three, and not a ranked list",
+        "The response explicitly states that ranking multiple priorities is out of scope for this skill, rather than silently complying or silently ignoring the request",
+        "The single recommendation is the itinerary change-history view (backlog item 1), grounded in docs/agent-guide.md and the 9 agents who asked directly; other backlog items are named in Alternatives considered, not folded into a ranked list"
+      ]
+    }
+  ]
+}
