@@ -22,6 +22,20 @@ the target skill's SKILL.md text is appended to the system prompt via
 `--append-system-prompt` -- this proves divergence under direct instruction
 injection, not normal Agent Skill description-based triggering/discovery.
 
+Fixture contract (iteration-1, this runner only -- not a claim of
+compatibility with every existing mature evals.json/pressure_evals.json):
+each case's "files" must contain exactly one entry, and it must be a
+directory -- the fixture's repo root, copied fresh into an isolated scratch
+copy per condition. No multi-file or multi-root fixtures are supported;
+a case violating this fails validation before any condition runs.
+
+Trust boundary: each case's optional "verify" commands ("cmd") are trusted
+repository configuration, authored by whoever wrote the fixture, not
+untrusted input. They are executed via the shell (subprocess `shell=True`)
+from inside that case's isolated scratch copy, never the source fixture.
+No escaping, sandboxing, or command allowlisting is performed beyond that
+filesystem isolation.
+
 Run with `uv run scripts/eval-divergence.py <skill> --compare baseline`.
 """
 
@@ -37,6 +51,35 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 CLAUDE_TIMEOUT_SECONDS = 300
 TOOLS = "Read,Edit,Write,Glob"
+
+
+class ManifestError(ValueError):
+    """A case entry violates this runner's iteration-1 files[] contract."""
+
+
+def resolve_case_repo(case: dict) -> Path:
+    """Resolve and validate a case's fixture repo directory.
+
+    Iteration-1 contract: 'files' must contain exactly one entry, and that
+    entry must be a directory -- the fixture's repo root. This is this
+    runner's own contract, not a claim of compatibility with every existing
+    mature evals.json/pressure_evals.json shape (some of which use 'files'
+    for other purposes); it is deliberately not generalized to multiple
+    entries or multiple fixture roots.
+    """
+    case_id = case.get("id", "?")
+    files = case.get("files")
+    if not files:
+        raise ManifestError(f"case {case_id}: 'files' is missing or empty; exactly one directory entry is required")
+    if len(files) > 1:
+        raise ManifestError(
+            f"case {case_id}: 'files' has {len(files)} entries; exactly one is required "
+            "(iteration-1 contract, no multi-file/multi-root support)"
+        )
+    src_repo = REPO / files[0]
+    if not src_repo.is_dir():
+        raise ManifestError(f"case {case_id}: 'files' entry is not a directory: {files[0]}")
+    return src_repo
 
 
 def load_manifest(path: Path) -> dict:
@@ -108,6 +151,10 @@ def run_verify(verify_specs: list[dict], cwd: Path) -> list[dict]:
     results = []
     for spec in verify_specs:
         try:
+            # spec["cmd"] is trusted repository configuration (authored in
+            # the fixture's own divergence.json), not untrusted input; it
+            # runs via the shell inside the isolated scratch copy only.
+            # See the module docstring's "Trust boundary" note.
             proc = subprocess.run(
                 spec["cmd"], shell=True, cwd=cwd, capture_output=True, text=True, timeout=60
             )
@@ -150,11 +197,7 @@ def run_condition(case: dict, condition: str, src_repo: Path, skill_text: str | 
     return {"outcome": outcome, "verify": verify_results, "repo_dir": dest / "repo"}
 
 
-def run_case(case: dict, skill_text: str, model: str | None, run_dir: Path) -> dict:
-    src_repo = REPO / case["files"][0]
-    if not src_repo.is_dir():
-        sys.exit(f"eval-divergence: case {case['id']} 'files' entry not found: {src_repo}")
-
+def run_case(case: dict, src_repo: Path, skill_text: str, model: str | None, run_dir: Path) -> dict:
     case_run_dir = run_dir / f"case-{case['id']:03d}"
     baseline = run_condition(case, "baseline", src_repo, None, model, case_run_dir)
     skill = run_condition(case, "skill", src_repo, skill_text, model, case_run_dir)
@@ -220,8 +263,24 @@ def write_summary_md(run_dir: Path, results: list[dict], skill_name: str,
     (run_dir / "summary.md").write_text("\n".join(lines) + "\n")
 
 
+EPILOG = """\
+Fixture contract (iteration-1, this runner only): each case's "files" must
+be exactly one directory entry -- the fixture repo root. No multi-file or
+multi-root fixtures; a case that violates this fails validation before any
+condition runs. Not a claim of compatibility with other evals.json shapes.
+
+Trust boundary: each case's "verify[].cmd" is trusted repository
+configuration, executed via the shell from inside that case's isolated
+scratch copy. Not sandboxed or escaped beyond that filesystem isolation.
+"""
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(
+        description=__doc__.splitlines()[0],
+        epilog=EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument("skill", help="skill name (matches skills/<skill>/SKILL.md by default)")
     parser.add_argument("--compare", required=True, choices=["baseline"],
                          help="what to compare the skill condition against")
@@ -251,6 +310,14 @@ def main() -> int:
     if not cases:
         sys.exit("eval-divergence: no cases selected")
 
+    # Validate every selected case's files[] contract up front, before
+    # running anything -- a bad case later in the list must not waste a
+    # completed claude -p run on an earlier one.
+    try:
+        case_repos = {case["id"]: resolve_case_repo(case) for case in cases}
+    except ManifestError as e:
+        sys.exit(f"eval-divergence: {e}")
+
     run_dir = REPO / "evals" / args.skill / "runs" / datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -263,7 +330,7 @@ def main() -> int:
         baseline_desc += f", --model {args.model}"
         skill_desc += f", --model {args.model}"
 
-    results = [run_case(case, skill_text, args.model, run_dir) for case in cases]
+    results = [run_case(case, case_repos[case["id"]], skill_text, args.model, run_dir) for case in cases]
 
     print_summary(results, baseline_desc, skill_desc)
     write_summary_md(run_dir, results, args.skill, baseline_desc, skill_desc)

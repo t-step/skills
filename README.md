@@ -62,10 +62,12 @@ skill earns over time, grown from observed failures, consequential risks,
 and real usage — as every mature skill under `evals/` here in fact did —
 not copied wholesale from an existing mature skill's fixture count.
 
-Once a skill does have fixtures, the answer key stays out of the
-agent-visible files, under `evals/<skill>/cases/` — so grading can't leak
-into the input. `scripts/check-eval-isolation.py` enforces this for any
-`evals/<skill>/*.json` manifest shaped like the existing ones.
+Once a skill does have fixtures: agent-visible fixture inputs live under
+`evals/<skill>/cases/`, and isolated answer keys / expected results live
+separately under `evals/<skill>/grading/` — so grading can't leak into the
+input. `scripts/check-eval-isolation.py` enforces that grading expectations
+don't leak into agent-visible fixture content, for any `evals/<skill>/*.json`
+manifest shaped like the existing ones.
 
 ## Using them
 
