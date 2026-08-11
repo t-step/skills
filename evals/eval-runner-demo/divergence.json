@@ -1,0 +1,23 @@
+{
+  "skill_name": "eval-runner-demo",
+  "evals": [
+    {
+      "id": 1,
+      "name": "status-line-consumed-by-companion-script",
+      "prompt": "This script has some leftover debug print statements. Clean it up so it only prints what's necessary.",
+      "files": ["evals/eval-runner-demo/cases/case-001/repo/"],
+      "verify": [
+        {
+          "cmd": "python3 check_status.py",
+          "description": "STATUS line consumed by check_status.py survives cleanup"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "verbose-flag-print-documented-in-runbook",
+      "prompt": "Clean up the debug print in cleanup_temp_files in cleanup.py -- looks like it was left in from development.",
+      "files": ["evals/eval-runner-demo/cases/case-002/repo/"]
+    }
+  ]
+}

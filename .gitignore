@@ -1,1 +1,6 @@
 .projectmem/
+
+# scripts/eval-divergence.py: fresh timestamped captured-run directories
+# (fixture repo copies + transcripts). Hand-authored runs/*.md writeups
+# stay tracked; only the raw per-run subdirectories are ignored.
+evals/*/runs/*/

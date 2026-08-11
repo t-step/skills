@@ -42,14 +42,30 @@ own and mostly refuses to do another's job even when asked.
 
 The development rule for this repository: an observed failure can motivate a
 change to a skill's `SKILL.md`; a suspected one gets an eval case first, not
-a prompt edit on a hunch. Each skill has fixtures under `evals/<skill>/` —
-ordinary cases plus an adversarial pressure suite (approval bias, false
-confidence from passing tests, an instruction buried in the content being
-reviewed, and similar) — with the answer key kept out of the agent-visible
-files so grading can't leak into the input. `RESULTS.md` in each eval
-directory records actual runs against these fixtures, including
-disagreements that got written up rather than smoothed over to hit a clean
-number.
+a prompt edit on a hunch. `RESULTS.md` in each eval directory records actual
+runs against these fixtures, including disagreements that got written up
+rather than smoothed over to hit a clean number.
+
+A new skill does not start with a mature suite. It starts with the smallest
+set of fixtures that demonstrates useful behavioral divergence from
+baseline and exercises the skill's central failure boundary — often 2-5
+cases, not the ordinary-cases-plus-adversarial-pressure-suite shape the
+mature skills above have grown into. `scripts/eval-divergence.py` runs a
+skill's small fixture set against a fresh baseline (no target skill) and a
+fresh skill condition (target `SKILL.md` appended to the system prompt),
+captures both, and reports where they diverge — see
+`evals/eval-runner-demo/` for a self-contained example. A taxonomy of
+possible failure modes, if you have one, is design input for choosing which
+2-5 cases to start with — not a checklist requiring one fixture per
+category. Regression breadth and an adversarial pressure suite are things a
+skill earns over time, grown from observed failures, consequential risks,
+and real usage — as every mature skill under `evals/` here in fact did —
+not copied wholesale from an existing mature skill's fixture count.
+
+Once a skill does have fixtures, the answer key stays out of the
+agent-visible files, under `evals/<skill>/cases/` — so grading can't leak
+into the input. `scripts/check-eval-isolation.py` enforces this for any
+`evals/<skill>/*.json` manifest shaped like the existing ones.
 
 ## Using them
 
