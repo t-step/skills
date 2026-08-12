@@ -914,3 +914,108 @@ existing rule — a future run that repeats the leakage will now fail
 where the original grading key would have passed it. `case-117` and
 `case-118` remain permanent additions to the pressure suite (18 cases
 total).
+
+
+## Iteration 6 — anti-certainty-proxy correction (2026-08-12)
+
+**Motivation.** A production run of the sibling skill
+(`next-best-product-slice`, the "Valence" repository) self-described its
+selection function as "smallest thing I can fully stand behind" —
+evidentiary confidence proxying for priority. This skill's iteration-5
+wording shared the underlying bug: a controlled baseline run against a
+synthetic fixture reproduced it verbatim ("the tags registration is the
+only candidate whose entire justification is already-observed fact…
+Every other candidate needs at least one fact nobody has," with a
+grounded product hypothesis dismissed as "speculation about user want"
+and seam safety cited inside Why now).
+
+**Scope decision.** A full "facts gated, value is a named bet" framework
+(two confidences, a "The bet" report section, a candidate-generation
+completeness check) was drafted into this skill first, then deliberately
+withdrawn and routed to `next-best-product-slice` instead: an
+intermediate full-framework wording caused a real regression on
+case-114 (the fact-vs-value reclassification dissolved the designed tie
+into a fabricated size tiebreak, caught by a same-session rerun), and
+the framework's product-bet orientation was eroding the two skills'
+designed divergence. This skill keeps its all-criteria objective and
+receives only the narrow correction:
+
+- Speculation tier scoped to factual premises; a value hypothesis is not
+  factual speculation, cannot be dismissed as "speculation about user
+  want," and a grounded candidate competes on the full criteria even
+  when its value is harder to prove than a rival's. Evidentiary
+  confidence establishes the factual basis of a candidate, never its
+  priority — with an explicit boundary that this does not dissolve the
+  genuine-ambiguity outcome for otherwise-indistinguishable candidates
+  hanging on the same single unresolved fact.
+- Criteria intro: no criterion wins by default, and none is disqualified
+  by default either.
+- Architectural momentum: a "proven safe to touch" seam is
+  implementation information — at most a final feasibility tie-break,
+  never part of why a slice is next; the adjacency gradient-descent loop
+  is named.
+- New refusal: recommending the most provable candidate because it is
+  the most provable, or dismissing a grounded candidate for unproven
+  value.
+
+The regression fixture built for this failure mode (a grep-provable
+README-core cleanup vs. an observed-premise product hypothesis under
+"certain win" pressure) moved with the framework: it now lives at
+`evals/next-best-product-slice/cases/case-112/`, where its RED/GREEN
+pair reproduces and corrects the production failure directly (see that
+suite's RESULTS.md Iteration 2).
+
+**Full suite rerun** (25 cases, claude-sonnet-5, fresh subagent per
+case, blind to grading; graded by two fresh grader agents against the
+committed keys, adjudicated by the orchestrating session). Totals
+re-derived from the grader reports: **77 expectations, 70 pass, 2
+partial, 3 borderline, 2 fail.** 21 of 25 cases fully clean, including
+every refusal case (101, 104, 105, 108, 109), the tie case 114 (2/2
+relevant runs: tie named, evidence-step recommended), the tunneling case
+115 ("implementation momentum, not new product-consequential evidence"),
+and the recency case 103 ("being in the same file is implementation
+convenience, not evidence"). The non-clean cases:
+
+- **case-116 (documented-limitation-no-need), 0/3 — ruled a grading-key
+  defect, not a skill defect.** 4 of 4 runs (two before and two after
+  the boundary-sentence addition) picked CSV export via a
+  size/reversibility comparison while explicitly disclaiming any value
+  or urgency claim ("three equally value-unproven candidates… smallest
+  and most reversible"). The key demands an evidence-producing step and
+  asserts the three candidates are indistinguishable "by value, size,
+  or risk" — but the fixture's own text establishes a size asymmetry
+  (multi-region is a data-model change, webhooks need new delivery
+  infrastructure, CSV is a read path), and the key's expected behavior
+  encodes the pre-correction doctrine (unproven value auto-routes to
+  measurement) that this iteration deliberately removes. The grader
+  independently flagged the fixture's under-enforced symmetry. The key
+  is left unmodified here and flagged for an explicit follow-up
+  decision rather than silently rewritten by the change it would be
+  blessing.
+- **case-117 E4, 1/2 runs — placement variance.** One run listed the
+  unevidenced components inside Alternatives considered (disallowed by
+  the key even when rejected there); a rerun placed them only in Why
+  now / non-goals with an explicit parenthetical declining to pad
+  Alternatives. Substantive expectations passed in both runs.
+- **case-004 E2, partial — continuous with iteration 1**, which recorded
+  the same miss in both configurations: the rollout's
+  evidence-insufficiency is fully argued, but reversibility is never
+  named as a distinct reason.
+- **case-003 E3 borderline** (close calls not named as close) and
+  **case-107 E3 borderline** (reduced confidence scoped to
+  review-derived claims rather than the recommendation itself) — both
+  presentation-level, both documented rather than fixture-patched.
+
+**What this proves / what this does not prove.** Proves: the pre-change
+wording reproducibly exhibits certainty-as-proxy selection on the moved
+fixture (1 baseline run, verbatim); the narrowed wording preserves the
+suite's substantive behaviors (25 cases, 1 run each at final wording,
+plus targeted reruns at N=2–4 on 003/114/116/117); the case-114 tie
+contract that an intermediate wording broke is restored (2/2). Does not
+prove: stability under repetition for the N=1 cases; that the narrow
+correction changes real-world picks (its uplift case lives in the
+sibling suite's RED/GREEN, not here — this suite's rerun is regression
+evidence); or the correct resolution of case-116, which is now an open
+key-vs-doctrine question rather than a graded result. Raw run outputs
+and grader reports live in the authoring session's scratchpad and are
+summarized here; they are not committed.
