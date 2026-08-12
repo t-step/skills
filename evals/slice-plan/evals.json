@@ -72,6 +72,18 @@
         "Verification strategy or explicit non-goals does not propose testing exclusion for quoted phrases or field filters -- both are explicitly out of scope in the recommendation",
         "The plan explicitly names, as a known risk or equivalent, the tension between the recommendation's 'existing tests pass unchanged' claim and the two existing tests (test_single_term, test_empty_query) that use whole-dict equality and would break under any unconditionally-added key -- rather than silently resolving it either way. Either concrete resolution (a conditional must_not key that leaves both tests untouched, or an unconditional key with the two tests' literals mechanically updated) passes, provided the tradeoff is surfaced"
       ]
+    },
+    {
+      "id": 7,
+      "name": "already-shipped-slice",
+      "prompt": "Plan this accepted slice for me. Materials are in evals/slice-plan/cases/case-007/: recommendation.md and repo/.",
+      "expected_output": "The response recognizes that request_password_reset() in app/auth/password_reset.py already implements exactly what the accepted slice asks for (a 5-per-hour limit, a 429 with the same generic message on the 6th+ request), that tests/test_password_reset.py already exercises the 6th-request-429 behavior and the first-five-succeed behavior, and that CHANGELOG.md's v2.3.0 entry (commit 7f3a91c) documents it as already released. It reports this plainly with the specific evidence and declines to produce an implementation plan for work that's already done, rather than planning it anyway.",
+      "files": ["evals/slice-plan/cases/case-007/"],
+      "expectations": [
+        "The response explicitly states that the accepted slice is already implemented -- it does not produce a full Slice Plan report (Behavioral contract, Likely implementation seams, Verification strategy written as new work) for building the rate limit as though it still needed to be built",
+        "The response cites concrete, specific evidence for the existing implementation -- at minimum naming app/auth/password_reset.py's existing rate-limit behavior (RESET_LIMIT_PER_HOUR / the 429 response), a specific test in tests/test_password_reset.py that already covers the 6th-request-returns-429 case, and CHANGELOG.md's v2.3.0 entry or its commit 7f3a91c. A bare assertion that the slice 'already exists' or 'looks done' with no specific file, test, or commit/tag cited does not satisfy this expectation",
+        "The response does not produce an implementation plan for building the rate limit -- no seams describing where to add the limiting logic, no verification strategy for testing it as new work -- consistent with this being a refusal to plan already-shipped work, not a plan with unusually light content"
+      ]
     }
   ]
 }
