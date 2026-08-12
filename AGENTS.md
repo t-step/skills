@@ -31,6 +31,16 @@ This repository is private, so GitHub CI runs rarely and must never be the first
 
 The canonical check command is `bash scripts/check.sh`. It runs the strict-YAML skill-frontmatter lint (`scripts/check-skill-frontmatter.py`, a uv script), the eval answer-leakage guard (`scripts/check-eval-isolation.py`), the cross-skill dependency check (`scripts/check-skill-deps.py`), and the skill-usage-report test suite (`scripts/test-skill-usage-report.py`), and it must pass before any commit or PR. It is enforced at three layers: run it directly while working; the machine-local pre-commit hook invokes it (appended below projectmem's fenced block in `.git/hooks/pre-commit` — hooks are untracked, so re-append on a fresh clone); and `.github/workflows/checks.yml` re-runs the identical script in CI as a backstop, never as the first execution. Add future checks to `check.sh` itself, not to the hook or the workflow.
 
+## Eval write-up calibration
+
+Past `RESULTS.md` write-ups and audit reports have overstated evidence — "disproven" claimed from weak data, hand-typed totals that didn't match the raw run, credit awarded for zero-evidence content — and had to be corrected by hand. Every `RESULTS.md`, and any PR description reporting eval outcomes, is held to this contract:
+
+- Include a "What this proves / what this does not prove" section.
+- Compute numeric totals (case counts, pass rates) from the raw run data at write-up time; never hand-type them from memory. Re-count before publishing.
+- Reserve strong conclusion verbs — proves, disproves/disproven, confirms — for conclusions the case count and effect size clearly support. Below that bar, say "suggestive, underpowered" and state how many more cases (or what other evidence) would be needed. This is a qualitative judgment call, not a numeric threshold — do not invent one.
+- Grading keys must not award credit for responses that produce zero-evidence content in a section the rubric requires evidence for.
+- Before publishing, re-read the write-up adversarially: every claim needs a citation to a run artifact (transcript, grading output, diff). Claims that can't be cited get downgraded or deleted.
+
 ## Skill usage measurement
 
 `scripts/skill-usage-report.py` reports how often each `skills/*/SKILL.md` has actually been invoked in local Claude Code sessions (total count, distinct sessions/projects, last-used timestamp), by scanning `~/.claude/projects/**/*.jsonl` transcripts fresh on every run. Run it manually with `uv run scripts/skill-usage-report.py` when deciding whether a skill is getting used or is an archive candidate — it is deliberately stateless and not wired into any automated schedule or hook; see `docs/superpowers/specs/2026-08-04-skill-usage-report-design.md` for the scope decision and what's deferred until real usage shows a need.
