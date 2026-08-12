@@ -38,7 +38,7 @@ script's docstring for the exact detection rule.
 | Skill | What it does | Validation |
 |---|---|---|
 | [`comment-cleanup`](skills/comment-cleanup/) | Report-first comment cleanup: classifies each comment remove/correct/ preserve by what information would be lost if it disappeared. | 22 cases · validated (sample) |
-| [`next-best-product-slice`](skills/next-best-product-slice/) | Recommends exactly one next bounded product slice -- the smallest change that measurably grows what a product's intended users can understand, complete, or rec… | 15 cases · validated (sample) |
+| [`next-best-product-slice`](skills/next-best-product-slice/) | Recommends exactly one next bounded product slice -- the smallest change that grows what a product's intended users can understand, complete, or recover from,… | 16 cases · validated (sample) |
 | [`next-best-slice`](skills/next-best-slice/) | Recommends exactly one next implementation slice once a completed slice has been reviewed and retrospected — "given what we now know, what's the smallest, high… | 25 cases · validated (sample) |
 | [`repo-orientation`](skills/repo-orientation/) | Builds a concise, evidence-backed operating map of a repository before consequential work begins: purpose, governing instructions (root and scoped), major exec… | 22 cases · validated (sample) |
 | [`ship-slice`](skills/ship-slice/) | Ships one finished slice: discovers the repo's own complete verification gate (Makefile/package.json/pyproject targets, CI workflows, AGENTS.md/CLAUDE.md), run… | 2 cases · authored, unrun |

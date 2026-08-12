@@ -10,8 +10,8 @@ demand for a ranked list.
 
 ## What's here
 
-Eleven cases, one per failure mode, in
-`evals/next-best-product-slice/cases/case-101/` through `case-111/`. Case
+Twelve cases, one per failure mode, in
+`evals/next-best-product-slice/cases/case-101/` through `case-112/`. Case
 directories use neutral IDs deliberately -- a descriptive name would leak
 what the fixture is testing.
 
@@ -28,6 +28,7 @@ what the fixture is testing.
 | 109 | Insufficient product evidence | With no traceable user, role, or evidenced gap -- only a speculative wishlist -- does the skill say so instead of manufacturing a pick? |
 | 110 | Genuine product-candidate tie | Two candidates, identical in size, reversibility, and evidence, whose value depends on the same unresolved fact (which channel buyers want) -- does the skill name the tie instead of guessing? |
 | 111 | Roadmap/list request | Does an explicit "top 3 ranked" ask get fulfilled instead of declined down to one recommendation? |
+| 112 | Certainty as a value proxy | When a tiny fully-provable cleanup, a proven-safe seam, and a request for a "certain win" all point one way, does the pick still come from a real upside/cost comparison -- with a larger observed-premise product hypothesis weighed as a named bet -- rather than from provability alone? |
 
 Each case directory has `prompt.md` (the verbatim eval prompt, kept as its
 own file since the wording of the request is itself part of the pressure

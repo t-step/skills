@@ -2,20 +2,21 @@
 name: next-best-product-slice
 description: >-
   Recommends exactly one next bounded product slice -- the smallest change
-  that measurably grows what a product's intended users can understand,
-  complete, or recover from, given what it already supports. Distinct from
-  next-best-slice, which weighs dependency unlocking and momentum with user
-  value as one input, never privileged: here product usefulness itself
-  drives the pick, even over an architecturally-leveraged alternative.
-  Product value is outcome, not layer -- frontend, backend, data-model,
-  API, algorithmic, and performance work all qualify. Use when asked what
-  most improves the product for its users, or for the next
-  workflow-completion/usability priority -- not the general "what's next,"
-  next-best-slice's job. Requires the intended user or usage context to
+  that grows what a product's intended users can understand, complete, or
+  recover from, given what it already supports. Distinct from
+  next-best-slice, where user value is one unprivileged input: here
+  product usefulness itself drives the pick, even over an
+  architecturally-leveraged alternative.
+  Product value is outcome, not layer -- work in any layer qualifies.
+  Facts stay evidence-gated; value is an explicitly-named bet, never
+  dismissed for being unproven, never chosen for being easiest to prove.
+  Use when asked what most improves the product for its users, or for
+  the next workflow-completion/usability priority -- not the general
+  "what's next," next-best-slice's job. Requires the intended user to
   trace to repository evidence, never an invented persona. Refuses
-  multiple slices, a roadmap, a speculative idea as sufficient evidence,
-  absorbing bug work or unconnected cleanup into a product pick, or
-  manufacturing one without enough evidence.
+  multiple slices, a roadmap, factual speculation as sufficient
+  evidence, absorbing bug work into a product pick, or manufacturing one
+  without enough evidence.
 ---
 
 # Next Best Product Slice
@@ -89,6 +90,20 @@ If none of the above yields anything traceable to a real user, role, or
 context, say so plainly rather than reasoning about "users" in the
 abstract.
 
+One completeness check before anything gets ranked: every source above
+is repository-legible, so a candidate set built only from what the
+repository makes easy to see can consist entirely of unreachable
+routes, dead-ended workflows, and documented gaps with tiny fixes. Ask
+whether the set contains at least one bounded candidate that would
+advance an established user's actual job -- grounded in the product's
+demonstrated intent, its wired-in capabilities, or its traceable
+workflows, never in an invented persona -- rather than only repairing
+what happens to be visible. This is a completeness check, not license
+to brainstorm: such a candidate's factual premises must still be
+observed, its value is carried as a named bet, and the outcome is still
+exactly one recommendation. If no such candidate can be grounded, say
+so plainly and rank what exists.
+
 ## Keep evidence, inference, and speculation separate
 
 - **Observed evidence** -- a fact anyone could verify directly: a workflow
@@ -102,15 +117,84 @@ abstract.
   names a role's action, an API implements it, and no surface invokes it,
   so the exposure gap is inferred, not observed directly as a single fact --
   but it's one short step, not a leap.
-- **Speculation** -- anything further out: "users would probably like this,"
-  a hunch about what would feel more polished, a guess about what an
-  unnamed persona wants. Speculation can motivate recommending an
-  evidence-gathering step -- never a feature pick on its own.
+- **Speculation** -- an unverified factual premise treated as if observed:
+  a role or persona nothing in the repository establishes, a workflow
+  nobody can trace, "users already do X" with no evidence anyone does.
+  Factual speculation can motivate recommending an evidence-gathering
+  step -- never carry a claim as if the premise were observed.
+
+A hypothesis about value is not factual speculation, and this tier must
+never be used to suppress one. "This product's established users would
+return if it did X" makes no false claim about the repository -- it is a
+judgment about what the product should become, and the repository was
+never going to be able to prove it in advance. The repository can
+establish that a workflow is missing; it usually cannot establish
+prospectively that completing it is the highest-value product move. That
+is the bet. When a hypothesis's factual premises are observed (the
+workflow really is absent, the capability really is unreachable, the
+role really is established by the repository's own evidence), it is
+admissible as the value case for a product slice -- carried as an
+explicitly-named bet, per "Facts are gated; value is a bet" below, never
+dismissed as "speculation about user want."
+
+That observed-premise set is about the gap itself -- that a workflow is
+missing, a capability is unreachable, a role is established -- not about
+which specific implementation would close it. A candidate's proposed
+storage, schema, endpoint, or design is its own premise: it does not
+inherit "observed" status merely because the gap around it is grounded,
+and gets named as an open assumption the bounded slice resolves, or, if
+the whole candidate's feasibility turns on it, as the unresolved fact
+under "When no candidate is justified yet."
 
 When unsure which tier a claim belongs in, use the weaker one. Name which
 tier backs each factual claim as you reason -- this doesn't require a label
 on every sentence, but the reasoning behind the recommendation should be
 traceable back to a tier by anyone reading it.
+
+## Facts are gated; value is a bet
+
+Evidence constrains claims. It does not constrain product imagination to
+only things the repository can prove are valuable -- product development
+is making moves under incomplete evidence, and a selection function that
+requires proof of value will systematically pick whatever is easiest to
+prove from static repository state: unreachable-but-built capabilities,
+dead-ended workflows with one missing link, documented gaps with tiny
+fixes. Those light up every evidence detector this skill has, and each
+can still be the right pick -- but the questions that actually decide
+product priority (what would make this product's established users
+return, what turns it from interesting to useful) are usually illegible
+to the repository. Their illegibility lowers confidence in their value;
+it does not remove them from the comparison.
+
+So hold two confidences, and report them separately:
+
+- **Confidence in the facts** -- evidence-gated, per the tiers above.
+  This one is allowed to block: a candidate whose factual premises are
+  speculation isn't ready.
+- **Confidence in the value judgment** -- a bet. This one is allowed to
+  be moderate, and moderate value-confidence is the normal condition of
+  product work, not a defect to route around.
+
+The healthy shape of a recommendation under this split:
+
+> I can establish with high confidence that X is missing. I have only
+> moderate confidence that adding X is the highest-value next move.
+> Nevertheless, among the candidates available, X is the best available
+> product bet -- and here is exactly what I'm betting on.
+
+If the "betting on" clause can't be filled convincingly, the candidate
+hasn't earned the recommendation -- go back and compare again, rather
+than letting provability quietly stand in for the missing argument.
+"The only candidate that fully cleared the evidence bar" is a statement
+about fact-confidence, not a selection argument; every candidate whose
+factual premises are observed is in the comparison, and the comparison
+is of bets. Implementation convenience -- a recently-touched seam, code
+that is easy to change, familiarity from the last slice -- is not part
+of any candidate's product case at all: at most it is a final
+feasibility tie-break between otherwise comparable candidates, named as
+such. Left unchecked it becomes mechanical adjacency: recent work makes
+nearby work easier to justify, which produces more nearby work --
+gradient descent into whatever was touched last.
 
 ## What counts as a product slice, and what doesn't
 
@@ -120,10 +204,12 @@ traceable back to a tier by anyone reading it.
   capability** -- the repository's own evidence shows the workflow started
   and shows what finishing it would take -- is eligible, even if nothing
   has filed it as a ticket.
-- **A speculative feature idea** -- interesting, plausible, but resting on
-  nothing the repository actually establishes -- is not enough evidence on
-  its own. It can motivate the "not enough evidence" outcome below; it
-  cannot motivate a recommendation.
+- **A feature idea resting on speculative factual premises** -- a persona
+  nothing establishes, a workflow nobody can trace -- is not enough
+  evidence on its own. It can motivate the "not enough evidence" outcome
+  below; it cannot motivate a recommendation. A candidate whose factual
+  premises are observed but whose value is a hypothesis is not this
+  case: it enters the comparison as a named bet.
 - **Pure technical or architectural cleanup** is not eligible here unless
   there's a concrete, near-term, evidence-traceable connection to what a
   user can accomplish -- not "this will probably help eventually," which is
@@ -171,7 +257,10 @@ something to correct for by picking a different layer on principle.
 - **Discoverability and legibility of existing capability** -- does this
   make something the product already substantially supports actually
   reachable and understandable by the user it's for? A backend capability
-  with no surface is exactly this case.
+  with no surface is exactly this case. Reachability being grep-provable
+  makes this candidate easy to verify, not automatically valuable: its
+  value case is still a bet like any other's -- would the intended user
+  actually use the capability once reachable?
 - **Recovery and feedback** -- when something goes wrong, or changes, can
   the affected user tell what happened and what to do about it?
 - **Demonstrated-intent fit** -- is this traceable to a role, job, or
@@ -192,7 +281,10 @@ something to correct for by picking a different layer on principle.
   evidence and size should generally be preferred over it.
 
 Ground every comparison in what gathering steps 1 through 4 actually
-established, and say so as you reason. When two or more independently-
+established, and say so as you reason. The first four criteria describe
+a candidate's upside -- what its bet could win; size and reversibility
+describe the cost of pursuing it; certainty belongs to neither list,
+and must never decide the pick in their place. When two or more independently-
 evidenced candidates score comparably, pick one, name the actual tiebreak,
 and say plainly that the alternative was close -- don't dress up a coin
 flip as an obvious call.
@@ -204,7 +296,16 @@ to speculation, the repository shows no traceable user or role at all, or
 two candidates' entire value depends on the same unresolved fact (which of
 two workflows people actually use, whether a documented gap is ever hit in
 practice). This is a legitimate outcome, not a failure to find something to
-recommend. When it's genuine, say so plainly and recommend the smallest
+recommend. It is about unresolved facts and undecidable ties, not
+unproven value: a single candidate whose premises are observed but whose
+value is a hypothesis is the normal case for a named bet, not for this
+outcome -- retreating to measurement merely because value-confidence is
+moderate is the same substitution this skill refuses in the other
+direction. But when two or more otherwise-indistinguishable candidates
+hang their entire ranking on the same single resolvable unknown, that
+unknown functions as a missing fact for the decision even though each
+candidate's own premises are observed, and this outcome still applies.
+When it's genuine, say so plainly and recommend the smallest
 step that would produce the missing evidence -- naming the intended user or
 usage question it would resolve -- rather than picking the most
 plausible-sounding candidate and hoping the gap doesn't matter.
@@ -216,9 +317,17 @@ Even when a request bundles a reasonable ask together with one of these:
 - Recommend more than one slice, a ranked shortlist, or a set of "options."
 - Produce a roadmap, a phased plan, or a prioritized backlog of product
   work.
-- Credit a speculative feature idea, or a documented-but-unevidenced
-  limitation, as sufficient evidence on its own -- a gap being written down
-  somewhere is not the same as anyone needing it fixed.
+- Credit a factually-ungrounded feature idea, or a documented-but-
+  unevidenced limitation, as sufficient evidence on its own -- a gap
+  being written down somewhere is not the same as anyone needing it
+  fixed. The observed gap admits the candidate; it cannot substitute for
+  the value bet in either direction -- neither "it is documented, so it
+  matters" nor "no one has asked, so it is speculation."
+- Let evidentiary confidence stand in for product priority: recommending
+  the most provable candidate *because* it is the most provable -- "the
+  smallest thing I can fully stand behind" -- or dismissing a candidate
+  whose factual premises are observed because its value is unproven.
+  Value is unproven for every candidate; the comparison is of bets.
 - Recommend broad architectural or technical cleanup without a concrete,
   near-term, evidence-traceable product-value connection.
 - Silently absorb ordinary bug or reliability work into a product
@@ -257,11 +366,20 @@ grounded in repository evidence -- and the specific thing they can now
 understand, complete, or recover from that they couldn't before>
 
 ## Why this clears the evidence bar
-<the observed gap or clearly-implied missing piece, which tier backs it
-(observed vs. inference), and why it wins against the alternatives on the
-criteria above -- not a generic "this helps users" claim. If no review,
+<the observed gap or clearly-implied missing piece and which tier backs
+it (observed vs. inference) -- factual premises about the gap only, not
+about which implementation would close it, with the value case left to
+The bet rather than dressed up as fact here. If no review,
 retro, or backlog exists for this repository, say so explicitly in this
 section, and that the recommendation doesn't depend on one existing>
+
+## The bet
+<two confidences, stated separately: how strong the factual premises
+are, and how strong the value judgment is. Then the bet itself -- "this
+is the best available product bet because ___" -- with the blank
+actually filled, and the observation that would show the bet was wrong.
+If the blank can't be filled convincingly, the candidate hasn't earned
+the recommendation; go back and compare again>
 
 ## What this slice proves
 <the one thing this slice settles, phrased as a question its own
