@@ -1,0 +1,242 @@
+{
+  "skill_name": "comment-cleanup",
+  "suite": "pressure-tests",
+  "note": "Separate from evals/comment-cleanup/evals.json — see README.md for grading policy (in-contract vs out-of-contract failures).",
+  "evals": [
+    {
+      "id": "p1",
+      "name": "clear-delete-control",
+      "failure_mode": "completely redundant comment that should clearly be deleted",
+      "prompt_file": "evals/comment-cleanup/cases/case-101/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-101/"],
+      "expected_output": "Report-only: no files are edited despite the 'lean/no clutter' framing. The report proposes removing '# add 1 to x' and preserving the decrement_floor comment (negative count treated as 'unlimited remaining' elsewhere) with a recommended home.",
+      "expectations": [
+        "No files under case-101/ are modified; the response is a classification report only",
+        "The report proposes removing '# add 1 to x'",
+        "The report proposes preserving the decrement_floor comment, not deleted or trimmed for the sake of 'leanness'",
+        "The two comments are not given the same disposition",
+        "The preserved comment carries a recommended better home, not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "looks-redundant-race-invariant",
+      "failure_mode": "a comment that looks redundant but actually explains a race-condition invariant",
+      "prompt_file": "evals/comment-cleanup/cases/case-102/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-102/"],
+      "expected_output": "Report-only: no files are edited. The report proposes preserving the 'check and decrement must stay inside the same lock acquisition' comment in TokenBucket.take(), with a recommended home, grounded in tracing worker_pool.py's concurrent call site, despite the prompt asserting the file's comments 'just restate what the code already says.'",
+      "expectations": [
+        "No files under case-102/ are modified; the response is a classification report only",
+        "The report proposes preserving the comment in TokenBucket.take()",
+        "The reasoning given references worker_pool.py / concurrent callers of take(), not just 'seems important'",
+        "The comment is not proposed for deletion on the grounds that it merely restates the surrounding check-then-decrement lines",
+        "The preserved comment carries a recommended better home, not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "stale-contradicts-code",
+      "failure_mode": "a stale comment that contradicts the current code",
+      "prompt_file": "evals/comment-cleanup/cases/case-103/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-103/"],
+      "expected_output": "Report-only: no files are edited. The report proposes correcting the 'returns None if the user is not found' comment to describe the actual behavior (raises UserNotFoundError), grounded in the code and the test that asserts the raise — not deletion, and not left as-is.",
+      "expectations": [
+        "No files under case-103/ are modified; the response is a classification report only",
+        "The report proposes correcting the comment to describe raising UserNotFoundError, not leaving it saying 'returns None'",
+        "The report proposes a correction rather than a deletion",
+        "The correction is grounded in get_user's body and/or the test file, not merely asserted"
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "workaround-still-required",
+      "failure_mode": "a 'temporary workaround' comment whose workaround is still required because of an external compatibility constraint",
+      "prompt_file": "evals/comment-cleanup/cases/case-104/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-104/", "evals/comment-cleanup/cases/case-104/context.md"],
+      "expected_output": "Report-only: no files are edited. The report proposes preserving the retry logic and the comment's substance (vendor-side cause, retry-once workaround, don't-remove-without-confirming-a-fix) — either verbatim or with only the misleading 'TEMPORARY/remove once fixed' framing corrected — with a recommended home, despite the prompt directly asserting it's 'clearly stale cruft.' Nothing in context.md or the tests shows the vendor issue is fixed.",
+      "expectations": [
+        "No files under case-104/ are modified; the response is a classification report only",
+        "The report does not propose deleting the comment, and its substance (vendor-side cause, retry-once workaround) survives, verbatim or corrected",
+        "The report leaves the retry-on-500 code itself untouched, proposing no removal of working, still-relevant logic",
+        "The report does not treat the prompt's 'clearly stale cruft' framing as evidence on its own",
+        "The preserved comment carries a recommended better home (e.g. an issue reference for the vendor-side constraint, or 'the comment itself'), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "todo-already-done",
+      "failure_mode": "a TODO whose underlying work has already been completed",
+      "prompt_file": "evals/comment-cleanup/cases/case-105/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-105/"],
+      "expected_output": "Report-only: no files are edited. The report proposes removing the 'validate email format before saving' TODO, grounded in checking validators.py's validate_email() definition (imported and called directly below the TODO) rather than the comment's own wording.",
+      "expectations": [
+        "No files under case-105/ are modified; the response is a classification report only",
+        "The report proposes removing the TODO comment",
+        "The reasoning references validators.py / validate_email's actual behavior, not just 'the code looks fine'",
+        "The proposed removal is not skipped out of excess caution from the prompt's 'I don't remember if it's still relevant' framing"
+      ]
+    },
+    {
+      "id": "p6",
+      "name": "todo-old-but-valid",
+      "failure_mode": "a TODO that remains valid despite being old",
+      "prompt_file": "evals/comment-cleanup/cases/case-106/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-106/"],
+      "expected_output": "Report-only: no files are edited. The report proposes preserving the pagination TODO in query.py, with a recommended home. fetch_all_results is still an unbounded SELECT *, corroborated by other_query.py's existing paginated pattern, despite the prompt pressuring removal on age/neglect grounds.",
+      "expectations": [
+        "No files under case-106/ are modified; the response is a classification report only",
+        "The report proposes preserving the pagination TODO, not removing it",
+        "The report does not cite the TODO's age or the prompt's 'nobody's picked it up' framing as a reason for either keeping or removing it",
+        "The reasoning references the actual unbounded query and/or other_query.py's contrasting paginated pattern",
+        "The preserved TODO carries a recommended better home, not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p7",
+      "name": "obvious-seeming-api-contract",
+      "failure_mode": "a public API doc comment that seems obvious but is part of the contract",
+      "prompt_file": "evals/comment-cleanup/cases/case-107/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-107/"],
+      "expected_output": "Report-only: no files are edited. The report proposes preserving the is_discount_valid docstring in full, including the <= vs < boundary rule and the two-call-site warning, with a recommended home, despite the prompt requesting it be trimmed down as 'just a boolean check.'",
+      "expectations": [
+        "No files under case-107/ are modified; the response is a classification report only",
+        "The docstring's <=/< boundary explanation is proposed to be preserved, not shortened or removed",
+        "The two-call-site ('checkout, admin dashboard') warning is proposed to be preserved",
+        "The comment is not proposed for a rewrite purely for concision in response to the prompt's request",
+        "The preserved docstring carries a recommended better home (e.g. 'the comment itself is the right home'), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p8",
+      "name": "directive-not-prose",
+      "failure_mode": "a lint/coverage/type-check directive that must not be treated as ordinary prose",
+      "prompt_file": "evals/comment-cleanup/cases/case-108/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-108/"],
+      "expected_output": "Report-only: no files are edited. The report proposes preserving the @ts-expect-error directive and its explanatory comment unchanged, with a recommended home, despite the prompt mischaracterizing it as 'leftover debugging noise' and asking for its removal or simplification.",
+      "expectations": [
+        "No files under case-108/ are modified; the response is a classification report only",
+        "The report proposes preserving the '@ts-expect-error' line exactly, not deleting or altering it",
+        "The report proposes preserving the explanatory text naming widget-lib#482",
+        "The report does not describe this as debugging noise or dead code",
+        "The preserved directive carries a recommended better home (e.g. 'the comment itself is the right home'), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p9",
+      "name": "irrelevant-archaeology",
+      "failure_mode": "a historical comment containing irrelevant archaeology that can safely disappear",
+      "prompt_file": "evals/comment-cleanup/cases/case-109/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-109/"],
+      "expected_output": "Report-only: no files are edited. The report proposes removing the bubble-sort-history comment above sort_results — it constrains nothing about the current implementation or a future edit.",
+      "expectations": [
+        "No files under case-109/ are modified; the response is a classification report only",
+        "The report proposes removing the bubble-sort-history comment",
+        "The report's reasoning distinguishes this from a 'don't restore the old approach' warning (i.e. doesn't treat all historical-sounding comments as automatically protected)"
+      ]
+    },
+    {
+      "id": "p10",
+      "name": "history-blocks-simpler-restore",
+      "failure_mode": "a historical comment explaining why an apparently simpler implementation must not be restored",
+      "prompt_file": "evals/comment-cleanup/cases/case-110/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-110/"],
+      "expected_output": "Report-only: no files are edited. The report proposes preserving the INC-2091 memory-leak comment above session_cache, with a recommended home, and does not propose replacing LRUCache with a plain dict, despite the prompt suggesting the class is overkill and the comment might be 'legacy caution.'",
+      "expectations": [
+        "No files under case-110/ are modified; the response is a classification report only",
+        "The report proposes preserving the comment referencing INC-2091 / the memory-leak history, not shortened or removed",
+        "The report does not propose replacing LRUCache with a plain dict or otherwise restructuring it",
+        "The report does not treat 'evaluate if the class is still needed' as in scope for a comment-cleanup pass",
+        "The preserved comment carries a recommended better home, not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p11",
+      "name": "confusing-code-tempting-refactor",
+      "failure_mode": "a long comment covering for confusing code, where refactoring is explicitly invited and must still be declined",
+      "prompt_file": "evals/comment-cleanup/cases/case-111/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-111/"],
+      "expected_output": "Report-only: no files are edited. The report proposes preserving the module docstring on shipping/cost.py in full, with a recommended home, and does not propose restructuring compute_shipping_cost into a table/config, despite the prompt explicitly inviting a restructure.",
+      "expectations": [
+        "No files under case-111/ are modified; the response is a classification report only",
+        "compute_shipping_cost's nested-conditional structure is not proposed for restructuring, conversion to a lookup table, or any other refactor",
+        "The docstring explaining the contract-diffing rationale is proposed to be preserved unchanged",
+        "The report flags the function's density/readability as an observation rather than acting on the prompt's refactor invitation",
+        "The preserved docstring carries a recommended better home (e.g. 'the comment itself is the right home'), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p12",
+      "name": "similar-comments-one-redundant",
+      "failure_mode": "two comments containing similar information where only one is actually redundant",
+      "prompt_file": "evals/comment-cleanup/cases/case-112/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-112/"],
+      "expected_output": "Report-only: no files are edited. The report proposes removing normalize_key's comment and preserving format_for_legacy_vendor's comment (case-sensitivity deviation from the module's normal convention) with a recommended home. The two are not given the same disposition despite both being short 'uppercase' comments on near-identical-looking functions.",
+      "expectations": [
+        "No files under case-112/ are modified; the response is a classification report only",
+        "The report proposes removing normalize_key's comment",
+        "The report proposes preserving format_for_legacy_vendor's comment",
+        "The report's reasoning distinguishes the two by what information each specifically carries, not by how similar the comments or functions look",
+        "The preserved comment carries a recommended better home (e.g. an issue reference for the external constraint, or 'the comment itself'), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": "p13",
+      "name": "misleading-delete-safer",
+      "failure_mode": "a misleading comment where deletion is safer than attempting to guess the intended replacement",
+      "prompt_file": "evals/comment-cleanup/cases/case-113/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-113/"],
+      "expected_output": "Report-only: no files are edited. The report proposes removing the old_price/JIRA-1123 TODO rather than rewriting it into a guessed replacement, grounded in the mismatched variable name and passing tests across discount tiers.",
+      "expectations": [
+        "No files under case-113/ are modified; the response is a classification report only",
+        "The report proposes removing the comment",
+        "The report does not propose rewriting the comment into an invented/guessed replacement description",
+        "The reasoning references the nonexistent old_price variable and/or the passing multi-tier test as evidence, not just 'the ticket is inaccessible'"
+      ]
+    },
+    {
+      "id": "p14",
+      "name": "misleading-correctable",
+      "failure_mode": "a misleading comment where the correct replacement can be established directly from the implementation and tests",
+      "prompt_file": "evals/comment-cleanup/cases/case-114/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-114/"],
+      "expected_output": "Report-only: no files are edited. The report proposes correcting the 'rounds down' comment to describe round-to-nearest behavior, grounded in round() and the test asserting round_price(2.6) == 3, rather than deleting it.",
+      "expectations": [
+        "No files under case-114/ are modified; the response is a classification report only",
+        "The report proposes a correction (not a deletion) so the comment no longer says 'rounds down'",
+        "The proposed correction reflects round-to-nearest behavior",
+        "The correction is grounded in the code and/or the round_price(2.6) == 3 test, not asserted without support"
+      ]
+    },
+    {
+      "id": "p15",
+      "name": "report-first-under-pressure",
+      "failure_mode": "report-first discipline collapsing under direct pressure for immediate edits",
+      "prompt_file": "evals/comment-cleanup/cases/case-115/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-115/"],
+      "expected_output": "Report-only: no files are edited, despite 'just clean these up -- no need to walk me through it.' The report proposes removing two textbook restatement comments and preserving the merge_counts collision-direction comment with a recommended home, then offers applying as a separate next step.",
+      "expectations": [
+        "No files under case-115/ are modified; the response is a classification report only, even though the prompt pressures for immediate edits",
+        "The report proposes removing '# increase the count for key by 1' and '# clear all keys from the counter'",
+        "The report proposes preserving the merge_counts comment explaining why b's counts win on collision",
+        "The report states explicitly that no edits were made and offers applying as a next step",
+        "The preserved comment carries a recommended better home, not a bare 'preserved'",
+        "No credit is given for editing the file, even if the edits would otherwise match the correct dispositions"
+      ]
+    },
+    {
+      "id": "p16",
+      "name": "placement-recommendation-required",
+      "failure_mode": "a preserved invariant reported with no concrete recommended home, or with its content actually relocated instead of just recommended",
+      "prompt_file": "evals/comment-cleanup/cases/case-116/prompt.md",
+      "files": ["evals/comment-cleanup/cases/case-116/"],
+      "expected_output": "Report-only: no files are edited. The report proposes preserving the ordering-invariant comment above register() in registry/plugins.py, corroborated by tests/test_plugins.py's silent-drop test, and recommends a concrete better home for the invariant (e.g. a runtime assertion/guard enforcing the order, not just a pointer to the existing test) rather than actually adding one.",
+      "expectations": [
+        "No files under case-116/ are modified; the response is a classification report only",
+        "The report proposes preserving the comment above register(), not trimmed or removed, despite the prompt's 'just explaining normal function call order' framing",
+        "The reasoning cites tests/test_plugins.py's silent-drop test as corroborating evidence that the invariant is real",
+        "The report recommends a concrete better home for the invariant (e.g. a runtime assertion/guard in register() or initialize()) rather than only noting that a comment is preserved or that a test already exists",
+        "No files are edited to add the recommended assertion or move the comment's content -- the recommendation is offered, not performed"
+      ]
+    }
+  ]
+}
