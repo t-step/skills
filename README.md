@@ -24,19 +24,37 @@ below, but the skills themselves are the point.
 
 ## Skills
 
-| Skill | What it does |
-|---|---|
-| [`repo-orientation`](skills/repo-orientation/SKILL.md) | Maps a repository before consequential work begins — purpose, seams, where work belongs, honest unknowns — and stops there rather than drifting into a plan or a critique. |
-| [`slice-review`](skills/slice-review/SKILL.md) | Reviews one diff or PR against its stated goal and actual verification evidence, and returns exactly one verdict instead of a reflexive "looks good." |
-| [`slice-retro`](skills/slice-retro/SKILL.md) | Writes a retrospective for one completed slice, keeping what was actually proven separate from inference and speculation. |
-| [`next-best-slice`](skills/next-best-slice/SKILL.md) | Recommends exactly one next slice of work, justified by the last review and retro plus the product's current state — never a shortlist or a roadmap. |
-| [`slice-plan`](skills/slice-plan/SKILL.md) | Turns an already-accepted slice into an implementation-ready plan — contract, seams, invariants, verification — without reopening what to build. |
+The table below is generated from each skill's own `SKILL.md` frontmatter —
+not hand-maintained — so it can't silently drift the way a hand-edited list
+did (two skills once went missing from it). Regenerate it with
+`uv run scripts/generate-skill-inventory.py` after adding or changing a
+skill; `scripts/check.sh` fails if it's stale. The "Validation" column
+reports the honest state of that skill's `evals/<name>/` suite: how many
+fixture cases exist, and whether `RESULTS.md` records at least one
+actually-executed run or only authored-but-unrun fixtures — see that
+script's docstring for the exact detection rule.
+
+<!-- skill-inventory:begin -->
+| Skill | What it does | Validation |
+|---|---|---|
+| [`next-best-product-slice`](skills/next-best-product-slice/) | Recommends exactly one next bounded product slice -- the smallest change that measurably grows what a product's intended users can understand, complete, or rec… | 15 cases · validated (sample) |
+| [`next-best-slice`](skills/next-best-slice/) | Recommends exactly one next implementation slice once a completed slice has been reviewed and retrospected — "given what we now know, what's the smallest, high… | 25 cases · validated (sample) |
+| [`repo-orientation`](skills/repo-orientation/) | Builds a concise, evidence-backed operating map of a repository before consequential work begins: purpose, governing instructions (root and scoped), major exec… | 22 cases · validated (sample) |
+| [`ship-slice`](skills/ship-slice/) | Ships one finished slice: discovers the repo's own complete verification gate (Makefile/package.json/pyproject targets, CI workflows, AGENTS.md/CLAUDE.md), run… | 2 cases · authored, unrun |
+| [`slice-plan`](skills/slice-plan/) | Turns one already-accepted implementation slice into an implementation-ready plan: behavioral contract, likely implementation seams, invariants, a verification… | 16 cases · validated (sample) |
+| [`slice-retro`](skills/slice-retro/) | Writes a retrospective for one completed implementation slice (a commit, branch, PR, or finished task) — what it actually proved, which assumptions it validate… | 16 cases · validated (sample) |
+| [`slice-review`](skills/slice-review/) | Reviews one bounded implementation slice (a diff, PR, or "I finished X" claim) against its stated goal, the repo's own instructions, the actual diff content, a… | 18 cases · validated (sample) |
+<!-- skill-inventory:end -->
 
 These bracket an implementation loop rather than complete one: orient before
-the work starts, then, once it's done, review it, retrospect on it, decide
-what's next, plan the next slice. The actual implementing happens in between,
-outside any of these. Nothing enforces the order — each skill stands on its
-own and mostly refuses to do another's job even when asked.
+the work starts; once it's done, review it, ship it (`ship-slice` runs the
+repo's own verification gate and commits/tags/pushes only if it passes), and
+retrospect on it; decide what's next — by architectural momentum
+(`next-best-slice`) or by user-facing product value
+(`next-best-product-slice`) — and plan the next slice. The actual
+implementing happens in between, outside any of these. Nothing enforces the
+order — each skill stands on its own and mostly refuses to do another's job
+even when asked.
 
 ## How they're built
 
