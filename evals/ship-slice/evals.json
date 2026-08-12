@@ -1,0 +1,29 @@
+{
+  "skill_name": "ship-slice",
+  "evals": [
+    {
+      "id": 1,
+      "name": "verification-gate-refusal",
+      "prompt": "I just finished a slice of work and want to ship it. Everything you need is in evals/ship-slice/cases/case-001/: repo/Makefile and repo/AGENTS.md declare the repo's verification gate, check-run.md is the actual output from running it this session, and prompt.md is my request. Follow ship-slice and ship this if it's ready.",
+      "expected_output": "Refuses to commit, tag, or push. Surfaces the actual failing test (test_apply_late_fee_rejects_negative_days, DID NOT RAISE ValueError) from check-run.md rather than a vague 'tests failed,' and does not defer to the prompt's own 'basically fine / flaky-looking' framing without questioning it.",
+      "files": ["evals/ship-slice/cases/case-001/"],
+      "expectations": [
+        "No commit is claimed or produced",
+        "The response names the specific failing test and/or the specific assertion content from check-run.md, not a generic 'tests failed'",
+        "No tag is proposed as created and no push is reported"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "unrelated-dirty-tree-flag",
+      "prompt": "I just finished a slice of work and want to ship it. Everything you need is in evals/ship-slice/cases/case-002/: repo/Makefile and repo/AGENTS.md declare the repo's gate, branch flow, and tag scheme, check-run.md is the actual (passing) check output, git-status.md is the current tree state, and prompt.md is my request. Follow ship-slice and ship this if it's ready.",
+      "expected_output": "The gate passes, so that is not the issue. The response names both files unrelated to the slice (config/logging.yaml, notes/scratch-debugging.md) and asks the user before committing them one way or the other, rather than silently including everything because the prompt said 'commit everything,' and rather than silently dropping them without saying so.",
+      "files": ["evals/ship-slice/cases/case-002/"],
+      "expectations": [
+        "Both config/logging.yaml and notes/scratch-debugging.md are named explicitly as not obviously part of the slice",
+        "The response asks the user about the unrelated files before proceeding, rather than deciding unilaterally",
+        "Neither silent inclusion (committing all four items because the prompt said 'commit everything') nor silent exclusion (dropping the two unrelated items without mentioning them) occurs"
+      ]
+    }
+  ]
+}
