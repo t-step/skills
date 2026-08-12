@@ -6,15 +6,16 @@ description: >-
   smallest, highest-value thing to build next?" — strictly from that
   review, that retro, and whatever backlog/roadmap evidence exists. Weighs
   dependency unlocking, user value, learning value, size, reversibility,
-  risk, and architectural momentum, and names the strongest alternative
-  passed over. Use when a slice/PR/task has just been reviewed and
+  risk, and architectural momentum. Use when a slice/PR/task has just been reviewed and
   retrospected and someone asks what to build next, which ticket to pick
   up, wants "top picks," or wants a roadmap/quarter plan distilled to one
-  step. Refuses — even under a roadmap's stated phase, a stale "P0" label,
-  user preference, or "keep momentum" pressure — to recommend more than one
-  slice, pick the largest milestone, or produce a project plan. When
-  evidence doesn't justify feature work, recommends the smallest slice that
-  would produce the missing evidence instead of guessing.
+  step. Refuses — even under a stale "P0" label, user preference, or
+  "keep momentum" pressure — to recommend more than one slice, pick the
+  largest milestone, or produce a project plan. Grounds
+  factual premises in observed evidence but never prefers a candidate
+  merely because its value is easier to prove. When evidence doesn't
+  justify feature work, recommends the smallest evidence-producing slice
+  instead of guessing.
 ---
 
 # Next Best Slice
@@ -207,15 +208,31 @@ justifying a choice instead of describing what happened:
 - **Inference** — one tight step from that evidence: the retro says a
   reusable retry seam now exists, so a slice that uses that seam for a
   second call site is a short, defensible inferential step, not a leap.
-- **Speculation** — anything further out: "this will probably also help
-  with X," a hunch about what users want, a guess about future scale nobody
-  measured. Speculation isn't banned, but it can only ever motivate the
-  "gather more evidence" outcome below — a slice whose job is to test the
-  speculation — never a claim that a feature slice is already justified.
+- **Speculation** — an unmeasured or unverified factual premise treated
+  as if observed: "this breaks at production scale," "that canary delta is
+  real," "users already do X." Factual speculation isn't banned, but it
+  can only ever motivate an evidence-producing slice — one whose job is to
+  test the premise — never carry a claim as if the premise were observed.
 
-When a candidate's justification is only as strong as speculation, that's
-the signal to recommend evidence-gathering instead of the feature itself,
-not to write it up as if the evidence were already observed.
+A hypothesis about value — "users would benefit if this existed" — is
+not factual speculation, and this tier is not grounds to dismiss it.
+Evidentiary confidence establishes the factual basis of a candidate, not
+its priority: a candidate whose factual premises are observed (the
+capability really is absent, the journey really is incomplete) competes
+on the full criteria below even though its value, like every
+candidate's, is unproven in advance. Do not prefer a rival merely
+because its value case is easier to prove, and do not dismiss a grounded
+candidate as "speculation about user want" — what stays banned is
+stating a value hypothesis in fact language ("users need this"). None
+of this dissolves the genuine-ambiguity outcome below: when several
+otherwise-indistinguishable candidates hang their entire ranking on the
+same single unresolved fact, admitting them all is not the same as
+being able to rank them — that situation still belongs to "When no
+candidate is justified yet," not to a size tiebreak.
+
+When a candidate's *factual premises* are only as strong as speculation,
+that's the signal to recommend evidence-gathering instead of the feature
+itself, not to write it up as if the evidence were already observed.
 
 Name which channel backs each factual claim as you reason — recent slice
 evidence, current product-state evidence, or speculation — and separately
@@ -265,9 +282,12 @@ worthless.
 ## The criteria, and how they actually trade off
 
 Every candidate gets weighed against the same seven angles. None of them
-wins by default, including user value — a slice that delights users but
-that nothing in the evidence justifies doing *now* is not this skill's job
-to greenlight. A candidate with nothing to show on Dependency unlocking —
+wins by default, including user value — and none is disqualified by
+default either: once a candidate's factual premises are grounded, it
+competes on all seven, even when its value is harder to prove than a
+rival's. Evidentiary confidence establishes the factual basis of a
+candidate, never its priority. A
+candidate with nothing to show on Dependency unlocking —
 because no review or retro exists to unlock anything — isn't disqualified
 by that alone; it's judged on whichever of the other six criteria actually
 apply, same as any candidate whose case rests on channel 2 and the
@@ -281,9 +301,9 @@ strategic-continuity lens rather than channel 1:
   question (something in Remaining uncertainty or Follow-up questions),
   rather than a question nobody actually has?
 - **User value** — does it produce something a user can observe or benefit
-  from soon? Real, but not sufficient alone — see "no candidate is
-  justified yet" below for what happens when this is the only thing a
-  candidate has going for it.
+  from soon? Real, but not sufficient alone — and almost never provable
+  in advance; unproven value is the normal condition of every candidate
+  here, never by itself grounds to disqualify one.
 - **Implementation size** — prefer the smallest slice that still proves or
   unlocks the intended thing. If two candidates would settle the same
   question, the smaller one wins outright.
@@ -303,7 +323,13 @@ strategic-continuity lens rather than channel 1:
   helps choose among candidates that are already well-justified on the
   others; it isn't grounds to prefer the freshest seam over a more
   consequential bounded capability or a risk the review/retro actually
-  demonstrated.
+  demonstrated. A seam being "proven safe to touch" by recent slices is
+  implementation information, not product information: it may appear as a
+  final feasibility tie-break between otherwise comparable candidates,
+  never inside the argument for why a slice is next. Unchecked, it becomes mechanical adjacency bias — recent
+  work lowers implementation uncertainty nearby, which makes nearby
+  recommendations easier to justify, which produces more recent work
+  nearby — gradient descent into whatever was touched last.
 
 Ground every comparison in the two evidence channels above — what the
 review or retro actually established, and what the repository's current
@@ -390,8 +416,13 @@ ask together with one of these:
   not inherited.
 - Turn "the repository's present state can introduce a candidate" into an
   open-ended product brainstorm, or justify a candidate by "this would be
-  nice" or an assumed user want. The repository can introduce a candidate;
-  only observed evidence can justify building it.
+  nice" or an assumed user want. The repository can introduce a
+  candidate; only observed factual premises can ground it.
+- Let evidentiary confidence stand in for priority: recommending the
+  most provable candidate *because* it is the most provable — "the
+  smallest thing I can fully stand behind" — or dismissing a candidate
+  as "speculation about user want" when its factual premises are
+  observed and only its value is unproven.
 - Treat a missing review or retro as blanket grounds to decline a product
   recommendation. Missing recent-slice evidence only blocks claims that
   specifically need it (what the last slice proved or unlocked) — it
@@ -413,7 +444,9 @@ least one criterion above, where a careful reader would reasonably ask "why
 not this instead?" For each: one or two sentences on what it would have
 offered, and the specific, evidence-grounded reason it waits (not ready
 yet, not the smallest way to learn this, bigger than the question needs, or
-resting on speculation rather than evidence). Two to four alternatives is
+resting on factual speculation rather than observed premises — never
+merely "its value is unproven," which is true of every bet). Two to four
+alternatives is
 usually the right range — leaving out a real close call looks like it
 wasn't considered, and padding the list with items nobody would seriously
 propose looks like the opposite of the discipline this skill is for.
