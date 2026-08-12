@@ -679,3 +679,36 @@ either fixture actually run, that the skill's existing discipline needs
 help distinguishing capability-sourced information from any other kind
 -- the discipline that already holds for manually-read information held
 equally well here.
+
+## Iteration 4 -- already-shipped grounding check, fixture authored, not yet run
+
+A recurring real-world failure prompted a new mandatory first step in
+`SKILL.md`'s "Gather before planning": full planning effort was spent,
+in practice, on slices that turned out to be already implemented at
+the target branch's HEAD. `SKILL.md` now requires checking for this
+before anything else -- searching for the symbols, routes, and tests
+the slice would introduce, and checking recent commits and tags newer
+than whatever handed the slice off -- with two explicit outcomes:
+report "already implemented at `<SHA>`" with concrete evidence and
+refuse to plan, or (if only partially present) plan just the missing
+part.
+
+`case-007` (regression suite) was added to cover this: an accepted
+slice (rate-limit `request_password_reset()`) whose `repo/` already
+contains the finished implementation, passing tests covering the
+recommendation's exact acceptance evidence, and a `CHANGELOG.md` entry
+citing a shipped commit and tag. `evals.json` expectation set requires
+(a) an explicit statement that the slice is already implemented, (b)
+citation of specific file/test/commit-level evidence -- a bare "looks
+done" claim does not satisfy it -- and (c) no implementation plan
+produced for the already-shipped behavior regardless of what else the
+response says.
+
+**Status: fixture and grading key authored and passing
+`scripts/check.sh` (frontmatter lint, eval-isolation guard, dependency
+check); not yet run against the skill.** No with-skill or baseline
+run has been performed for this case, so it carries no pass/fail
+result yet and is not reflected in any total above. This is a known
+gap in this iteration's evidence, not an oversight -- authoring the
+fixture and grading key was the scope of this pass; running it against
+fresh subagents is follow-up work.

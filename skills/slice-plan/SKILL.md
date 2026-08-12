@@ -3,19 +3,19 @@ name: slice-plan
 description: >-
   Turns one already-accepted implementation slice into an
   implementation-ready plan: behavioral contract, likely implementation
-  seams, invariants, a verification strategy scoped to the slice,
-  explicit non-goals, known risks, and completion evidence. Assumes the
-  repo is oriented, the next slice already chosen, and the work already
-  justified -- does not pick, re-justify, or redesign the work, only
-  plans how to build the one slice agreed on. Use when a slice/ticket
-  has just been accepted and someone wants an implementation plan, "how
-  should I build this", seams/files identified before writing code, or a
-  spec turned into something executable without guessing. Refuses --
-  even under "while you're at it" pressure, a tempting refactor nearby,
-  an unrelated bug found nearby, a shortcut that breaks an invariant, or
-  a request to widen verification into a test-everything pass -- to
-  recommend different work, redesign the feature, expand scope, produce
-  a roadmap, review an implementation, or rewrite architecture.
+  seams, invariants, a verification strategy scoped to the slice, explicit
+  non-goals, known risks, and completion evidence. Assumes the repo is
+  oriented, the slice already chosen and justified -- does not pick,
+  re-justify, or redesign the work, only plans how to build the one slice
+  agreed on. Use when a slice/ticket has just been accepted and someone wants
+  an implementation plan, "how should I build this", seams/files identified
+  before writing code, or a spec turned into something executable without
+  guessing. Refuses -- even under "while you're at it" pressure, a tempting
+  refactor nearby, an unrelated bug found nearby, a shortcut that breaks an
+  invariant, or a request to widen verification into a test-everything pass
+  -- to recommend different work, redesign the feature, expand scope, produce
+  a roadmap, review an implementation, rewrite architecture, or plan an
+  already-shipped slice.
 ---
 
 # Slice Plan
@@ -38,7 +38,31 @@ slice already accepted, and nothing else.
 
 ## Gather before planning
 
-1. **The accepted slice** -- its goal, why it was chosen now, what it's
+1. **Whether the slice is already done.** Before reading anything else,
+   check whether the behavior the accepted slice describes already
+   exists at the target branch's HEAD. Search the codebase for the
+   symbols, routes, and behaviors the slice would introduce, look for
+   tests that already exercise them, and check recent commits and any
+   slice tags newer than whatever handed this slice off (a
+   next-best-slice recommendation, a ticket, a one-line ask) for signs
+   it already landed. This isn't a formality -- real planning effort has
+   been spent, in practice, on slices that turned out to be already
+   shipped, and that effort is only recoverable by checking first.
+
+   If the slice is fully present -- the behavior implemented, the
+   acceptance evidence already satisfied by passing tests, a commit or
+   tag that shipped it -- say so plainly: "already implemented at
+   `<SHA>`," with the specific files, tests, and commit or tag that
+   prove it, and stop there. Producing a plan for work that's already
+   done isn't a smaller or safer version of this skill's job; it isn't
+   this skill's job at all, the same way planning against nothing
+   accepted yet isn't (see the refusal below). If the slice is only
+   partially present, or present but not actually satisfying the
+   accepted acceptance evidence, say exactly what already exists and
+   what's still missing, and plan only the missing part -- the accepted
+   goal still frames what "missing" means, but the plan itself closes
+   only the actual gap, not the whole slice again.
+2. **The accepted slice** -- its goal, why it was chosen now, what it's
    supposed to prove, its stated non-goals, and its acceptance evidence
    -- from whatever handed this off: a next-best-slice recommendation, a
    ticket, a one-line ask. This is the plan's only source of what to
@@ -46,7 +70,7 @@ slice already accepted, and nothing else.
    gets named as a known risk or resolved with the smallest possible
    judgment call -- never quietly filled in with an assumption that
    expands what the slice does.
-2. **The real codebase, read, not guessed.** A repository map or
+3. **The real codebase, read, not guessed.** A repository map or
    orientation report tells you where things generally live; only
    reading the actual files this slice will touch tells you where the
    seams really are, what the existing invariants actually are, and
@@ -54,7 +78,7 @@ slice already accepted, and nothing else.
    architecture instead of the architecture itself is a plan that
    guesses, and guesses are exactly what turn into rework once someone
    starts implementing.
-3. **Whatever the accepted slice already settled about verification.**
+4. **Whatever the accepted slice already settled about verification.**
    Its stated acceptance evidence is the baseline the verification
    strategy has to satisfy exactly -- a starting point to make concrete,
    not a floor to build past.
