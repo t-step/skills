@@ -1,0 +1,89 @@
+{
+  "skill_name": "comment-cleanup",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mixed-restate-and-rationale",
+      "prompt": "Clean up the comments in evals/comment-cleanup/cases/case-001/repo/. Remove clutter, but don't touch anything that would lose real information. Report what you did.",
+      "expected_output": "Report-only: no files are edited. The report proposes removing two mechanics/restate comments (loop narration, running-total restatement) and preserving the math.floor rounding-direction comment and the reorder_point docstring's non-negative-return contract, each with a recommended home for the preserved information.",
+      "files": ["evals/comment-cleanup/cases/case-001/repo/"],
+      "expectations": [
+        "No files under case-001/repo/ are modified; the response is a classification report only",
+        "The report proposes removing the loop-narration comment ('loop over each item in the list') and the running-total restatement comment",
+        "The report proposes preserving the math.floor comment explaining why floor (not int()) is used for negative adjustments, not deleting or rewording it",
+        "The report proposes preserving the reorder_point docstring's contract (return value is always >= 0, even with missing/empty demand_history)",
+        "Both preserved items carry a recommended better home for their information (a test/assertion, docstring, decision log, issue reference, or an explicit 'the comment itself is the right home'), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "portability-typescript-directive",
+      "prompt": "Clean up the comments in evals/comment-cleanup/cases/case-002/repo/. Remove clutter, but don't touch anything that would lose real information. Report what you did.",
+      "expected_output": "Report-only: no files are edited. The report proposes removing the isAdmin restate comment and the runValidators mechanics comment, and preserving the isValidEmailFormat JSDoc contract and both eslint-disable-next-line directives, each with a recommended home.",
+      "files": ["evals/comment-cleanup/cases/case-002/repo/"],
+      "expectations": [
+        "No files under case-002/repo/ are modified; the response is a classification report only",
+        "The report proposes removing '// check if user is admin' and '// loop through validators and run each one'",
+        "The report proposes preserving the isValidEmailFormat JSDoc (format-only, no deliverability guarantee) unchanged",
+        "The report proposes preserving both '// eslint-disable-next-line no-bitwise' comments, not treated as ordinary prose about the code",
+        "Both preserved items carry a recommended better home (e.g. 'the comment itself is the right home' for the JSDoc and for the directive), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "unexported-function-concurrency-invariant",
+      "prompt": "Clean up the comments in evals/comment-cleanup/cases/case-003/repo/. Remove clutter, but don't touch anything that would lose real information. Report what you did.",
+      "expected_output": "Report-only: no files are edited. The report proposes removing the 'return the length of the slice' restatement and preserving the drain() locking-invariant comment with a recommended home, grounded in tracing drain's call site rather than its own five-line body.",
+      "files": ["evals/comment-cleanup/cases/case-003/repo/"],
+      "expectations": [
+        "No files under case-003/repo/ are modified; the response is a classification report only",
+        "The report proposes removing '// return the length of the slice' above Size()",
+        "The report proposes preserving the comment above drain() documenting that mu must already be held by the caller",
+        "The reasoning given for preserving drain's comment references Shutdown() (its call site) and/or Size() taking the same lock, not just 'it looks important'",
+        "The preserved item carries a recommended better home (e.g. a concurrency test/assertion, or 'the comment itself'), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "confusing-code-flag-not-refactor",
+      "prompt": "Clean up the comments in evals/comment-cleanup/cases/case-004/repo/. Remove clutter, but don't touch anything that would lose real information. Tests live under tests/ if you want to verify anything. Report what you did.",
+      "expected_output": "Report-only: no files are edited and tokenize() is not refactored or restructured. The report proposes preserving the long state-machine comment above tokenize() with a recommended home, and flags the dense, magic-number-driven implementation as a code-quality observation, not fixed.",
+      "files": ["evals/comment-cleanup/cases/case-004/repo/"],
+      "expectations": [
+        "No files under case-004/repo/ are modified; the response is a classification report only",
+        "The report proposes preserving the comment above tokenize(), not shortened or reworded",
+        "tokenize()'s implementation is not restructured, refactored, or rewritten (e.g. no Enum introduced, no branch splitting) — not even proposed as an edit",
+        "The report flags the function's readability/magic-number density as an observation without acting on it, or the report otherwise makes clear the code was deliberately left as-is",
+        "The preserved comment carries a recommended better home (e.g. 'the comment itself is the right home'), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "todo-done-vs-todo-still-open",
+      "prompt": "Clean up the comments in evals/comment-cleanup/cases/case-005/repo/. Remove clutter, but don't touch anything that would lose real information. Report what you did.",
+      "expected_output": "Report-only: no files are edited. The report proposes removing the 'cap refunds at MAX_REFUND_CENTS' TODO (the check already exists on the next line) and preserving the 'log refund reason to the audit trail' TODO with a recommended home, corroborated by billing/audit.py showing audit_log() exists but isn't called from refunds.py.",
+      "files": ["evals/comment-cleanup/cases/case-005/repo/"],
+      "expectations": [
+        "No files under case-005/repo/ are modified; the response is a classification report only",
+        "The report proposes removing '# TODO: cap refunds at MAX_REFUND_CENTS'",
+        "The report proposes preserving '# TODO: log refund reason to the audit trail'",
+        "The reasoning for preserving the second TODO references billing/audit.py (checking whether the described work is actually done), not just the TODO's own wording",
+        "The preserved TODO carries a recommended better home (e.g. 'the comment itself' or an issue-tracker promotion), not a bare 'preserved'"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "locally-similar-only-one-globally-redundant",
+      "prompt": "Clean up the comments in evals/comment-cleanup/cases/case-006/repo/. Remove clutter, but don't touch anything that would lose real information. Report what you did.",
+      "expected_output": "Report-only: no files are edited. The report proposes removing the 'convert cents to dollars' comment and preserving the minor-units package-convention comment above apply_discount with a recommended home, because pricing/currency.py confirms that convention is stated nowhere else in the repo.",
+      "files": ["evals/comment-cleanup/cases/case-006/repo/"],
+      "expectations": [
+        "No files under case-006/repo/ are modified; the response is a classification report only",
+        "The report proposes removing '# convert cents to dollars' above to_display_string",
+        "The report proposes preserving the minor-units convention comment above apply_discount",
+        "The report's reasoning for preserving it references checking whether the convention is documented elsewhere in the repo (e.g. pricing/currency.py), not just that it 'sounds important'",
+        "The preserved comment carries a recommended better home (e.g. pricing/currency.py's module docstring, or 'the comment itself'), not a bare 'preserved'"
+      ]
+    }
+  ]
+}
