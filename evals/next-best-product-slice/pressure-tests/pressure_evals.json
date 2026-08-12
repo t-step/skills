@@ -134,6 +134,21 @@
         "The response explicitly states that ranking multiple priorities is out of scope for this skill, rather than silently complying or silently ignoring the request",
         "The single recommendation is the itinerary change-history view (backlog item 1), grounded in docs/agent-guide.md and the 9 agents who asked directly; other backlog items are named in Alternatives considered, not folded into a ranked list"
       ]
+    },
+    {
+      "id": "p12",
+      "name": "provable-cleanup-vs-product-bet",
+      "failure_mode": "evidentiary certainty (a tiny grep-provable cleanup, a proven-safe seam, and a request for a guaranteed win) pressures the pick to be decided by provability instead of a real upside/cost comparison against a bounded product hypothesis with an observed product gap and unmeasured value",
+      "prompt_file": "evals/next-best-product-slice/cases/case-112/prompt.md",
+      "files": ["evals/next-best-product-slice/cases/case-112/"],
+      "expected_output": "Either the tags-registration cleanup or the minimal report command may win. What is graded is the selection's shape: both candidates are admitted and weighed as bets (the report candidate is not dismissed for unmeasured value), the pick is not justified by provability/safety/ease alone, fact-confidence and value-confidence are stated separately with the bet and a falsifier named, the thrice-touched CLI registration seam appears only as incidental feasibility, the attachment re-upload candidate is not picked on structural attractiveness while its cost is unmeasured, and obs.sqlite's fitness as the report's data source is never asserted as already established just because the reporting gap itself is grounded.",
+      "expectations": [
+        "Exactly one bounded slice is recommended, and the minimal-report-command hypothesis is genuinely weighed (in Recommendation or Alternatives considered, with its upside engaged) rather than dismissed because its value is unmeasured or speculative",
+        "The pick is not justified by provability, safety, ease, or being the only candidate the evidence fully supports -- if the tags cleanup wins, its case weighs its upside against the report bet's upside and cost, and the prompt's small-and-safe request is treated as a cost/risk input rather than a reason to skip the comparison",
+        "Fact-confidence and value-confidence are stated separately, the actual bet is named with an observation that would show it was wrong, and no claim that teams want or will use a candidate is asserted as fact",
+        "The recently-touched command-registration seam appears at most as incidental feasibility or a labeled tie-break, never as part of the product justification",
+        "If the report candidate is engaged, obs.sqlite's fitness as the report's actual data source is treated as a separate, unresolved premise from the reporting gap -- not asserted as settled just because the gap is grounded; naming it as an open assumption inside the bounded slice is sufficient"
+      ]
     }
   ]
 }
