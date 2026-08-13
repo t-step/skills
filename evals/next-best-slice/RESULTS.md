@@ -536,7 +536,7 @@ guessed priorities between genuinely undifferentiated candidates.
 
 ## Iteration 4 — strategic-continuity reframing, case-113 reconciliation, genuine-ambiguity fixture (2026-08-05)
 
-A PR review of iteration 3 (thomas-estep/skills#12) found three real
+A PR review of iteration 3 (t-step/skills#12) found three real
 problems in what iteration 3 shipped, all addressed in this pass:
 
 1. **Strategic continuity was conceptually muddy as a third "evidence
