@@ -13,3 +13,4 @@ python3 scripts/check-eval-isolation.py
 python3 scripts/check-skill-deps.py
 python3 scripts/test-skill-usage-report.py
 python3 scripts/test-eval-divergence.py
+bash skills/calibration-radar/scripts/test-pjm-cross-project-search.sh
