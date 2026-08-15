@@ -15,6 +15,7 @@ detection rule.
 
 | Skill | What it does | Validation |
 |---|---|---|
+| [`calibration-radar`](skills/calibration-radar/) | Periodic external-calibration radar for an experienced software/AI engineer: searches primary sources (Anthropic, OpenAI, NIST, OWASP, CNCF, DORA, etc.) for de… | 15 cases · validated (sample) |
 | [`comment-cleanup`](skills/comment-cleanup/) | Report-first comment cleanup: classifies each comment remove/correct/ preserve by what information would be lost if it disappeared. | 22 cases · validated (sample) |
 | [`next-best-product-slice`](skills/next-best-product-slice/) | Recommends exactly one next bounded product slice -- the smallest change that grows what a product's intended users can understand, complete, or recover from,… | 16 cases · validated (sample) |
 | [`next-best-slice`](skills/next-best-slice/) | Recommends exactly one next implementation slice once a completed slice has been reviewed and retrospected — "given what we now know, what's the smallest, high… | 25 cases · validated (sample) |

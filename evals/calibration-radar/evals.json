@@ -1,0 +1,73 @@
+{
+  "skill_name": "calibration-radar",
+  "evals": [
+    {
+      "id": 1,
+      "name": "clean-run-mixed-signal",
+      "prompt": "Give me my calibration radar for the last month (today is 2026-08-15). I ran a broad search across primary industry sources myself and collected what came back — it's in evals/calibration-radar/cases/case-001/candidates.md. For local correlation, use evals/calibration-radar/cases/case-001/projectmem-results.md as if it were the output of running the projectmem searches yourself (current project + cross-project + global gotchas) — treat it as authoritative, don't try to run live MCP/pjm tools for this exercise.",
+      "expected_output": "Selects the genuinely strong signals (NIST agent authorization, OWASP Agentic Top 10, DORA supplement, CNCF reference architecture, ACM context-engineering rubric, Anthropic tool-output contracts) and excludes the noise (pricing tier, funding round, leaderboard chest-thumping, executive prediction, routine version bump, listicle). Correctly classifies the NIST item as a formalization gap, the OWASP item as a locally evidenced strength, and the Anthropic item as a practice divergence, citing the specific projectmem fixture evidence for each. Produces both a raw audit-trail result and a compact summary.",
+      "files": [
+        "evals/calibration-radar/cases/case-001/candidates.md",
+        "evals/calibration-radar/cases/case-001/projectmem-results.md"
+      ],
+      "expectations": [
+        "The response excludes the pricing-tier, funding-round, leaderboard chest-thumping, executive-prediction, routine-version-bump, and listicle candidates from its selected signals, either omitting them or explicitly discarding them with a stated reason",
+        "The NIST agent-authorization item is classified as a formalization gap (or clearly equivalent wording) and cites the bindle MCP-tool-scoped-after-a-near-miss note as the specific supporting evidence",
+        "The OWASP Agentic Top 10 item is classified as a locally evidenced strength (or clearly equivalent wording) and cites this repo's own instruction-injection-resistant pressure-test decisions as the specific supporting evidence",
+        "The Anthropic tool-output-contracts item is classified as a practice divergence (or clearly equivalent wording) and cites bindle's explicit decision not to validate tool output, including its stated reason",
+        "The response does not claim a projectmem connection for the Valence requireOperator/shared-secret material as evidence for the NIST agent-authorization item — the fixture explicitly marks that as a non-match (different concept: human/service auth, not agent tool authorization)",
+        "The response includes a raw, per-item breakdown (date, source, what changed, why it survived the filter, calibration classification) in addition to a compact summary — not only the compact summary"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "quiet-period",
+      "prompt": "What changed in the last week that I should know about? Today is 2026-08-15. Search results are in evals/calibration-radar/cases/case-002/candidates.md. For local correlation, use evals/calibration-radar/cases/case-002/projectmem-results.md as the authoritative simulated output of the projectmem searches.",
+      "expected_output": "Selects at most 1-2 signals (realistically just the benchmark scoring erratum) rather than padding the list to hit a target count. Explicitly states the period was thin. Does not fabricate a projectmem connection.",
+      "files": [
+        "evals/calibration-radar/cases/case-002/candidates.md",
+        "evals/calibration-radar/cases/case-002/projectmem-results.md"
+      ],
+      "expectations": [
+        "The response selects at most 2 signals as genuinely calibration-relevant, and does not treat the self-reported internal-benchmark chest-thumping post, the funding round, the hardware/pricing announcement, the prediction keynote, the routine linter release, or the aggregator newsletter as real signals",
+        "The response explicitly states or clearly conveys that this period had little genuine signal, rather than presenting a padded list as if it were a normal-strength period",
+        "The benchmark-scoring-erratum item, if selected, is marked as having no local projectmem evidence rather than an invented connection",
+        "The response still produces a raw audit-trail section (what was searched, what was discarded and why) even though the selected set is small"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "locally-evidenced-strength-and-friction",
+      "prompt": "Quarterly industry calibration, please — today is 2026-08-15, so the last 90 days. Search results are in evals/calibration-radar/cases/case-003/candidates.md. For local correlation, use evals/calibration-radar/cases/case-003/projectmem-results.md as the authoritative simulated projectmem search output.",
+      "expected_output": "Selects the evidence-before-verdict guidance, the abstention special issue, and the GitHub review-round-trip data as strong signals. Prominently surfaces the repeated-local-friction connection (case-105 issue + Valence whole-branch-review finding) for the review-round-trip item as the standout correlation of the run, rather than burying it. Reasons about the actual dates given rather than assuming an ordering.",
+      "files": [
+        "evals/calibration-radar/cases/case-003/candidates.md",
+        "evals/calibration-radar/cases/case-003/projectmem-results.md"
+      ],
+      "expectations": [
+        "The GitHub review-round-trip item is classified as repeated local friction and cites both the skills-repo case-105 issue and the Valence whole-branch-review decision as two independent supporting instances",
+        "This repeated-friction correlation is called out prominently (e.g., highlighted in the summary's opportunities/interpretation section, not just listed as one bullet among many equally-weighted items)",
+        "The evidence-before-verdict/abstention items reference the skills repo's slice-review decisions with a date-aware statement (the response engages with the actual dates given for the local decision vs. the external items, rather than asserting an unsupported ordering)",
+        "The AI-code-reviewer product launch and the routine linting release are not treated as calibration signals"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "divergence-vs-gap",
+      "prompt": "Anything new worth testing myself against, calibration-wise, over the last month? Today is 2026-08-15. Search results are in evals/calibration-radar/cases/case-004/candidates.md. For local correlation, use evals/calibration-radar/cases/case-004/projectmem-results.md as the authoritative simulated projectmem search output.",
+      "expected_output": "Correctly separates a deliberate documented divergence (stacked PRs over squash-merge) from a genuine gap, correctly identifies a formalization gap (reversibility budget) from repeatedly-informal local practice, and does not upgrade a plain absence of projectmem evidence into a 'genuine knowledge gap' label.",
+      "files": [
+        "evals/calibration-radar/cases/case-004/candidates.md",
+        "evals/calibration-radar/cases/case-004/projectmem-results.md"
+      ],
+      "expectations": [
+        "The GitHub/CNCF empirical squash-merge study is selected as a signal in Phase 1 (not discarded) — it is a genuinely strong external item on its own merit (two-organization convergence, empirical/primary-source backing, changes an established recommendation)",
+        "The squash-merge recommendation is classified as a practice divergence, citing the gh-stack decision and its stated reason, and the response does not recommend the user adopt squash-merge as if the mismatch were a finding to fix",
+        "The reversibility-budget item is classified as a formalization gap, citing the recurring informal 'expensive to undo' language across next-best-slice/slice-plan and the Valence additive-migration note",
+        "The centralized-orchestrator item, which has zero projectmem matches, is labeled as having no local evidence found rather than asserted to be a 'genuine knowledge gap' or similar overclaim",
+        "The LLM-as-judge methodology item is classified as repeated local friction, explicitly citing both the case-009 and case-107 single-pass-variance instances",
+        "The IDE plugin product launch is excluded from the selected signals"
+      ]
+    }
+  ]
+}
