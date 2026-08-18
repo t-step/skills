@@ -1,0 +1,53 @@
+{
+  "skill_name": "build-vs-adopt-audit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "clear-commodity-finding",
+      "prompt_file": "evals/build-vs-adopt-audit/cases/case-001/prompt.md",
+      "files": ["evals/build-vs-adopt-audit/cases/case-001/"],
+      "expected_output": "Flags ApiClient's hand-rolled retry loop as a finding: no decision evidence found (checked comment, ADR, commit history, project memory), resembles the general retry/backoff commodity pattern, recommendation is to re-run build-vs-adopt (not to prescribe a specific replacement).",
+      "expectations": [
+        "Flags app/clients/api_client.py's retry loop as a finding",
+        "States what was checked for a decision and that none was found, matching the fixture",
+        "The recommendation is to re-run the build-vs-adopt evaluation, not a prescribed library replacement"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "justified-custom-not-flagged",
+      "prompt_file": "evals/build-vs-adopt-audit/cases/case-002/prompt.md",
+      "files": ["evals/build-vs-adopt-audit/cases/case-002/"],
+      "expected_output": "Does not flag SpendGovernor as a finding: it's domain-specific (contract-anniversary reset, mid-cycle override) and has an on-record ADR explaining why slowapi (a rate-limiting library already a dependency) doesn't fit. Lists it under 'considered, not flagged.'",
+      "expectations": [
+        "Does not list SpendGovernor as a finding",
+        "Discusses it under 'considered, not flagged', citing the domain-specific behavior and/or the existing ADR",
+        "Does not recommend replacing SpendGovernor with slowapi or a similar rate-limiting library/service"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "mixed-repo-discrimination",
+      "prompt_file": "evals/build-vs-adopt-audit/cases/case-003/prompt.md",
+      "files": ["evals/build-vs-adopt-audit/cases/case-003/"],
+      "expected_output": "In one pass: flags LocalCache (undocumented, generic LRU/TTL cache used for a generic purpose) as a finding, and does not flag apply_tier_pricing (tightly coupled to Contract.tiers, has an inline rationale comment).",
+      "expectations": [
+        "Flags app/cache/local_cache.py's LocalCache as a finding",
+        "Does not flag app/pricing/tier_calculator.py's apply_tier_pricing as a finding",
+        "Both determinations are correct in the same response"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "weak-preference-evidence",
+      "prompt_file": "evals/build-vs-adopt-audit/cases/case-004/prompt.md",
+      "files": ["evals/build-vs-adopt-audit/cases/case-004/"],
+      "expected_output": "Still flags NotificationDispatcher's hand-rolled retry loop as a finding even though a comment exists, because the comment states a preference/outcome ('simpler than adding a dependency') rather than showing a considered tradeoff. Evidence is characterized honestly as preference-only, not 'none found' and not sufficient to clear the candidate. Recommendation is still to re-run build-vs-adopt, not a prescribed replacement or an assertion the custom code is wrong.",
+      "expectations": [
+        "Flags app/notifications/dispatcher.py's retry loop as a finding despite the existing comment",
+        "Characterizes the comment as preference-only / not showing a considered tradeoff, rather than reporting 'no evidence found' or treating it as sufficient to clear the candidate",
+        "The recommendation is to re-run the build-vs-adopt evaluation, not a prescribed replacement, and does not assert the existing implementation is wrong"
+      ]
+    }
+  ]
+}

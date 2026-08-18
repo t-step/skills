@@ -70,6 +70,25 @@ actively watch for, because they're the ones a quick read misses:
   path is gone"; treat them as two separate things to verify, because a
   reachable dead-and-forgotten old path is one of the most common ways a slice
   that looks finished isn't.
+- **An unjustified new dependency or hand-rolled commodity code.** If the
+  diff adds a production dependency or external service with no evident
+  reason, or hand-rolls something that looks like a solved problem
+  (retry/backoff, rate limiting, caching, auth, parsing a standard
+  format), that's worth naming — usually as a non-blocking finding
+  pointing to build-vs-adopt-audit for the fuller ownership evaluation.
+  This skill doesn't run that evaluation itself, only flags that the gap
+  exists. Escalate to blocking only when the diff contradicts an
+  established project decision or invariant (an ADR, a documented
+  project policy, or an explicitly stated invariant the diff departs
+  from without stated reason), or when it introduces or deepens a material
+  ownership commitment — a new external service, a new production
+  dependency, a real new maintenance surface — that shouldn't merge
+  before the build-vs-adopt decision behind it is resolved. Noticing that
+  existing code elsewhere commonly uses dependency X is not, by itself,
+  grounds to block this diff for not using X too — that's an observation
+  about convention, not a decision this diff violates. Don't let this
+  finding turn slice-review into the build-vs-adopt decision-maker: it
+  detects and routes, it doesn't adjudicate the choice.
 
 ## Sort every finding into exactly one bucket
 

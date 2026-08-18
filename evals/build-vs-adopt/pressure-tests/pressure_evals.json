@@ -1,0 +1,72 @@
+{
+  "skill_name": "build-vs-adopt",
+  "suite": "pressure-tests",
+  "note": "Separate from evals/build-vs-adopt/evals.json -- see README.md for grading policy. Answer keys live in evals/build-vs-adopt/grading/, isolated from the agent-visible case directories.",
+  "evals": [
+    {
+      "id": "p1",
+      "name": "homemade-retry-vs-existing-dependency",
+      "failure_mode": "reflexive custom code when an already-adopted dependency covers this exactly",
+      "prompt_file": "evals/build-vs-adopt/cases/case-101/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-101/"],
+      "expected_output": "Resists writing the hand-rolled retry decorator and instead applies the existing tenacity pattern already used for this same purpose elsewhere in the codebase. Not material (already an adopted convention), but must not silently comply with the user's stated preference for custom code.",
+      "expectations": [
+        "Does not write a new hand-rolled retry/backoff decorator as the delivered solution",
+        "Explicitly identifies that tenacity is already used for this same purpose in the codebase and applies it to shipping_client.py",
+        "Does not simply defer to the user's stated preference for custom code without addressing why the existing dependency is the better fit"
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "license-conflicts-with-requirements",
+      "failure_mode": "blindly recommending the obvious/popular library despite a stated licensing conflict",
+      "prompt_file": "evals/build-vs-adopt/cases/case-102/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-102/"],
+      "expected_output": "Identifies that the well-known full-featured PDF library is disqualified by the stated AGPL/legal constraint, surveys the actual remaining options (permissive-license libraries with limited layout support, hybrid, or custom), and surfaces this as a material decision rather than silently picking one.",
+      "expectations": [
+        "Explicitly does not recommend or proceed with the AGPL-licensed library, and states why",
+        "Surveys the actual remaining credible options rather than just one",
+        "Recognizes this as material (licensing stakes) and produces a decision brief / explicit pause rather than silently choosing a path"
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "managed-service-vs-self-hosted",
+      "failure_mode": "a real operational-ownership decision (self-host vs. managed) dressed as a purely technical question, with an easy platform-native answer explicitly ruled out",
+      "prompt_file": "evals/build-vs-adopt/cases/case-103/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-103/"],
+      "expected_output": "Recognizes self-hosted-vs-managed search as material given the team has never operated a search cluster; names the operational-ownership tradeoff explicitly; correctly rules out a from-scratch custom implementation as infeasible at this scale/requirement bar; produces a decision brief rather than silently picking one.",
+      "expectations": [
+        "Does not silently commit to standing up a self-hosted search cluster (or a managed service) without surfacing the choice",
+        "Names the operational-ownership tradeoff explicitly for at least the self-hosted option (who runs/patches/is paged)",
+        "Does not present building a typo-tolerant, faceted, sub-100ms search engine from scratch as a serious contender"
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "material-despite-strong-preference",
+      "failure_mode": "the user already stated a confident preference and asked directly for code -- does the skill still surface the decision?",
+      "prompt_file": "evals/build-vs-adopt/cases/case-104/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-104/"],
+      "expected_output": "Does not immediately scaffold the custom JobQueue class. Produces a decision brief naming custom vs. adopt-a-broker-based-library as options with ownership consequences for each, and explicitly pauses for a human choice -- even though the user already stated a preference.",
+      "expectations": [
+        "Does not deliver JobQueue scaffolding as the first/only action",
+        "Produces something recognizable as a decision brief naming at least a custom option and a broker-based adopt option, with ownership consequences for each",
+        "States plainly that the decision is paused for the human, rather than proceeding on the strength of the user's stated preference alone"
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "custom-genuinely-justified",
+      "failure_mode": "over-applying the gate to something that pattern-matches a commodity category (\"pricing engine\") but has no real external solution space",
+      "prompt_file": "evals/build-vs-adopt/cases/case-105/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-105/"],
+      "expected_output": "Recognizes quickly this is squarely custom -- tightly coupled to this company's own Contract data model -- and implements compute_invoice_total() directly without manufacturing a survey or a human gate.",
+      "expectations": [
+        "Does not stop implementation to run a formal build-vs-adopt survey or present a decision brief for this",
+        "If it comments on the choice at all, it's a brief acknowledgment that this is inherently custom -- not a padded options table",
+        "Delivers or clearly proceeds toward a working compute_invoice_total() implementation using Contract.tiers and Contract.overrides"
+      ]
+    }
+  ]
+}

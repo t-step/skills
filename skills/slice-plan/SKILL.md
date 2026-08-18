@@ -82,6 +82,20 @@ slice already accepted, and nothing else.
    Its stated acceptance evidence is the baseline the verification
    strategy has to satisfy exactly -- a starting point to make concrete,
    not a floor to build past.
+5. **Whether a likely seam quietly requires a new ownership decision.**
+   The accepted slice fixes *what* to build; naming implementation seams
+   still involves deciding *how*, and sometimes "how" means introducing a
+   new production dependency, an external service, or a substantial
+   custom implementation of something that looks like a solved problem
+   (retry logic, caching, auth, rate limiting, parsing a standard
+   format). That choice isn't this plan's to make quietly just because a
+   seam needs to be named. **REQUIRED SUB-SKILL:** Use build-vs-adopt
+   when a seam's implementation approach is genuinely undecided and looks
+   material -- let it settle the approach before this plan names that
+   seam around it. When the approach is obvious or already conventional
+   for this codebase (the accepted slice already implies it, or it's
+   another ordinary use of a dependency already in the project), that's
+   not a new decision -- name the seam and move on.
 
 If genuinely nothing accepted exists yet -- no recommendation, no
 ticket, nothing to plan against -- don't invent a slice to plan around.

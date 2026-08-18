@@ -15,6 +15,8 @@ detection rule.
 
 | Skill | What it does | Validation |
 |---|---|---|
+| [`build-vs-adopt`](skills/build-vs-adopt/) | Makes the build-vs-adopt decision explicit before implementation commits to an approach -- surveys existing internal capability, platform/stdlib primitive, mat… | 11 cases · validated (sample) |
+| [`build-vs-adopt-audit`](skills/build-vs-adopt-audit/) | Retrospectively audits a repository, directory, or diff for custom-built commodity functionality -- hand-rolled retry, rate limiting, caching, auth, parsing a… | 4 cases · validated (sample) |
 | [`calibration-radar`](skills/calibration-radar/) | Periodic external-calibration radar for an experienced software/AI engineer: searches primary sources (Anthropic, OpenAI, NIST, OWASP, CNCF, DORA, etc.) for de… | 15 cases · validated (sample) |
 | [`comment-cleanup`](skills/comment-cleanup/) | Report-first comment cleanup: classifies each comment remove/correct/ preserve by what information would be lost if it disappeared. | 22 cases · validated (sample) |
 | [`next-best-product-slice`](skills/next-best-product-slice/) | Recommends exactly one next bounded product slice -- the smallest change that grows what a product's intended users can understand, complete, or recover from,… | 16 cases · validated (sample) |

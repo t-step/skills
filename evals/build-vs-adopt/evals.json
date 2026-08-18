@@ -1,0 +1,77 @@
+{
+  "skill_name": "build-vs-adopt",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-external-service",
+      "prompt_file": "evals/build-vs-adopt/cases/case-001/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-001/"],
+      "expected_output": "Does not jump straight into a raw-smtplib EmailSender class. Surveys real options (managed transactional-email service and/or a library that handles deliverability/retry/TLS), recognizes this is material (new external service or dependency, no existing internal option), and produces a decision brief with an explicit pause for a human choice.",
+      "expectations": [
+        "Does not proceed straight to implementing the raw-smtplib EmailSender class as the delivered solution",
+        "Produces something recognizable as a decision brief: options considered, a recommendation, and consequences of owning the chosen option",
+        "States plainly that implementation is paused pending a human decision, rather than proceeding"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "existing-internal-reuse",
+      "prompt_file": "evals/build-vs-adopt/cases/case-002/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-002/"],
+      "expected_output": "Discovers and reuses the existing app/utils/ids.py generate_id() helper, already used the same way twice elsewhere. Not material -- no decision brief, no gate, just reuse.",
+      "expectations": [
+        "The implementation calls (or clearly plans to call) the existing generate_id() helper rather than writing new ID-generation logic",
+        "No decision brief, options table, or explicit pause for a human choice is produced",
+        "Does not treat this as needing a formal survey of internal/platform/library/service/custom options"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "trivial-local-helper",
+      "prompt_file": "evals/build-vs-adopt/cases/case-003/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-003/"],
+      "expected_output": "Just gives the one-line strftime formatting call. No build-vs-adopt apparatus of any kind -- local code is obviously simpler and no dependency is seriously in contention.",
+      "expectations": [
+        "Gives a direct, minimal answer (the strftime/format call) with no decision brief, options table, or solution-space survey",
+        "Does not raise or consider adopting a dependency for this",
+        "Response length/structure stays proportional to the triviality of the ask"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "conventional-dependency-use",
+      "prompt_file": "evals/build-vs-adopt/cases/case-004/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-004/"],
+      "expected_output": "Applies the existing slowapi @limiter.limit(...) pattern, already used identically on two other routes, to the new endpoint. Already a project convention -- not material, no gate.",
+      "expectations": [
+        "Implements the rate limit using the existing limiter/slowapi pattern, not a new hand-rolled limiter or a newly-introduced different dependency",
+        "No decision brief, options table, or explicit pause for a human choice is produced",
+        "Treats this as an ordinary use of an already-adopted dependency, not a new decision"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "unrelated-bug-fix",
+      "prompt_file": "evals/build-vs-adopt/cases/case-005/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-005/"],
+      "expected_output": "Just fixes the off-by-one bug (< becomes <=). Nothing build-vs-adopt-shaped in the response at all -- this task has nothing to do with sourcing a capability.",
+      "expectations": [
+        "The off-by-one bug is fixed correctly",
+        "Nothing in the response resembles a build-vs-adopt decision brief, options table, solution-space survey, or materiality discussion",
+        "No mention of dependencies, libraries, services, or ownership tradeoffs anywhere in the response"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "already-decided-dont-reask",
+      "prompt_file": "evals/build-vs-adopt/cases/case-006/prompt.md",
+      "files": ["evals/build-vs-adopt/cases/case-006/"],
+      "expected_output": "An applicable recorded decision (ADR-0004) already resolves custom vs. Celery+Redis for this exact requirement. Proceeds toward implementing the custom Postgres-backed JobQueue without re-opening the choice -- no decision brief, no options table, no pause.",
+      "expectations": [
+        "No decision brief, options table, or explicit pause for a human choice is produced",
+        "The response proceeds toward implementing the custom Postgres-backed JobQueue consistent with ADR-0004",
+        "Does not treat the existing ADR as merely a preference that needs to be re-weighed from scratch"
+      ]
+    }
+  ]
+}
