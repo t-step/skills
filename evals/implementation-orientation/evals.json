@@ -1,0 +1,89 @@
+{
+  "skill_name": "implementation-orientation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "cli-command-registry",
+      "prompt_file": "evals/implementation-orientation/cases/case-001/prompt.md",
+      "files": ["evals/implementation-orientation/cases/case-001/"],
+      "expected_output": "One obvious sibling pattern (register_command decorator), nothing hidden. Should abstain -- no material findings, no decision brief, no inflated 'convention' claim about a two-example registry.",
+      "expectations": [
+        "Does not produce a 'Material guidance' section with findings, or explicitly reports no material guidance found",
+        "Does not treat the register_command decorator pattern itself as a material finding worth reporting -- it's the single obvious path, not a discovery",
+        "Response stays short and does not read as an architecture review or full repo tour"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "slack-notifier-bypass",
+      "prompt_file": "evals/implementation-orientation/cases/case-002/prompt.md",
+      "files": ["evals/implementation-orientation/cases/case-002/"],
+      "expected_output": "Surfaces that the existing NotificationChannel registry (notifications/base.py) wraps every channel's send() through a shared RateLimiter, and that the proposed standalone SlackNotifier/send_slack_message plan would bypass both the registry and the rate limiter. Recommends implementing Slack as a registered NotificationChannel subclass instead.",
+      "expectations": [
+        "Names the existing NotificationChannel registry/base class as the mechanism to extend, not a new standalone class",
+        "Explicitly flags that the proposed plan bypasses the shared RateLimiter guard in NotificationChannel.send()",
+        "Frames this as material guidance (would change the implementation approach), not routine orientation"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "dropbox-image-fetch",
+      "prompt_file": "evals/implementation-orientation/cases/case-003/prompt.md",
+      "files": ["evals/implementation-orientation/cases/case-003/"],
+      "expected_output": "Surfaces core/net.py's is_allowed_remote_host() SSRF guard and get_session() convention, already used by the one existing remote-fetch integration (webhook_fetcher.py), and flags that the proposed raw requests.get(url) plan skips both -- a security-relevant omission.",
+      "expectations": [
+        "Names is_allowed_remote_host() (or the SSRF/internal-host guard it implements) as something the new fetch path must use",
+        "Names the shared get_session()/webhook_fetcher.py convention as precedent to follow instead of a bare requests.get() call",
+        "Frames this as a security-relevant material finding, with high or medium confidence, not a passing mention"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "device-sensor-unique-id",
+      "prompt_file": "evals/implementation-orientation/cases/case-004/prompt.md",
+      "files": ["evals/implementation-orientation/cases/case-004/"],
+      "expected_output": "Surfaces that sensor.kind exists specifically to distinguish multiple sensors on the same device (entities/sensor.py), so dropping the ':{kind}' suffix from unique_id() would collide a device's temperature/humidity/battery sensors onto one ID. Flags the proposed migration as unsafe as stated and recommends a real discriminator stay in the ID (or an explicit collision-handling plan).",
+      "expectations": [
+        "Explicitly names the collision risk: multiple sensors on one device would get the same ID if the ':{kind}' suffix is dropped",
+        "Connects entities/sensor.py's per-subclass kind attribute to why registry.py's unique_id() includes it",
+        "Recommends against the simplification as proposed, or names the collision as something that must be resolved before proceeding, rather than endorsing the task's framing that the suffix is unnecessary"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "retry-helper-unification",
+      "prompt_file": "evals/implementation-orientation/cases/case-005/prompt.md",
+      "files": ["evals/implementation-orientation/cases/case-005/"],
+      "expected_output": "Surfaces that with_retry (core/retry.py) fails open (swallows the exception, returns None) while call_with_retry (integrations/retry_utils.py) fails closed (re-raises), and that this is a real behavioral difference each call site depends on -- nightly_sync.py relies on the None-means-skip contract, charge.py relies on the exception propagating. Flags this as a genuine decision the unification must resolve, not a mechanical merge.",
+      "expectations": [
+        "Names the fail-open vs fail-closed behavioral difference between the two helpers explicitly",
+        "Connects this to a concrete consequence for at least one call site (nightly_sync.py's result-is-None branch, or charge.py needing the exception to propagate)",
+        "Treats this as an open decision / genuine ambiguity to resolve before merging, rather than silently picking one behavior or treating the merge as purely mechanical deduplication"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "provider-zeta-registration",
+      "prompt_file": "evals/implementation-orientation/cases/case-006/prompt.md",
+      "files": ["evals/implementation-orientation/cases/case-006/"],
+      "expected_output": "Five near-identical provider registration files with no behavior. Should abstain -- this is mechanical scaffolding repeated five times, not an architectural convention worth reporting, even though the repetition is real and visible.",
+      "expectations": [
+        "Does not produce a 'Material guidance' section, or explicitly reports no material guidance found",
+        "Does not frame the repeated provider_*.py shape as a convention, invariant, or architectural finding -- at most treats it as the obvious pattern to copy, without calling it out as a discovery",
+        "Response stays short and proportional to a five-line-registration task"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "eventbus-publish-integration",
+      "prompt_file": "evals/implementation-orientation/cases/case-007/prompt.md",
+      "files": ["evals/implementation-orientation/cases/case-007/"],
+      "expected_output": "The task already names the exact binding mechanism (EventBus.instance().publish(...)) and states the integration point is settled. Repository inspection adds nothing material beyond confirming the call is well-formed. Should abstain.",
+      "expectations": [
+        "Does not produce a 'Material guidance' section with findings beyond what the task itself already specified, or explicitly reports no material guidance found",
+        "Does not manufacture an alternative integration approach or second-guess the tech lead's stated integration point without new evidence",
+        "Response stays short -- does not turn this into a broader investigation of the event system"
+      ]
+    }
+  ]
+}
