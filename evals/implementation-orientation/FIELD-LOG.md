@@ -2,8 +2,10 @@
 
 Manual log of real (non-eval) invocations of `implementation-orientation`,
 kept while the skill is a field-trial draft. Not automated, not wired into
-any hook or script — append a row by hand after a real use, per the
-"Field-trial logging" section of `skills/implementation-orientation/SKILL.md`.
+any hook or script, and not something the skill itself writes to as part
+of being invoked — the field-trial observer/operator appends a row by
+hand, retrospectively, after a real use, per the "Field-trial logging"
+section of `skills/implementation-orientation/SKILL.md`.
 
 Target: roughly 10–15 real-use rows before the draft is reassessed for
 promotion, revision, or retirement.

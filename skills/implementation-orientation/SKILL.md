@@ -271,17 +271,23 @@ Useful for judging your own draft before writing the report:
 - Write the implementation.
 
 If a request bundles this in with one of those ("orient me and then plan
-it," "check for gotchas and just build it") — do the orientation pass as
-scoped here, say plainly that the rest is a different skill's job, and stop
-there rather than quietly expanding scope.
+it," "check for gotchas and just build it") — run the orientation pass
+first, exactly as scoped here, then carry any material findings forward
+into the requested downstream work rather than stopping and handing the
+user back to another skill themselves. A no-material-guidance result is
+not a reason to interrupt the downstream work either — it just means the
+downstream work proceeds with nothing extra to account for. The point of
+staying narrowly scoped is that the orientation pass itself must not turn
+into the plan or the implementation, not that the user has to manually
+re-invoke something else once it's done. The intended flow is task →
+orientation preflight → the requested planning/implementation, carrying
+findings forward — not task → orientation → stop.
 
 ## Field-trial logging
 
-This skill is being field-tested, not benchmarked in the usual sense. After
-a real (non-eval) invocation, append one row to
-`evals/implementation-orientation/FIELD-LOG.md` — see that file for the
-exact columns and an example row. It takes under a minute and is the only
-telemetry this skill collects; there is no automated logging, hook, or
-external service involved. If appending feels like it would interrupt the
-actual task, it's fine to skip — the log is for retrospective calibration,
-not a required step of using the skill.
+This skill is being field-tested, not benchmarked in the usual sense.
+`evals/implementation-orientation/FIELD-LOG.md` tracks real (non-eval)
+invocations, but filling it in is not part of running this skill — it's
+maintained retrospectively by whoever is operating the field trial,
+outside the invocation itself. This skill does not write to it, and
+running the skill has no side effects on the repo.
