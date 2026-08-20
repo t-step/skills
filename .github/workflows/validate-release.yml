@@ -1,0 +1,38 @@
+name: validate-release
+
+# Validates the marketplace/plugin manifests on every PR targeting main, and
+# enforces that plugins/software-engineering/'s version is bumped whenever
+# its runtime contents change.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Claude Code CLI
+        uses: ./.github/actions/install-claude-cli
+
+      - name: Validate marketplace manifest
+        run: claude plugin validate . --strict
+
+      - name: Validate software-engineering plugin manifest
+        run: claude plugin validate ./plugins/software-engineering --strict
+
+      - name: Enforce version bump on plugin runtime changes
+        run: scripts/check-plugin-version-bump.sh "${{ github.event.pull_request.base.sha }}"
+
+      - name: Marketplace add / install smoke test
+        run: |
+          claude plugin marketplace add ./
+          claude plugin install software-engineering@t-step-skills --scope local
+          claude plugin list --json

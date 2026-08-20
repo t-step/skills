@@ -1,0 +1,13 @@
+{
+  "name": "t-step-skills",
+  "owner": {
+    "name": "Thomas Estep"
+  },
+  "description": "Plugin marketplace distributing t-step Claude Code skills.",
+  "plugins": [
+    {
+      "name": "software-engineering",
+      "source": "./plugins/software-engineering"
+    }
+  ]
+}
