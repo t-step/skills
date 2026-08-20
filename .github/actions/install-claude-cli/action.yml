@@ -1,0 +1,15 @@
+name: Install Claude Code CLI
+description: >-
+  Installs the pinned Claude Code CLI version used by this repository's
+  workflows, via Anthropic's supported installer version argument
+  (https://claude.ai/install.sh [stable|latest|VERSION]). Single source of
+  truth for the pinned version -- update CLAUDE_CODE_VERSION here only.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CLAUDE_CODE_VERSION: "2.1.237"
+      run: |
+        curl -fsSL https://claude.ai/install.sh | bash -s "$CLAUDE_CODE_VERSION"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"

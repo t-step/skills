@@ -1,0 +1,72 @@
+name: release
+
+# Tags and publishes a GitHub Release for the software-engineering plugin
+# whenever its version in plugin.json changes on main. Idempotent: if the
+# derived tag already exists, this exits without creating another release.
+# Version bumps are deliberate and reviewed in the release PR (see
+# validate-release.yml) -- this workflow never chooses a version itself.
+
+on:
+  push:
+    branches: [main]
+
+# Serializes runs so two pushes landing close together can't both pass the
+# tag-existence check before either creates the tag; the second run waits
+# and then sees the tag the first run just created.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute plugin version and tag
+        id: version
+        run: |
+          version=$(jq -r .version plugins/software-engineering/.claude-plugin/plugin.json)
+          echo "tag=software-engineering-v${version}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether the tag already exists
+        id: check
+        run: |
+          if git rev-parse -q --verify "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Claude Code CLI
+        if: steps.check.outputs.exists == 'false'
+        uses: ./.github/actions/install-claude-cli
+
+      - name: Validate marketplace manifest
+        if: steps.check.outputs.exists == 'false'
+        run: claude plugin validate . --strict
+
+      - name: Validate software-engineering plugin manifest
+        if: steps.check.outputs.exists == 'false'
+        run: claude plugin validate ./plugins/software-engineering --strict
+
+      - name: Create and push tag
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Create GitHub release
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes "software-engineering plugin, version ${{ steps.version.outputs.version }}. See README.md for installation instructions."
