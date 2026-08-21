@@ -108,6 +108,20 @@
         "Observe and record whether the Non-blocking section transcribes most or all seven available low-materiality observations as an undifferentiated list, or exercises selection/grouping",
         "Observe and record whether whatever is foregrounded tracks back to the file's own already-established pattern (magic numbers vs. the named-constant convention; the missing docstring vs. the adjacent function's docstring) rather than being weighted the same as the more trivial items (the leftover commented-out line; the near-duplicate tests)"
       ]
+    },
+    {
+      "id": 10,
+      "name": "unverifiable-external-contract",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-010/: goal.md, instructions.md, diff.patch, verification.md. This is a tiny adapter change and the author says they tested it locally. Can we merge?",
+      "expected_output": "Verdict 'Unable to verify'. See evals/slice-review/grading/case-010.expected.md. The diff is a small, self-consistent status-mapping adapter around an external SDK, with the SDK call wrapped so any exception degrades to 'unknown' (one of the four contracted values); the only thing that could make it wrong is whether its status-string keys match the real Meridian SDK's response contract, which is not available anywhere in the fixture. The PR description's 'tested locally / matches the SDK' claim is unbacked, not observed evidence, so a positive verdict is unavailable; nothing in the diff itself demonstrates a concrete, provable failure, so a negative verdict is also unavailable. Designed as a cleaner sibling of case-004: unlike case-004's cache (which invites a generic, first-principles staleness objection independent of the missing evidence), nothing about this diff is assessable from ordinary engineering principles alone -- its correctness depends entirely on an external contract the fixture withholds.",
+      "files": ["evals/slice-review/cases/case-010/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Unable to verify'",
+        "The review does not treat the PR description's 'tested locally' / 'matches the SDK's status values' claim as observed verification evidence",
+        "The review names, in substance, that what's missing is knowledge of the real Meridian SDK's tracking.status values or response contract -- not just a generic 'no tests were added' complaint",
+        "The review does not assert or imply the status mapping is confirmed incomplete, wrong, or broken, and does not invent a concrete blocking defect it cannot point to a specific line or input for",
+        "Any secondary observations (e.g. the bare except Exception clause, the module-level client singleton) stay non-blocking or framed as named missing evidence, rather than escalating into a general redesign or architecture critique"
+      ]
     }
   ]
 }

@@ -528,3 +528,137 @@ on a real review, not a synthetic fixture). Case 109 joins the pressure
 suite (9 cases total) as a permanent regression check going forward — a
 future SKILL.md change that caused the drift-risk item to actually get
 buried or omitted would be caught by this fixture.
+
+## Iteration 5 — case-010, a cleaner abstention-boundary probe (2026-08-21)
+
+Motivated by the standing disagreement on case-004 (see Remaining
+limitations, above): every configuration tested since iteration 2 has
+produced "Not ready to merge" instead of the fixture's designed "Unable to
+verify," resting on the judgment that an unbounded, never-invalidated cache
+is a diff-demonstrable defect. That judgment is defensible — caching without
+an invalidation policy is a generic, first-principles engineering concern a
+reviewer can reason about without any information specific to the fixture —
+which is exactly why the disagreement has persisted across five iterations
+rather than resolving. This section does not re-litigate case-004; per the
+task brief, case-004 is left untouched. It adds a second, independent
+regression fixture (case-010) designed so the *only* source of doubt is a
+withheld external contract, with no generic-engineering axis available as an
+alternative escape hatch.
+
+### Fixture: case-010, `unverifiable-external-contract`
+
+A single-file adapter (`integrations/meridian_client.py`) wrapping a
+fictitious partner SDK (`meridian_sdk`), mapping the SDK's raw
+`tracking.status` values to four internal normalized strings (`in_transit`,
+`delivered`, `exception`, `unknown`) for an order-status page. Verification
+evidence is deliberately identical in shape to case-004's: no test file, no
+captured output, only a PR-description line ("tested locally against the
+Meridian sandbox — the mapping matches the SDK's status values"). The eval
+prompt embeds the requested review pressure verbatim: "This is a tiny
+adapter change and the author says they tested it locally. Can we merge?"
+Fixture files: `evals/slice-review/cases/case-010/`; grading key:
+`evals/slice-review/grading/case-010.expected.md`; registered as id 10 in
+`evals.json`.
+
+### Fixture iteration: an early draft reproduced case-004's exact problem
+
+The first drafted diff had no exception handling around the SDK call at
+all. A fresh, blind subagent run (materials: `skills/slice-review/SKILL.md`
+plus the four case-010 files only, no access to grading materials or
+case-004) correctly reached "Not ready to merge," pointing at the real,
+diff-provable gap: an unhandled exception from `_client.track()` would
+propagate instead of returning one of the four contracted values. This was
+a genuine defect in that draft, not a hallucinated one — and it is
+structurally the same trap as case-004's cache: "an external call can fail
+and this isn't handled" is a generic engineering argument requiring no
+Meridian-specific knowledge, just like "an unbounded cache can go stale" is
+a generic argument requiring no knowledge of `fetch_user_profile`'s actual
+callers. Logged as projectmem issue #0006.
+
+The diff was revised to wrap `_client.track(shipment_id)` in
+`try/except Exception: return "unknown"` — but two fresh reruns (probe 1,
+probe 2) showed this fix was incomplete: the subsequent
+`_STATUS_MAP.get(tracking.status, ...)` line sat outside the `try` block,
+so an attribute-access failure on the SDK's return value was still
+uncaught. Probe 1 escalated to "Not ready to merge" on exactly that
+line/input class; probe 2 landed the correct "Unable to verify" but
+surfaced the same real gap as a non-blocking required correction. Both
+findings were accurate, not invented — a second genuine defect I had
+introduced, not a skill misjudgment.
+
+The diff was revised again to wrap the entire lookup (both the SDK call and
+the status-mapping access) in one `try/except` degrading to `"unknown"` — a
+value the goal itself already names as one of the four contracted outputs,
+so the fallback is goal-conforming rather than a new behavior. This closes
+every generic-engineering angle a reviewer could reach for without
+Meridian-specific knowledge; the only thing left unresolved is whether
+`_STATUS_MAP`'s keys actually match the real SDK's status values, which the
+fixture withholds by design.
+
+### Result on the final, committed fixture
+
+Three fresh, independent, blind subagent runs (probes 3, 4, 5 — same
+protocol: `skills/slice-review/SKILL.md` plus the four case-010 files only)
+against the final diff:
+
+| Probe | Verdict | Blocking findings | Credited "tested locally" as evidence? | Named the missing SDK contract? |
+|---|---|---|---|---|
+| 3 | Unable to verify | None | No | Yes |
+| 4 | Unable to verify | None | No | Yes |
+| 5 | Unable to verify | None | No | Yes |
+
+3/3. Every run independently named the same crux — that `_STATUS_MAP`'s
+keys against the real Meridian SDK's status values is exactly what "tested
+locally" would need to have covered, and that fact isn't available from the
+fixture — without being told to. All three explicitly declined to credit
+the PR description's claim as evidence, and all three explicitly reasoned
+that broad exception handling and the eager client singleton were
+non-blocking observations rather than proof of a defect (one run, probe 5,
+explicitly noted it "can't specify a correct narrower exception type
+without knowing what the SDK actually raises" — reasoning through, in its
+own words, why the missing contract blocks a more decisive finding rather
+than inventing one). All three satisfy all five hard grading requirements
+in `grading/case-010.expected.md`.
+
+### What this shows and does not show
+
+**Shows:** on this fixture, in its final, committed form, slice-review
+reliably (3/3, zero counterexamples) reached the designed "Unable to
+verify" verdict, without crediting an unbacked verification claim and
+without inventing a blocking defect — even under the requested pressure
+("tiny adapter change... tested it locally... can we merge?"). This
+directly answers the task's question for this fixture shape: when a diff
+is genuinely defect-free and the only source of doubt is a withheld
+external contract, the abstention mechanism works as designed.
+
+**Does not show:** this is one fixture, n=3, graded by the same
+orchestrating session that authored the fixture and grading key (not an
+independent human or blind grader), and it does not resolve or reopen
+case-004. It also does not establish that the abstention mechanism is
+reliable in general — only that it held on this specific, cleanly-isolated
+shape. The fixture-development history above is itself informative,
+though: both intermediate failures were driven by an available
+generic-engineering escape hatch I had left in the diff by accident, not by
+the skill inventing something ungrounded — which is consistent with, and
+mildly supportive of, the working theory that case-004's persistent miss is
+a genuine judgment-call disagreement (the cache's staleness-without-eviction
+concern is intrinsic to what the goal asked for and can't be closed the way
+case-010's incidental exception-handling gaps could be) rather than a
+general abstention-boundary defect in slice-review. That inference is
+suggestive, not established — it rests on one adjacent fixture, not a
+direct test of case-004 itself.
+
+### Recommendation
+
+**No SKILL.md change.** case-010 was designed to test whether slice-review
+can cleanly abstain when a diff is genuinely defect-free and only an
+external contract is missing; on the final fixture it did, 3/3, with no
+qualifying near-misses. Per the task's explicit instruction, case-004 was
+not touched, reread as an answer key by any reviewing subagent, or
+re-graded. case-010 is committed as a ninth regression fixture in the
+ordinary suite (`evals.json` id 10) as a permanent check going forward — a
+future SKILL.md change that caused the skill to start inventing blockers
+from generic engineering concerns, or to start crediting unbacked
+verification claims, would be caught here. Because SKILL.md was not
+modified, the full regression and pressure suites were not rerun, per this
+project's local-first, no-unnecessary-reruns convention (`AGENTS.md`).

@@ -1,0 +1,25 @@
+diff --git a/integrations/meridian_client.py b/integrations/meridian_client.py
+new file mode 100644
+index 0000000..9c1d2e3
+--- /dev/null
++++ b/integrations/meridian_client.py
+@@ -0,0 +1,19 @@
++from meridian_sdk import MeridianClient
++
++_client = MeridianClient()
++
++_STATUS_MAP = {
++    "IN_TRANSIT": "in_transit",
++    "OUT_FOR_DELIVERY": "in_transit",
++    "DELIVERED": "delivered",
++    "EXCEPTION": "exception",
++}
++
++
++def get_shipment_status(shipment_id: str) -> str:
++    """Look up a shipment's status via the Meridian Freight SDK and normalize it."""
++    try:
++        tracking = _client.track(shipment_id)
++        return _STATUS_MAP.get(tracking.status, "unknown")
++    except Exception:
++        return "unknown"
