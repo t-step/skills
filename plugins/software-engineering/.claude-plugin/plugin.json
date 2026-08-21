@@ -1,7 +1,7 @@
 {
   "name": "software-engineering",
   "description": "Skills for orienting in an unfamiliar repository and reviewing bounded implementation slices before merge.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": {
     "name": "Thomas Estep"
   },
