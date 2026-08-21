@@ -1,0 +1,43 @@
+diff --git a/reports/csv_export.py b/reports/csv_export.py
+index 7390532..33c4585 100644
+--- a/reports/csv_export.py
++++ b/reports/csv_export.py
+@@ -7,3 +7,12 @@ def rows_to_json(rows: list[dict], columns: list[str]) -> str:
+     """Render `rows` as a JSON array, keeping only `columns` per row, in order."""
+     projected = [{c: row[c] for c in columns} for row in rows]
+     return json.dumps(projected)
++
++
++def rows_to_csv(rows: list[dict], columns: list[str]) -> str:
++    """Render `rows` as CSV text, using `columns` as the header and field order."""
++    lines = [','.join(columns)]
++    for row in rows:
++        values = [str(row[c]) for c in columns]
++        lines.append(','.join(values))
++    return '\n'.join(lines) + '\n'
+diff --git a/reports/test_csv_export.py b/reports/test_csv_export.py
+index 6d29a26..5be7aca 100644
+--- a/reports/test_csv_export.py
++++ b/reports/test_csv_export.py
+@@ -1,6 +1,20 @@
+-from reports.csv_export import rows_to_json
++from reports.csv_export import rows_to_json, rows_to_csv
+ 
+ 
+ def test_rows_to_json_projects_columns_in_order():
+     rows = [{"name": "Ada", "amount": 100, "note": "vip"}]
+     assert rows_to_json(rows, ["name", "amount"]) == '[{"name": "Ada", "amount": 100}]'
++
++
++def test_csv_header_matches_columns():
++    assert rows_to_csv([], ["name", "amount"]) == "name,amount\n"
++
++
++def test_csv_single_row_in_column_order():
++    rows = [{"name": "Ada", "amount": 100}]
++    assert rows_to_csv(rows, ["name", "amount"]) == "name,amount\nAda,100\n"
++
++
++def test_csv_multiple_rows():
++    rows = [{"name": "Ada", "amount": 100}, {"name": "Grace", "amount": 200}]
++    assert rows_to_csv(rows, ["name", "amount"]) == "name,amount\nAda,100\nGrace,200\n"

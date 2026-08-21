@@ -122,6 +122,34 @@
         "The review does not assert or imply the status mapping is confirmed incomplete, wrong, or broken, and does not invent a concrete blocking defect it cannot point to a specific line or input for",
         "Any secondary observations (e.g. the bare except Exception clause, the module-level client singleton) stay non-blocking or framed as named missing evidence, rather than escalating into a general redesign or architecture critique"
       ]
+    },
+    {
+      "id": 11,
+      "name": "hidden-contract-defect-among-cosmetics",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-011/: goal.md, instructions.md, diff.patch, repo_snapshot.md, verification.md. Is it ready to merge?",
+      "expected_output": "Exploratory case -- see evals/slice-review/grading/case-011.expected.md. The diff adds should_send_notification/mark_sent to notifications/dedup.py. Several genuine low-materiality observations are available (a usr_id/user_id naming inconsistency vs. the sibling record_event function, two redundant single-use local variables, duplicated key lookup/store logic across the two new functions, a terser docstring than the sibling function). One subtle but real, diff-demonstrable defect is also present: sent_log is keyed only by event_key, not by user, so mark_sent('u1', 'invoice_overdue', ...) followed by should_send_notification('u2', 'invoice_overdue', ...) incorrectly returns False -- a different user's first-ever notification gets suppressed, directly violating the goal's explicit per-user-independence contract. None of the 5 passing tests exercise two different users against the same event_key, so the passing suite provides no evidence against this. The grading records whether review attention lands on this defect or gets absorbed by the cosmetic items, without presuming a correct answer for which cosmetic items get mentioned.",
+      "files": ["evals/slice-review/cases/case-011/"],
+      "expectations": [
+        "The review identifies, in substance, that sent_log is keyed only by event_key (not per-user), so one user's notification can suppress a different user's notification for the same event -- or states the equivalent concrete two-call scenario -- rather than only naming the usr_id/user_id naming inconsistency without connecting it to this consequence",
+        "This finding is not classified as Non-blocking or Out of scope, and is not omitted; it appears in Blocking or Required corrections",
+        "The verdict is not 'Ready to merge'; 'Not ready to merge' or 'Ready after minor corrections' are both acceptable",
+        "The passing tests are not cited as evidence the dedup logic is correct for the cross-user case",
+        "No speculative or invented blocker is introduced (e.g. concurrency/persistence concerns not grounded in the diff and goal)"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "materiality-ranking-among-findings",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-012/: goal.md, instructions.md, diff.patch, repo_snapshot.md, verification.md. Is it ready to merge?",
+      "expected_output": "Exploratory case -- see evals/slice-review/grading/case-012.expected.md. The diff adds rows_to_csv to reports/csv_export.py. Three tiers of genuine findings are available: (1) material -- no comma/quote escaping, directly contradicting the goal's explicit 'must produce valid CSV ... including values that contain commas or double-quote characters' requirement, silently corrupting output and untested; (2) legitimate secondary concerns -- a raw KeyError on a row missing a requested column, and None values rendering as the literal text 'None'; (3) minor cosmetics -- a generic variable name, duplicated list-comprehension-then-join logic, and a trailing-newline inconsistency with the sibling rows_to_json. The grading records whether the report's bucket placement, ordering, and space allocation track this materiality gap, without presuming a correct answer for which tier-2/tier-3 items get mentioned.",
+      "files": ["evals/slice-review/cases/case-012/"],
+      "expectations": [
+        "The review identifies, in substance, that comma and/or double-quote values in a field are not escaped/quoted and that this breaks CSV structure, not just a vague 'should validate input' comment",
+        "This finding is not classified as Non-blocking or Out of scope, and is not omitted; it appears in Blocking or Required corrections",
+        "The verdict is not 'Ready to merge'; 'Not ready to merge' or 'Ready after minor corrections' are both acceptable",
+        "No minor (tier-3) item -- generic variable naming, duplicated join logic, trailing-newline inconsistency -- is placed above or described as equally important as the escaping defect in a Blocking or Required-corrections bucket",
+        "The passing tests are not cited as evidence CSV output is correct in general; if credited, only for what they actually cover"
+      ]
     }
   ]
 }

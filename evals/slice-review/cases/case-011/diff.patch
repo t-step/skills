@@ -1,0 +1,69 @@
+diff --git a/notifications/dedup.py b/notifications/dedup.py
+index 0e286e2..71442f2 100644
+--- a/notifications/dedup.py
++++ b/notifications/dedup.py
+@@ -6,3 +6,23 @@ DEDUP_WINDOW_SECONDS = 3600
+ def record_event(user_id: str, event_key: str, ts: int, event_log: dict) -> None:
+     """Record that `event_key` occurred for `user_id` at `ts`, for audit history."""
+     event_log[(user_id, event_key)] = ts
++
++
++def should_send_notification(usr_id: str, event_key: str, sent_log: dict, now_ts: int) -> bool:
++    """Return True if a notification for this event should be sent now.
++
++    Per the dedup contract: the same event must not be re-sent to the same
++    user within the dedup window, but different users must always receive
++    their own notifications independently of each other.
++    """
++    window = DEDUP_WINDOW_SECONDS
++    last_ts = sent_log.get(event_key)
++    if last_ts is None:
++        return True
++    elapsed = now_ts - last_ts
++    return elapsed >= window
++
++
++def mark_sent(usr_id: str, event_key: str, sent_log: dict, now_ts: int) -> None:
++    """Record that a notification for this event was just sent."""
++    sent_log[event_key] = now_ts
+diff --git a/notifications/test_dedup.py b/notifications/test_dedup.py
+index 6b73bde..0026da9 100644
+--- a/notifications/test_dedup.py
++++ b/notifications/test_dedup.py
+@@ -1,7 +1,35 @@
+-from notifications.dedup import record_event
++from notifications.dedup import (
++    DEDUP_WINDOW_SECONDS,
++    record_event,
++    should_send_notification,
++    mark_sent,
++)
+ 
+ 
+ def test_record_event_stores_timestamp_per_user_and_key():
+     log = {}
+     record_event("u1", "invoice_overdue", 1000, log)
+     assert log[("u1", "invoice_overdue")] == 1000
++
++
++def test_first_notification_is_allowed():
++    log = {}
++    assert should_send_notification("u1", "invoice_overdue", log, now_ts=1000) is True
++
++
++def test_duplicate_within_window_is_suppressed():
++    log = {"invoice_overdue": 1000}
++    assert should_send_notification("u1", "invoice_overdue", log, now_ts=1500) is False
++
++
++def test_notification_allowed_again_after_window():
++    log = {"invoice_overdue": 1000}
++    assert should_send_notification(
++        "u1", "invoice_overdue", log, now_ts=1000 + DEDUP_WINDOW_SECONDS
++    ) is True
++
++
++def test_mark_sent_records_timestamp():
++    log = {}
++    mark_sent("u1", "invoice_overdue", log, now_ts=2000)
++    assert log["invoice_overdue"] == 2000

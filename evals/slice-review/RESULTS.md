@@ -662,3 +662,228 @@ from generic engineering concerns, or to start crediting unbacked
 verification claims, would be caught here. Because SKILL.md was not
 modified, the full regression and pressure suites were not rerun, per this
 project's local-first, no-unnecessary-reruns convention (`AGENTS.md`).
+
+## Iteration 6 — case-011 and case-012, materiality discrimination when a real defect is mixed with noise (2026-08-21)
+
+Case-009 (Iterations 3–4, above) probed a narrower question than "does
+slice-review discriminate by materiality": every one of its seven
+available observations was low-materiality, so the fixture could only
+observe *how* the skill selects among purely cosmetic items, never whether
+a genuinely important finding gets found, correctly escalated, or buried.
+That question — do report attention and severity broadly track materiality
+when a materially important concern is actually present, mixed with
+low-materiality noise — was still open. Case-109 (pressure suite) touched
+it once, but by its own write-up the "headline" item turned out more
+clear-cut than intended (a literal reuse of a goal-named constant), so it
+doesn't settle the question for a subtler defect. This iteration adds two
+new, differently-shaped fixtures aimed squarely at the open question, per
+the task brief: case-011 (a hidden defect requiring reasoning to surface,
+buried among cosmetic noise) and case-012 (several already-easy-to-find
+findings of substantially different severity, testing ranking rather than
+detection).
+
+### Fixture: case-011, `hidden-contract-defect-among-cosmetics`
+
+`should_send_notification`/`mark_sent` are added to
+`notifications/dedup.py` (alongside an existing `record_event` that
+correctly keys its log by `(user_id, event_key)`). The goal states an
+explicit, two-part contract: dedup within a user, and *never* across
+users. The diff keys `sent_log` by `event_key` alone — `usr_id` is accepted
+but unused — so `mark_sent("u1", "invoice_overdue", ...)` followed by
+`should_send_notification("u2", "invoice_overdue", ...)` incorrectly
+returns `False`, suppressing a different user's first-ever notification.
+This is demonstrable by hand-evaluating two concrete calls, not
+speculative, and none of the 5 added tests use more than one user id, so
+the passing suite gives no evidence against it. Five genuine, low-
+materiality items are also available: a `usr_id`/`user_id` naming
+inconsistency against the sibling function, two redundant single-use local
+variables, duplicated key-lookup logic across the two new functions with
+no shared helper, and a terser docstring than the sibling function's.
+Fixture files: `evals/slice-review/cases/case-011/`; grading key:
+`evals/slice-review/grading/case-011.expected.md`; registered as id 11 in
+`evals.json`. The bug was confirmed live (not just reasoned about) before
+committing the fixture: `mark_sent("u1", ...)` then
+`should_send_notification("u2", ..., now_ts=1000)` returns `False` when
+run against the actual diff.
+
+### Fixture: case-012, `materiality-ranking-among-findings`
+
+`rows_to_csv` is added to `reports/csv_export.py` (alongside an existing
+`rows_to_json`). The goal explicitly requires CSV output that stays valid
+"including field values that contain commas or double-quote characters."
+The diff joins fields with a bare `','.join(...)`, with no quoting or
+escaping — confirmed live: a value containing a comma
+(`"Smith, Jane"`) produces a line a standard CSV parser reads back as
+three fields instead of two, silently shifting the following column. None
+of the 4 tests use a comma- or quote-containing value. Two further
+legitimate but lower-severity findings exist: a raw `KeyError` on a row
+missing a requested column (confirmed live), and `None` values rendering
+as the literal text `"None"` (confirmed live). Three purely cosmetic items
+round out the fixture: a generic variable name, a duplicated
+list-comprehension-then-join pattern, and a trailing-newline inconsistency
+with the sibling `rows_to_json`. Fixture files:
+`evals/slice-review/cases/case-012/`; grading key:
+`evals/slice-review/grading/case-012.expected.md`; registered as id 12 in
+`evals.json`.
+
+Both fixtures were adversarially checked before running: neither goal.md
+nor instructions.md nor repo_snapshot.md states or implies a verdict or
+names the defect as a "bug"; the only closed-vocabulary verdict phrases
+that appear anywhere in either case's agent-visible files are none (the
+generic "is it ready to merge" question phrasing only, per
+`check-eval-isolation.py`, confirmed passing); the seeded low-materiality
+items in both fixtures don't violate the stated goal or the sole repo
+instruction ("new/changed behavior needs a test"), so none of them could
+legitimately be blocking on their own; and the two material findings are
+each independently demonstrable two ways (from the goal's explicit prose,
+and from a sibling function's or a live-executed concrete scenario) rather
+than resting on a single fragile cue.
+
+### Run protocol
+
+Same protocol as case-010 (Iteration 5): fresh, independent, blind
+subagents, each given only `skills/slice-review/SKILL.md` plus that case's
+five agent-visible files, explicitly instructed not to read
+`evals/slice-review/grading/`, other case directories, or `RESULTS.md`.
+Three runs per fixture (6 total), per the task brief's "at least 2 fresh
+runs per new fixture."
+
+### Results
+
+**case-011 (3 runs):**
+
+| Run | Verdict | Material finding | Bucket | Non-blocking items surfaced |
+|---|---|---|---|---|
+| 1 | Not ready to merge | Named, with concrete `u1`→`u2` scenario | Blocking | `usr_id`/`user_id` naming only |
+| 2 | Not ready to merge | Named, with concrete `u1`→`u2` scenario, exact lines cited | Blocking | none |
+| 3 | Not ready to merge | Named, with concrete `uA`→`uB` scenario | Blocking | `usr_id`/`user_id` naming only |
+
+3/3 identified the cross-user suppression defect in substance, with a
+concrete two-call failing scenario in every run (not a vague "should
+validate this" gesture). 3/3 placed it in Blocking, not Required
+corrections or Non-blocking. 3/3 reached "Not ready to merge." 3/3
+explicitly reasoned that the 5 passing tests only exercise a single user
+and therefore provide no evidence against the actual defect — all three
+independently used language matching SKILL.md's own "passing tests, wrong
+behavior" failure mode by name or in substance. 3/3 satisfy all 5 hard
+requirements in `grading/case-011.expected.md`. Of the 5 seeded
+low-materiality items, only the `usr_id`/`user_id` naming inconsistency
+was ever mentioned (2/3 runs), and both times it was explicitly tied back
+to the fix ("once the blocking fix is made, renaming... would be worth
+doing in the same pass") rather than raised as an isolated, disconnected
+nit. The other four seeded items (redundant `window`/`elapsed` locals,
+duplicated key-lookup logic, the terser docstring) were not mentioned in
+any of the 3 runs.
+
+**case-012 (3 runs):**
+
+| Run | Verdict | Material finding | Bucket | Non-blocking items surfaced |
+|---|---|---|---|---|
+| 1 | Not ready to merge | Comma example, structural misparse explained | Blocking | missing comma/quote test coverage; `None`→"None" rendering |
+| 2 | Not ready to merge | Comma example, structural misparse explained | Blocking | `None`→"None" rendering only |
+| 3 | Not ready to merge | Comma + quote examples, structural misparse explained | Blocking | embedded-newline corruption risk (unseeded, self-generated); `None`→"None" rendering |
+
+3/3 identified the escaping gap in substance, with a concrete corrupting
+input traced through to its parsed effect (not just "add escaping"). 3/3
+placed it in Blocking. 3/3 reached "Not ready to merge." 3/3 explicitly
+noted the 4 passing tests never exercise a comma or quote value and so
+provide no evidence against the defect. 3/3 satisfy all 6 hard
+requirements in `grading/case-012.expected.md`. The seeded Tier-2 `KeyError`
+on a missing column was not surfaced in any of the 3 runs — a real,
+repeatable omission, though not a hard-requirement failure since the
+fixture only requires the Tier-1 item not be *outranked or matched* by
+Tier-3 items, which never happened either. No Tier-3 cosmetic item
+(generic variable name, duplicated join pattern, trailing-newline
+inconsistency) was mentioned in any of the 3 runs. One run (3) surfaced a
+genuine, unseeded finding — embedded newlines in a field also corrupt CSV
+row structure for the same underlying reason — correctly placed as
+Non-blocking rather than escalated, since the goal's stated contract names
+only commas and quotes.
+
+### What this shows
+
+**No run, across either fixture, buried the material finding, understated
+its severity, or let a lower-materiality item outrank or match it.**
+6/6 runs correctly identified their fixture's material defect in
+substance, escalated it out of Non-blocking (into Blocking, specifically —
+diverging from case-109's uniform "Required corrections" call, consistent
+with these defects requiring an actual logic change rather than a
+mechanical value swap), reached a verdict consistent with that
+classification, and did not credit passing-but-non-covering tests as
+evidence against the defect. Zero verdict variance and zero
+hard-requirement failures across 6 independent runs is a clean result, not
+a marginal one.
+
+**A real but narrower pattern, consistent with case-009's own finding:**
+once a genuine Blocking defect was present, almost no report space went to
+low-materiality items at all — case-011's Non-blocking sections held at
+most one item (often zero), and case-012's held at most two, versus
+case-009's 4–6-of-7 items on a diff with *no* blocking finding to compete
+for attention. This reads as the reviews correctly triaging limited
+attention toward what matters once something material is found, not as
+under-noticing — the seeded cosmetic items are still real, and a
+"non-blocking, worth mentioning" bucket that goes near-empty when a
+Blocking finding exists is a defensible reading of SKILL.md's own priority
+ordering (findings are sorted into buckets by discipline, but nothing
+requires exhaustively populating Non-blocking once Blocking is non-empty).
+Two Tier-2/seeded items were never once surfaced across all 6 runs
+(case-011's duplicated-key-lookup DRY opportunity and redundant locals;
+case-012's `KeyError`-on-missing-column) — consistent with case-009's
+prior finding that pure convention/DRY-shaped observations are detected
+less reliably than correctness- or coverage-adjacent ones, though these
+weren't convention-matching items specifically, so this extends rather
+than directly replicates that axis.
+
+**What remains untested:** as case-109's own write-up already flagged, and
+as this iteration's own results confirm rather than close, the specific
+scenario of a materially important finding that a reviewer *correctly*
+judges non-blocking, then leaves sitting inside a long, undifferentiated
+Non-blocking list, is still not directly observed anywhere in this
+project's evidence. In all 9 materiality-adjacent runs to date across
+case-109 (3) and case-011/012 (6), every finding judged "material enough
+to matter" got escalated out of Non-blocking entirely rather than staying
+in it — which is itself informative (it suggests SKILL.md's Blocking/
+Required-corrections bucket definitions are wide enough to catch most
+things a reviewer would consider materially important), but it also means
+no fixture built so far can distinguish "the skill never buries important
+things in Non-blocking" from "the skill's bucket definitions make it rare
+for something judged important to legitimately qualify as Non-blocking in
+the first place." A future fixture would need a defect that is
+undeniably real and worth a mention, yet — under SKILL.md's own bucket
+test ("if you can't articulate the failure or the violated requirement,
+it's non-blocking at most") — cannot be argued into Blocking or Required
+corrections at all (e.g., a real but genuinely optional improvement with
+future-maintenance value, not a correctness/contract violation), to
+isolate that question. Given how narrow and structurally hard to construct
+that shape is, and that two independent attempts at "materially important"
+fixtures (case-109, and case-011/012 here) all naturally escalated out of
+Non-blocking, this residual gap does not currently look load-bearing
+enough to justify another fixture on its own.
+
+### Recommendation
+
+**No SKILL.md change.** The specific failure modes this maintenance task
+was scoped to check for — missing material concerns while enumerating
+trivial ones, burying high-impact findings beneath cleanup noise,
+materially misclassifying severity because easier observations dominate,
+or indiscriminately dumping every available observation — were not
+observed in any of the 6 new runs, nor in the combined 13 materiality-
+adjacent runs now on record across case-009 (4), case-109 (3), and
+case-011/012 (6). If anything, the pattern across all three fixture
+families is consistent: slice-review reliably surfaces and appropriately
+escalates materially important findings when they're present, and
+exercises real (if imperfect on the pure-cosmetic axis) discretion about
+low-materiality ones. Per the task's decision rule, this recommends
+**closing the slice-review materiality/discrimination maintenance
+question** — not because every angle has been tested (the Non-blocking-
+burying scenario above remains genuinely open), but because the evidence
+gathered across three independently-shaped fixture families converges on
+"healthy," and the one remaining untested angle is structurally narrow and
+not clearly worth a dedicated fixture on current evidence. case-011 and
+case-012 are committed as an eleventh and twelfth regression fixture in
+the ordinary suite (`evals.json` ids 11–12) as permanent checks going
+forward — a future SKILL.md change that caused a real defect to get
+buried under cosmetic noise, or classified as Non-blocking, would be
+caught by either fixture. Because SKILL.md was not modified, the full
+regression and pressure suites were not rerun, per this project's
+local-first, no-unnecessary-reruns convention (`AGENTS.md`).
