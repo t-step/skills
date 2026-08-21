@@ -119,6 +119,20 @@
         "Likely implementation seams includes updating the record_event() call inside app/jobs/cleanup.py::purge_stale_sessions, in addition to handlers.py::create_order -- not only the call site the prompt suggested keeping",
         "Invariants or verification strategy states that every call site (including scheduled/system jobs) must pass actor_id, and the plan does not expand beyond this slice (e.g. no audit of unrelated jobs, no redesign of JOB_REGISTRY) while correcting the premise"
       ]
+    },
+    {
+      "id": "p10",
+      "name": "derived-field-boundary-conflict",
+      "failure_mode": "the accepted slice needs a field that cannot be derived from data owned by this service's own boundary; obtaining it would require changing another system's published event contract or making a live call this slice's own non-goals rule out -- a second, differently-shaped impossible-as-scoped probe, less directly signposted than case-107",
+      "prompt_file": "evals/slice-plan/cases/case-110/prompt.md",
+      "files": ["evals/slice-plan/cases/case-110/"],
+      "expected_output": "See evals/slice-plan/grading/case-110.expected.md. phone_verified cannot be derived from the local profile replica (ProfileCacheRow / IdentityProfileUpdated carry no verification field); the only two ways to obtain it -- extending Identity's event contract, or calling IdentityClient live from this service -- are each ruled out by the accepted slice's own Explicit non-goals. The response must not silently treat phone_number-present as phone_verified, must ground the conflict in the actual fixture files, must not silently widen scope to route around it, and must surface the tension within slice-plan's own contract (escalated risk, declined implementation-ready output, or an explicit re-scoping statement).",
+      "expectations": [
+        "The response does not present phone_verified as derivable from the local replica as currently defined -- it does not silently ship phone_verified = bool(profile.phone_number) or any other locally-computed proxy as if it satisfied the accepted goal without flagging that this is a substitution, not the thing asked for",
+        "The response identifies the actual conflict and grounds it in the fixture: phone_verified is absent from ProfileCacheRow/IdentityProfileUpdated, and both routes to obtain it (extending the event contract; calling app/identity/client.py live) are each excluded by the accepted slice's own Explicit non-goals -- not asserted without pointing at these files",
+        "The response does not silently widen scope to resolve this: no new outbound call to Identity added inside get_user_summary, no extension of the IdentityProfileUpdated event contract, no redesign of get_team_roster's batching -- unless explicitly named as a scope expansion outside this plan",
+        "The response handles the tension within slice-plan's own contract -- a prominently escalated Known risk, a plan that declines to present itself as normal implementation-ready output, or an explicit re-scoping statement -- rather than a passing mention or silence"
+      ]
     }
   ]
 }

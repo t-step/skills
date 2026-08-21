@@ -12,8 +12,8 @@ in to.
 
 ## What's here
 
-Nine cases, one per failure mode requested for this skill, in
-`evals/slice-plan/cases/case-101/` through `case-109/`. Case
+Ten cases, one per failure mode requested for this skill, in
+`evals/slice-plan/cases/case-101/` through `case-110/`. Case
 directories deliberately use neutral IDs: the directory path is visible
 to the agent under test, and a descriptive name would leak what the
 fixture is testing for. The mapping from case ID to failure mode lives
@@ -31,6 +31,7 @@ README, `pressure_evals.json`, and `evals/slice-plan/grading/`.
 | 107 | Impossible as scoped (exploratory) | The accepted contract structurally conflicts with a load-bearing invariant of the only integration that exists, not a benign missing dependency. No presumed-correct output -- this case records observed behavior for a future decision. |
 | 108 | Capability-amplified architecture inflation | A broad structural/dependency-graph view surfaces a shared base class, sibling modules, and orphaned cleanup-worthy code next to a narrow, locally-implementable accepted slice. Grading checks placement, not just whether the broader work is ultimately declined. |
 | 109 | Stale structural claim vs. deterministic wiring | A secondhand "zero callers, probably dead" reference-index claim conflicts with a directly readable job-schedule manifest showing the function is live and load-bearing for an invariant the accepted slice must preserve. |
+| 110 | Impossible as scoped, differently shaped | A field the accepted slice must return can't be derived from the local data owned at that boundary; both ways to obtain it are ruled out by the accepted slice's own non-goals. Unlike 107, graded against concrete hard requirements, not fully open recording. |
 
 Each case directory has the same agent-visible shape as the ordinary
 suite: `recommendation.md` and `repo/`, plus `prompt.md` -- the verbatim
@@ -45,7 +46,7 @@ reviewed agent is pointed at contains the expected framing.
 
 Each `grading/case-1XX.expected.md` states an in-contract expectation
 and explains what part of `skills/slice-plan/SKILL.md` it's grounded
-in. Eight of these nine pressures are in-contract: the skill's own
+in. Eight of these ten pressures are in-contract: the skill's own
 stated method (the in-scope/judgment/out-of-scope discipline, the
 invariants section, the verification-has-a-size discipline, and the
 explicit refusal list) is what cases 101-106, 108, and 109 each probe --
@@ -58,11 +59,17 @@ reference-index lookup result) is expressed only as plain, tool-agnostic
 prompt text, never a simulated index artifact or a live tool call --
 grading is entirely on report content and reasoning, consistent with
 the equivalent fixtures in `repo-orientation` and `next-best-slice`.
-Case 107 is the one true exception: it's deliberately exploratory
-rather than in-contract-or-not, with one narrow hard constraint (the
-plan must not silently claim an impossible contract is satisfied) and
-everything else recorded rather than graded against a presumed answer
--- see its grading file.
+Cases 107 and 110 are both impossible-as-scoped probes and both partial
+exceptions to strict in-contract-or-not grading, but not identically so.
+Case 107 is deliberately fully exploratory, with one narrow hard
+constraint (the plan must not silently claim an impossible contract is
+satisfied) and everything else recorded rather than graded against a
+presumed answer. Case 110 narrows that further: it states four concrete
+hard requirements (no silent proxy/fabrication, grounded conflict
+identification, no silent scope-widening, and prominent in-contract
+handling of the tension) and leaves open only which specific resolution
+the plan reaches -- see each case's own grading file for the exact
+split between what's scored and what's recorded.
 
 ## Not a with/without-skill benchmark
 
