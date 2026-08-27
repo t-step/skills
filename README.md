@@ -6,9 +6,8 @@ This is an early release, published to try out normal plugin distribution and re
 
 ## What's here
 
-**`software-engineering`** (v0.2.0) — a plugin with four skills:
+**`software-engineering`** (v0.2.1) — a plugin with three skills:
 
-- **`next-best-slice`** — recommends exactly one next implementation slice once a completed slice has been reviewed and retrospected, weighing dependency unlocking, user value, learning value, size, reversibility, risk, and architectural momentum against the evidence — never a ranked shortlist or a roadmap.
 - **`repo-orientation`** — builds a concise, evidence-backed operating map of a repository before consequential work begins: purpose, governing instructions, major execution paths, architectural seams, and honest unknowns.
 - **`slice-review`** — reviews one bounded implementation slice (a diff, PR, or "done" claim) against its stated goal, repo instructions, the actual diff, and verification evidence, producing one of four verdicts.
 - **`task-composition`** — takes an already-decomposed spec or plan and composes its tasks into coherent, agent-sized execution groupings: vertical by default, a horizontal enabler only when it unlocks real parallel work, convergence points made explicit, and just enough dependency checking to catch cycles or misleading task order — never a priority call, a scheduler, or a durable task graph.
@@ -60,7 +59,7 @@ To also stop tracking the marketplace:
 
 This is a first release, published to learn the distribution mechanics rather than to promise a stable surface:
 
-- Only four skills are published. Others exist in development and are promoted deliberately, one at a time, not automatically.
+- Only three skills are published. Others exist in development and are promoted deliberately, one at a time, not automatically.
 - Versioning and releases are manual — see [`.github/workflows/`](.github/workflows/) for what's automated (manifest validation and a version-bump check on pull requests, tagging and GitHub Releases on merge to `main`) and what isn't (choosing a version, writing release notes).
 - Breaking changes to a skill's behavior are possible before `1.0.0`.
 
