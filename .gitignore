@@ -1,2 +1,7 @@
 .DS_Store
 .projectmem/
+
+# Raw per-run eval transcripts (fixture copies + captured outputs). Hand-
+# authored runs/*.md writeups stay tracked; only the raw per-run
+# subdirectories are ignored.
+evals/*/runs/*/
