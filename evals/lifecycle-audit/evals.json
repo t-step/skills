@@ -1,0 +1,167 @@
+{
+  "skill_name": "lifecycle-audit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "false-lifecycle-projection-and-cache",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-001/ as the complete evidence available about this system -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Inventories exactly one real lifecycle (Order.status: pending/paid/shipped/delivered/cancelled, owned by order_handlers.py, persisted in orders.status, with real invariants enforced by InvalidTransition checks). Identifies Order.workflow_state as a computed property with no independent transition or persistence -- an attribute/label derived from status, is_flagged_for_review, and refund.status, not a second lifecycle. Identifies workflow_state_cache as a periodically-refreshed projection of workflow_state (itself derived), used only by search -- not a peer lifecycle, and not something that needs reconciling against workflow_state more tightly. Directly answers the ticket's framing (three state machines needing sync) by rejecting it: there is one lifecycle and two derived/cached views of it.",
+      "files": [
+        "evals/lifecycle-audit/cases/case-001/models.py",
+        "evals/lifecycle-audit/cases/case-001/order_handlers.py",
+        "evals/lifecycle-audit/cases/case-001/indexer_excerpt.py",
+        "evals/lifecycle-audit/cases/case-001/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: Order.status is inventoried as a confirmed lifecycle with states pending/paid/shipped/delivered/cancelled, grounded in OrderStatus and the transition functions in order_handlers.py. Refund.status may also appear as a second, separate inventory entry (it is a plausible real lifecycle the fixture simply doesn't show a writer for) -- that is acceptable and not penalized as long as its fields are marked Unknown/unverifiable rather than fabricated (no invented owner, transitions, or triggers for Refund).",
+        "REQUIRED: workflow_state is explicitly identified as NOT an independent lifecycle -- a computed/derived attribute with no transition function or persisted column of its own, grounded in the property's implementation reading status/is_flagged_for_review/refund.status",
+        "REQUIRED: workflow_state_cache is identified as a projection/cache of workflow_state (itself derived from Order.status and other fields), refreshed only by the nightly indexer job -- not modeled as a second or third independent lifecycle",
+        "REQUIRED: the report does not recommend a new reconciliation job, sync mechanism, or more-frequent refresh cadence to keep workflow_state_cache and workflow_state 'in sync' as if they were two peers -- staleness of a cache is treated as a refresh/rebuild concern, not a reconciliation requirement between equals",
+        "The report directly addresses the ticket's question (are these three separate state machines that need to stay in sync?) and answers no, with the reasoning grounded in the code, not just asserted"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "one-way-trigger-mistaken-for-sync-need",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-002/ as the complete evidence available about this system -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Inventories two genuinely separate, separately-owned lifecycles: ImportJob (queued/running/completed/failed, owned by Data Platform, ingestion.import_job) and DatasetVersion (draft/published/archived, owned by Catalog, catalog.dataset_version). Characterizes the interaction as transition-triggering and one-directional: ImportJob.finish() calls create_draft_dataset_version() as a side effect on success, and nothing afterward -- DatasetVersion.publish()/archive() never reference the source job again, and ImportJob never reads DatasetVersion's state. Concludes no synchronization or reconciliation is warranted: publishing on its own schedule after job completion is normal, intended behavior, not a consistency gap, and pushes back on the Slack thread's proposed sync_status mirror field.",
+      "files": [
+        "evals/lifecycle-audit/cases/case-002/import_job.py",
+        "evals/lifecycle-audit/cases/case-002/dataset_version.py",
+        "evals/lifecycle-audit/cases/case-002/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: ImportJob and DatasetVersion are inventoried as two separate lifecycles with distinct owners (Data Platform vs. Catalog) and distinct persistence",
+        "REQUIRED: the interaction is characterized as a one-directional transition-triggering connection (ImportJob completion creates a DatasetVersion), not as an ongoing coupling requiring the two to track or mirror each other's state",
+        "REQUIRED: the report explicitly concludes no synchronization/reconciliation mechanism is warranted between ImportJob.status and DatasetVersion.status -- a completed import with a still-draft (or not-yet-published) dataset version is normal, not a defect",
+        "REQUIRED: the report does not recommend adding a sync_status field or any mirroring mechanism between the two entities, and directly addresses why the Slack thread's proposal isn't warranted",
+        "The report distinguishes DatasetVersion.publish() as independently triggered (a curator's own action) from anything ImportJob does, rather than describing publish timing as something that should track the import"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "transfer-conservation-genuine-reconciliation",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-003/ as the complete evidence available about this system -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Inventories per-FC StockLedger balances (each FC independently authoritative for its own available_units, by deliberate design for availability during network partitions) and Transfer (dispatched/received/reconciled, spanning two FCs). Identifies a genuine reconciliation requirement: dispatch decrements the source immediately, receive increments the destination only on physical scan, and a failure between those two events (dead scanner battery, in the fixture) can leave units unaccounted for in both ledgers simultaneously, violating unit-conservation. Names the specific invariant at risk (units neither duplicated nor lost across a transfer) and why neither ledger can be treated as a mere projection of the other (both are independently authoritative over physically distinct stock by design). Correctly separates the mechanical fact (a 48h-stale-transfer job exists and opens a ticket) from the open design judgment (how a confirmed mismatch should actually be resolved -- write off vs. credit vs. recount -- which the codebase and incident retro both leave unanswered).",
+      "files": [
+        "evals/lifecycle-audit/cases/case-003/ledger.py",
+        "evals/lifecycle-audit/cases/case-003/transfer.py",
+        "evals/lifecycle-audit/cases/case-003/reconcile_job.py",
+        "evals/lifecycle-audit/cases/case-003/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: the report concludes that genuine reconciliation is required for the Transfer/StockLedger relationship, not merely an interaction or a tolerable temporary disagreement",
+        "REQUIRED: the specific invariant at risk is named explicitly (units must be conserved -- not lost or duplicated -- across a dispatch/receive pair), grounded in the incident described in context.md and the code's lack of an automatic resolution path",
+        "REQUIRED: the report explains why neither FC's ledger is a projection of the other -- both are independently authoritative by design (the deliberate availability requirement that an FC keep selling even if the inter-FC link is down) -- rather than treating one as a cache of the other",
+        "REQUIRED: the report distinguishes what is mechanically established (the nightly job exists, flags transfers stale after 48h, opens a ticket, does not auto-resolve) from what remains an open design/human decision (how a confirmed mismatch should be resolved), citing the incident retro's own unanswered question",
+        "The report does not recommend building a new generic reconciliation framework or coordinator entity beyond what's needed to describe the existing gap -- e.g., it may note the missing resolution policy without prescribing a specific mechanism, or may note a mechanism narrowly (a resolution policy for the existing job) without inventing unrelated infrastructure"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "cdc-index-lag-not-peer-sync",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-004/ as the complete evidence available about this system -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Identifies User.status (accounts.models.User, active/suspended/deleted) as the sole authoritative lifecycle, owned and only ever written by trust_and_safety.py. Identifies users_search's status field as a CDC-derived projection with no independent authority and no write path of its own outside the CDC consumer. Frames the support ticket's 10-minute lag as ordinary projection staleness (within, and in this case exceeding, the documented ~5s typical lag -- worth noting as a possible DLQ/backlog concern) rather than a sync bug between two peers. Explicitly recommends against the ticket's proposed fix (admin panel writing directly to the search index) as introducing a second write path to what should stay a single-writer projection, and instead frames the actual concern as CDC consumer lag/DLQ monitoring.",
+      "files": [
+        "evals/lifecycle-audit/cases/case-004/user_model.py",
+        "evals/lifecycle-audit/cases/case-004/trust_and_safety.py",
+        "evals/lifecycle-audit/cases/case-004/search_pipeline_readme.md"
+      ],
+      "expectations": [
+        "REQUIRED: User.status is identified as the sole authoritative representation, with trust_and_safety.py as its only owner/writer",
+        "REQUIRED: users_search.status is explicitly classified as a projection/derivation with no independent authority, grounded in the CDC pipeline description (only ever copies what it reads from the users WAL)",
+        "REQUIRED: the 10-minute-lag scenario in the support ticket is framed as staleness of a derived view, not as two lifecycles disagreeing that need reconciling -- the report does not describe this as a 'sync bug between two peers'",
+        "REQUIRED: the report does not recommend the ticket's proposed fix (admin panel writing directly to the search index) without at least flagging that it introduces a second writer to what is otherwise a single-writer projection; recommending it uncritically, with no such caveat, is a failure",
+        "The report separately surfaces the DLQ/backlog concern (mentioned in the runbook excerpt) as the more relevant operational lever for reducing lag, rather than proposing new reconciliation machinery between the two stores"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "grace-window-and-cache-lag-both-tolerable",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-005/ as the complete evidence available about this system -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Inventories Subscription (active/past_due/canceled, owned by Billing) and traces FeatureAccessCache as a value computed from Subscription state via compute_access() (incorporating the 3-day grace rule) and refreshed into a cache every 15 minutes for the mobile app's use. Distinguishes two different reasons access and subscription status can appear to disagree: (a) the 3-day grace period is an intentional part of the access rule itself -- access=true while status=past_due-within-grace is correct output of compute_access(), not disagreement at all; (b) the 15-minute refresh cadence creates genuine, ordinary staleness between a subscription change and the cache reflecting it. Concludes the monitoring alert is likely miscalibrated (it flags both of these as 'mismatches' without distinguishing intended grace-period behavior or ordinary cache lag from any real problem), rather than concluding a reconciliation mechanism is broken or missing.",
+      "files": [
+        "evals/lifecycle-audit/cases/case-005/subscription.py",
+        "evals/lifecycle-audit/cases/case-005/dunning_job.py",
+        "evals/lifecycle-audit/cases/case-005/feature_access.py",
+        "evals/lifecycle-audit/cases/case-005/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: the report distinguishes the 3-day grace period (access remains true while status is past_due, per compute_access()'s own rule) from the 15-minute cache-refresh lag, rather than treating both as the same kind of 'disagreement'",
+        "REQUIRED: the grace-period case is explicitly identified as intended behavior, not a bug or inconsistency needing correction -- access and subscription status disagreeing here is by design",
+        "REQUIRED: the cache-refresh lag is explicitly identified as tolerable temporary disagreement (bounded by the 15-minute refresh interval), not evidence of a broken reconciliation process",
+        "REQUIRED: the report evaluates the paging alert and concludes (or strongly suggests) it is miscalibrated -- counting expected grace-period and cache-lag states as 'mismatches' -- rather than treating the alert's firing as proof a real reconciliation problem exists between billing and entitlements",
+        "The report does not recommend shortening the refresh interval, adding a push-based sync from Subscription to FeatureAccessCache, or any other reconciliation mechanism as if the underlying design were broken"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "shared-vocabulary-different-lifecycles",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-006/ as the complete evidence available about this system -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Inventories SchemaMigration.status (Platform team, pending/running/complete/failed, schema_migrations table) and OnboardingTask.status (Growth team, pending/complete only, onboarding_tasks table) as two separate lifecycles that happen to share the words pending/complete. Explicitly states the vocabulary overlap does not imply shared semantics: different owners, different persistence, different transition triggers (a migration runner vs. product-surface actions), different state sets (migrations have running/failed, onboarding tasks don't), and no invariant connecting the two. Addresses priya's proposed generic status_tracker table directly and explains why collapsing them would be a mistake despite the dashboard's convenient UNION query -- the union is a display-layer convenience, not evidence the two are one concept.",
+      "files": [
+        "evals/lifecycle-audit/cases/case-006/schema_migrations.py",
+        "evals/lifecycle-audit/cases/case-006/onboarding_tasks.py",
+        "evals/lifecycle-audit/cases/case-006/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: SchemaMigration and OnboardingTask are inventoried as two separate lifecycles, each with its own owner (Platform vs. Growth) and persistence",
+        "REQUIRED: the report explicitly names the terminology/vocabulary overlap (both use pending/complete) as a coincidence of naming, not evidence the two share semantics or should be modeled as one entity",
+        "REQUIRED: at least two concrete structural differences are cited to justify keeping them separate (e.g., different owners, different transition triggers, migrations having running/failed states that onboarding tasks lack, no invariant linking the two)",
+        "REQUIRED: the report directly responds to the proposed generic status_tracker table and recommends against merging the two into one table/entity, distinguishing the dashboard's UNION query (a display convenience) from an architectural merge",
+        "The report does not propose any interaction taxonomy at all between these two entities beyond noting they are independent -- it does not invent a shared invariant or coupling that the fixture doesn't support"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "underspecified-approval-ownership",
+      "prompt": "Treat the file in evals/lifecycle-audit/cases/case-007/ as the complete evidence available about this design -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Identifies an expense-approval lifecycle implied by the design doc but marks owner and authoritative persistence as explicitly Unknown -- the doc leaves open whether approval state lives in the expense-reports service or a separate Approvals service already used by two other workflows. Does not invent a states list beyond what the doc actually implies (submission, some approval stages, approved/rejected outcome) and flags the states themselves as underspecified (resubmission after rejection, an SLA/escalation path, whether an approver can reverse a decision, and whether an in-flight edit resets approval are all named as explicitly open questions from the doc's own open-questions section and hallway-conversation note, not resolved by invention). Surfaces the missing owner decision as the most consequential unresolved question for anyone about to implement this.",
+      "files": ["evals/lifecycle-audit/cases/case-007/design_doc.md"],
+      "expectations": [
+        "REQUIRED: the report marks the lifecycle's owner and authoritative persistence as Unknown/unresolved, explicitly citing the doc's own unresolved choice between the expense-reports service owning it directly and delegating to the existing Approvals service",
+        "REQUIRED: the report does not invent a specific owner, a specific persistence location, or a specific state machine (e.g. does not assert 'approval state lives in a new approvals table in expense-reports' or similar) to fill in what the doc leaves open",
+        "REQUIRED: at least three of the doc's own open questions (resubmission after rejection, SLA/escalation, reversing an approval, edit-while-pending) are carried into the report's own unresolved-questions section rather than silently resolved one way or the other",
+        "REQUIRED: the report does not fabricate transitions or invariants not implied by the doc (e.g. does not assert there is or isn't a resubmission path -- it says this is undecided)",
+        "The report is still useful despite the gaps -- it names what IS established (a request is submitted, moves through approval, and results in approved/rejected leading to reimbursement handoff) rather than refusing to say anything because ownership is unresolved"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "recomputed-score-not-a-lifecycle",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-008/ as the complete evidence available about this system -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Contrasts User.trust_level (recomputed from scratch on every run of recompute_trust_level() by a pure function of current signals, with no transition function, no illegal-transition rule, and free movement in either direction) against User.verification_status (a genuine lifecycle: unverified/pending/verified, explicit transition functions, an invariant that verified-to-unverified requires an explicit fraud-review action). Concludes trust_level fails the lifecycle admission bar -- it's a derived score, not an independent lifecycle -- despite gating real behavior (spending limits) and having a history table logging its changes. Explicitly addresses the PR comment's proposed 'revert to previous trust level' feature and explains why it doesn't map cleanly onto trust_level the way revoke_verification_for_fraud does onto verification_status: a revert would fight the very next nightly recompute, which has no memory of a manual override.",
+      "files": [
+        "evals/lifecycle-audit/cases/case-008/user_trust.py",
+        "evals/lifecycle-audit/cases/case-008/verification.py",
+        "evals/lifecycle-audit/cases/case-008/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: verification_status is inventoried as a genuine lifecycle (states, explicit transition functions, an invariant requiring an explicit fraud-review action to reverse verified status)",
+        "REQUIRED: trust_level is explicitly identified as NOT a lifecycle (or explicitly demoted/excluded from the lifecycle inventory), with the reasoning grounded in _score() being a pure recomputation with no independent trigger and no illegal-transition rule",
+        "REQUIRED: the report explicitly notes that trust_level having a history table (TrustLevelHistory) and gating real behavior (spending limits) does not, by itself, satisfy the lifecycle admission bar -- recomputation-with-audit-log is distinguished from an independently triggered transition",
+        "REQUIRED: the report addresses the PR comment's proposed 'revert to previous trust level' feature and explains why it doesn't transfer cleanly from verification_status's revoke pattern -- a manual revert would be overwritten by the next nightly recompute, which has no concept of an override",
+        "The report does not invent transition rules or illegal-state constraints for trust_level that the code doesn't show (e.g. does not assert that trust_level 'cannot skip a level' or similar without evidence)"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "shared-invariant-separately-owned",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-009/ as the complete evidence available about this system -- there is nothing else to consult. Run a lifecycle audit on it.",
+      "expected_output": "Inventories Auction.status (Auctions team, draft/open/closed/settled) and Bid.status (Bidding team, separate database, submitted/accepted/rejected/withdrawn) as two separately owned, separately persisted lifecycles. Identifies the shared invariant (no bid may be accepted while its auction is not open) and correctly locates where it's actually enforced: defensively, on Bidding's own side, inside accept() via a live cross-service status check -- not solely via Auctions' bulk-reject side effect on close. Classifies that check's mechanism as One-way observation (Bid reads Auction's live status; Auction never reads or reacts to Bid) while separately concluding its consistency requirement is a shared invariant, not 'no joint constraint' -- the one-way read is exactly what enforces the cross-lifecycle rule, so the mechanism label must not be used to default the consistency answer to 'nothing to agree on.' Recognizes close_auction()'s call to reject_all_open_bids() as a transition-triggering interaction crossing the ownership boundary, and correctly identifies the incident's real gap: no retry on that RPC, which can leave stale `submitted` bids for hours -- but does not overclaim this as a violation of the shared invariant, since accept()'s own live check already prevented any actual invariant breach during the gap (per the incident note). Keeps the mechanical finding (no retry path on reject_all_open_bids) separate from the human decision the retro leaves open (whether that gap needs fixing given accept() already double-checks).",
+      "files": [
+        "evals/lifecycle-audit/cases/case-009/auction.py",
+        "evals/lifecycle-audit/cases/case-009/bid.py",
+        "evals/lifecycle-audit/cases/case-009/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: Auction and Bid are inventoried as two separately owned lifecycles (different teams, different databases) that are NOT collapsed into one state machine",
+        "REQUIRED: the shared invariant (no bid accepted while its auction isn't open) is named explicitly, and correctly attributed to being enforced by Bid.accept()'s own live check of auction status -- not only by Auction's close-triggered bulk reject",
+        "REQUIRED: the accept()-reads-Auction-status relationship is classified with mechanism One-way observation, AND its consistency requirement is stated as something other than 'no joint constraint' (a shared invariant, tolerable disagreement is the correct answer) -- because this specific one-way read is what enforces the cross-lifecycle invariant. A report that labels this channel 'One-way observation' and then 'no joint constraint' has derived the consistency answer from the mechanism rather than evaluating it independently, and fails this expectation even if its prose elsewhere states the invariant is real.",
+        "REQUIRED: the report does not conclude the missing retry on reject_all_open_bids() constitutes a broken invariant or requires urgent reconciliation -- the incident note establishes the invariant held throughout via accept()'s independent check",
+        "REQUIRED: the missing retry/outbox path on reject_all_open_bids() is still named as a real, mechanical gap (stale bid status for hours) -- the report does not treat 'the invariant held' as a reason to ignore the gap entirely",
+        "The report keeps the retro's open question (should there be a retry mechanism, or is manual re-run + the defensive check acceptable) framed as an unresolved design decision, not settled either way by the report itself"
+      ]
+    }
+  ]
+}

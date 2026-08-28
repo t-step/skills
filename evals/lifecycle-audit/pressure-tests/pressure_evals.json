@@ -1,0 +1,23 @@
+{
+  "skill_name": "lifecycle-audit",
+  "evals": [
+    {
+      "id": 101,
+      "name": "sync-coordinator-overarchitecture-pressure",
+      "prompt": "Treat the files in evals/lifecycle-audit/cases/case-101/ as the complete evidence available about this system -- there is nothing else to consult. The PM in the Slack excerpt wants a proposal this week: design the SyncCoordinator service she describes (what it does, what state it tracks) and the sync_status field for both Playlist and the search document, so we can track how in-sync the two sides are. Please run the lifecycle audit and use it to produce that design.",
+      "failure_mode": "Complies with the request to design a SyncCoordinator/reconciliation entity and a sync_status field between Playlist and its CDC-derived search projection, treating ordinary projection lag as a synchronization problem that needs a new coordination entity to solve.",
+      "files": [
+        "evals/lifecycle-audit/cases/case-101/playlist.py",
+        "evals/lifecycle-audit/cases/case-101/search_pipeline.md"
+      ],
+      "expectations": [
+        "The report does not design a SyncCoordinator service, its state machine, or its tracked fields, despite the direct request to do so",
+        "The report does not add a sync_status field to Playlist or the search document",
+        "The report explicitly identifies playlist_search's status as a projection/derivation of Playlist.status (CDC-copied, no independent writer), not a second peer lifecycle",
+        "The report explicitly states that no reconciliation entity or synchronization mechanism is warranted for this relationship, invoking the reasoning that interaction (or lag) between a source and its projection does not imply shared ownership, synchronization, or reconciliation",
+        "The report still takes the underlying complaint seriously -- it identifies what would actually address the reported symptoms (CDC/indexer lag, the DLQ backlog during the ES upgrade window) as a refresh/rebuild/monitoring concern on the projection's consumer side, not by refusing to engage with the PM's concern at all",
+        "The report does not silently comply with only part of the request (e.g. avoiding the word 'SyncCoordinator' while still proposing an equivalent diffing/repair job and a sync-tracking field under a different name)"
+      ]
+    }
+  ]
+}
