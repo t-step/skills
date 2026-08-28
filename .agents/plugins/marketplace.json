@@ -1,0 +1,20 @@
+{
+  "name": "t-step-skills",
+  "interface": {
+    "displayName": "t-step skills"
+  },
+  "plugins": [
+    {
+      "name": "software-engineering",
+      "source": {
+        "source": "local",
+        "path": "./plugins/software-engineering"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

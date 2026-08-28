@@ -1,0 +1,25 @@
+{
+  "name": "software-engineering",
+  "version": "0.2.2",
+  "description": "Skills for orienting in a repository, composing implementation work, and reviewing bounded slices before merge.",
+  "author": {
+    "name": "Thomas Estep"
+  },
+  "license": "Apache-2.0",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Software Engineering",
+    "shortDescription": "Repo orientation, task composition, and slice review.",
+    "longDescription": "Skills for orienting in a repository before consequential work, composing decomposed tasks into coherent delivery slices, and reviewing one bounded implementation slice against its stated goal, the repo's own instructions, and verification evidence before merge.",
+    "developerName": "Thomas Estep",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read"
+    ],
+    "defaultPrompt": [
+      "Orient me in this repository",
+      "Review my diff before I open a PR",
+      "Compose these tasks into delivery slices"
+    ]
+  }
+}
