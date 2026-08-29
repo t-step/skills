@@ -1,0 +1,109 @@
+{
+  "skill_name": "state-ownership-audit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "clean-invalidate-on-write-cache",
+      "prompt": "Treat the files in evals/state-ownership-audit/cases/case-001/ as the complete evidence available about this system -- there is nothing else to consult. Audit ownership of Product.price.",
+      "expected_output": "Identifies products.price_cents (Postgres) as the sole authoritative representation, update_price() as the only legitimate writer, and the Redis cache as a read-through, invalidate-on-write projection that is always repopulated from a fresh database read -- never given an independently computed value. Concludes no reconciliation mechanism is needed and declines the ticket's proposed reconciliation job as unwarranted for a cache that cannot drift by construction (its only two states are 'absent' or 'equal to a value just read from the authority').",
+      "files": [
+        "evals/state-ownership-audit/cases/case-001/pricing_service.py",
+        "evals/state-ownership-audit/cases/case-001/schema.sql",
+        "evals/state-ownership-audit/cases/case-001/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: products.price_cents is named as the sole authoritative representation, and update_price() as the only legitimate writer",
+        "REQUIRED: the Redis cache is characterized as a projection/cache synchronized by invalidate-then-repopulate-on-read (not write-through, not an independent writer), grounded in get_price()/update_price()'s actual code",
+        "REQUIRED: the report does not recommend a reconciliation job, periodic re-sync, or any new coordinator/mechanism to keep the cache and the database 'from drifting' -- whether or not it also surfaces the narrower cache-repopulation race described below, it does not propose the ticket's specific fix",
+        "REQUIRED: the cache is never described as an independent writer/second authority -- any hazard the report finds (e.g. a repopulation race between a concurrent read and update_price()'s delete) is characterized as a narrow, bounded, self-correcting-by-TTL timing issue, not as evidence the cache holds independent authority",
+        "A report that additionally identifies the get_price()/update_price() repopulation race (a concurrent cache-miss read that completes its cache write after update_price()'s delete has already run) is not required, but is a correct and preferred finding, not a false positive, if reported plainly and without recommending a new mechanism to fix it"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "incremental-and-periodic-writers-same-authority",
+      "prompt": "Treat the files in evals/state-ownership-audit/cases/case-002/ as the complete evidence available about this system -- there is nothing else to consult. Audit ownership of ledger.balance_cents, addressing whether having two writers is a bug.",
+      "expected_output": "Identifies the append-only transactions table as the true authoritative source for the fact 'account balance' (it is the sum of transactions), and ledger.balance_cents as a materialized/cached total of that source, kept current by two mechanisms that both derive from the same authority: apply_transaction()'s incremental update (within the same DB transaction as the append) and reconcile_balances.py's periodic recompute-and-correct pass. Concludes this is not a multi-writer hazard on the same authority -- both paths write a value derived from transactions, neither introduces an independently-sourced value -- and explicitly distinguishes this from a genuine second-writer hazard.",
+      "files": [
+        "evals/state-ownership-audit/cases/case-002/ledger.py",
+        "evals/state-ownership-audit/cases/case-002/reconcile_balances.py",
+        "evals/state-ownership-audit/cases/case-002/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: names the append-only transactions table as the actual authoritative source of the balance fact, not ledger.balance_cents itself",
+        "REQUIRED: characterizes ledger.balance_cents as a materialized/cached total derived from transactions, updated both incrementally (apply_transaction) and via periodic reconciliation (reconcile_balances.py) -- both deriving from the same source rather than being two independent authorities",
+        "REQUIRED: explicitly concludes this is NOT a multi-writer hazard, directly addressing the onboarding engineer's question, and distinguishes 'two writers of a derived value from one source' from 'two independent authorities for the same fact'",
+        "The report notes reconcile_balances.py's role as legitimate drift-correction/reconciliation (a BalanceDriftDetected log line exists specifically for this), not as evidence of an ownership conflict"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "partitioned-authority-not-single-source",
+      "prompt": "Treat the files in evals/state-ownership-audit/cases/case-003/ as the complete evidence available about this system -- there is nothing else to consult. Audit ownership of available_units per SKU, and respond to the architect's proposal to make GlobalCatalog the single source of truth.",
+      "expected_output": "Identifies available_units authority as scoped/partitioned per fulfillment center -- each FC's own regional database is authoritative for its own physical stock, by deliberate design for availability during network partitions. Identifies GlobalCatalog.total_available as a periodically-refreshed aggregate/projection (sum across FCs, degrading gracefully by undercounting an unreachable FC) with no writing authority of its own. Responds to the proposal by naming what it would break: collapsing to a single GlobalCatalog authority with FCs merely caching from it removes each FC's ability to sell independently during a partition -- the reason the partitioning exists in the first place -- rather than silently agreeing to the redesign.",
+      "files": [
+        "evals/state-ownership-audit/cases/case-003/fc_inventory.py",
+        "evals/state-ownership-audit/cases/case-003/global_catalog.py",
+        "evals/state-ownership-audit/cases/case-003/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: characterizes available_units authority as scoped/partitioned by fulfillment center, not global, grounded in each FC's own local database and reserve_units()/restock() only ever touching that FC's own data",
+        "REQUIRED: characterizes GlobalCatalog.total_available as a derived, periodically-polled aggregate with no write authority over any FC's inventory, tolerating staleness and even gaps (an unreachable FC is simply skipped for that cycle)",
+        "REQUIRED: does not recommend or silently agree to making GlobalCatalog the single source of truth with FCs reduced to caches -- it names the concrete consequence (loss of per-FC availability during a network partition) as the reason this is a legitimate design decision, not a code smell to fix",
+        "The report treats the difference in polling cadence and possible undercount during a partition as an accepted characteristic of an aggregate view, not a defect requiring a fix"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "async-projection-safe-lag-not-a-defect",
+      "prompt": "Treat the files in evals/state-ownership-audit/cases/case-004/ as the complete evidence available about this system -- there is nothing else to consult. Audit ownership of order data and respond to the support ticket asking whether the observed lag is a bug needing a hotfix.",
+      "expected_output": "Identifies order_events as the sole authoritative, append-only origin of every order fact, and order_summary_view as an asynchronous, event-consumed projection built by summary_projector.py with documented eventual consistency (p99 lag under 2 seconds, DLQ + alerting on failure). Concludes the customer's ~1.5s lag is within the documented, intentional consistency window -- not a defect -- and does not recommend making the projection synchronous or adding a reconciliation job. Distinguishes this from a genuine problem (e.g. lag exceeding the documented SLA, or the DLQ silently swallowing events), which the evidence given does not show occurred here.",
+      "files": [
+        "evals/state-ownership-audit/cases/case-004/order_events.py",
+        "evals/state-ownership-audit/cases/case-004/summary_projector.py",
+        "evals/state-ownership-audit/cases/case-004/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: order_events is named as the sole authoritative source for order facts, and order_summary_view as an asynchronous projection built by consuming it, never an independent origin of order data",
+        "REQUIRED: explicitly concludes the observed ~1.5s lag is not a defect and is within the documented eventual-consistency window (references the p99<2s SLA and/or DLQ+alerting), directly answering the support ticket's question",
+        "REQUIRED: does not recommend making the projection synchronous, adding a reconciliation job, or otherwise treating the lag itself as something to fix",
+        "The consistency requirement for this pair is characterized as tolerable/bounded staleness, not 'no joint constraint' (the projection must eventually reflect every event) and not 'requires active reconciliation' (nothing here indicates convergence needs an active corrective mechanism beyond the DLQ retry path already in place)"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "genuine-second-writer-hazard",
+      "prompt": "Treat the files in evals/state-ownership-audit/cases/case-005/ as the complete evidence available about this system -- there is nothing else to consult. Audit who owns subscriptions.plan_tier and how the two write paths relate, per the incident retro.",
+      "expected_output": "Identifies two independent, uncoordinated writers of subscriptions.plan_tier: billing_webhook.py (applying Stripe's reported state unconditionally, with no ordering/staleness check) and admin_console.py's set_plan_tier() (a direct override with no interaction with Stripe at all). Names this as a genuine multi-writer hazard -- the centerpiece finding -- citing the incident where a delayed, stale Stripe webhook silently overwrote a support rep's manual override. Does not propose a specific fix (e.g., a specific reconciliation design); names the hazard and the absence of any ordering/version check between the two paths.",
+      "files": [
+        "evals/state-ownership-audit/cases/case-005/billing_webhook.py",
+        "evals/state-ownership-audit/cases/case-005/admin_console.py",
+        "evals/state-ownership-audit/cases/case-005/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: identifies both billing_webhook.py and admin_console.py as legitimate-looking but uncoordinated writers of the same fact (subscriptions.plan_tier), and names this explicitly as a multi-writer hazard -- not merely two representations, not dismissed as acceptable",
+        "REQUIRED: grounds the hazard in the actual incident (a delayed/out-of-order Stripe webhook silently overwrote a manual admin override, with no staleness or ordering check in billing_webhook.py)",
+        "REQUIRED: the report does not propose or design a specific fix (e.g. a specific reconciliation mechanism, versioning scheme, or lock) -- it names the hazard and stops at what a human/design decision would need to resolve",
+        "The hazard appears prominently under a hazards/findings section, not buried only inside a routine per-fact field description"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "docs-vs-code-authority-conflict",
+      "prompt": "Treat the files in evals/state-ownership-audit/cases/case-006/ as the complete evidence available about this system -- there is nothing else to consult. Audit who actually owns UserProfile/users.email, per the new hire's question about whether to add validation logic to profiles based on the README.",
+      "expected_output": "Identifies a direct conflict between the README (claims profiles.email is the source of truth and auth's copy is just a cache) and the executable evidence (auth_service.py is the only code that validates format/uniqueness and originates an email change; sync_email_from_auth.py in profiles only ever copies whatever auth's event reports, with no validation or origination logic of its own). Concludes, based on executable evidence, that auth actually holds authority over email, names the README's claim as wrong, and answers the new hire's question directly: new validation logic belongs in auth_service.py, not profiles.",
+      "files": [
+        "evals/state-ownership-audit/cases/case-006/README.md",
+        "evals/state-ownership-audit/cases/case-006/auth_service.py",
+        "evals/state-ownership-audit/cases/case-006/sync_email_from_auth.py",
+        "evals/state-ownership-audit/cases/case-006/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: explicitly names the conflict between the README's claim (profiles is source of truth) and the executable evidence (auth originates and validates the change; profiles only ever consumes an event) -- does not silently repeat the README's claim as fact",
+        "REQUIRED: concludes, based on the executable write paths, that auth_service.py holds authority over email (sole validator, sole originator of change), not profiles",
+        "REQUIRED: directly answers the new hire's question -- new email-validation logic belongs in auth, not profiles -- contradicting what the README implies",
+        "The report does not treat the README's 'source of truth' label as sufficient evidence on its own at any point in its reasoning"
+      ]
+    }
+  ]
+}
