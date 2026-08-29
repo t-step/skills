@@ -90,7 +90,7 @@ duplicate their work:
   decided. A pure forward-looking proposal with nothing implemented yet has
   nothing for this skill to check it against; that's `spec-pressure-test`'s
   territory.
-- **`slice-review`** judges whether a specific diff is ready to merge. This
+- **`change-review`** judges whether a specific diff is ready to merge. This
   skill never renders a merge verdict and isn't scoped to one diff; it
   looks at whatever framing surfaces are in scope for the audit.
 - **Documentation/comment cleanup** (rewriting or deleting prose) is a
@@ -254,7 +254,7 @@ some things" without landing on one:**
    evidence -- missing tests, no wiring, its own TODO), state plainly that
    the framing surface is not stale, and name the code-side gap as a
    correctness risk worth flagging to whoever owns that code -- but out of
-   this skill's scope to characterize further or fix (a `slice-review` or
+   this skill's scope to characterize further or fix (a `change-review` or
    ordinary code-review matter, not a framing finding). This still belongs
    somewhere the reader will see it (e.g., under Unresolved questions or a
    one-line note in the Working summary), but never as a framing
@@ -429,7 +429,7 @@ Even when a request bundles it in:
   is a compact, reasoning-impact-ranked set of findings, not a
   completeness sweep.
 - Judge implementation correctness, review a diff, or render a merge
-  verdict -- that's `slice-review`.
+  verdict -- that's `change-review`.
 
 If a request bundles a legitimate framing audit with one of these --
 "find the stale docs and fix them," "audit this and rename what's

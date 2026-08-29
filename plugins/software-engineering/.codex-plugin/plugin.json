@@ -1,7 +1,7 @@
 {
   "name": "software-engineering",
-  "version": "0.2.2",
-  "description": "Skills for orienting in a repository, composing implementation work, and reviewing bounded slices before merge.",
+  "version": "0.2.3",
+  "description": "Skills for orienting in a repository, composing implementation work, and reviewing bounded changes before merge.",
   "author": {
     "name": "Thomas Estep"
   },
@@ -9,8 +9,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Software Engineering",
-    "shortDescription": "Repo orientation, task composition, and slice review.",
-    "longDescription": "Skills for orienting in a repository before consequential work, composing decomposed tasks into coherent delivery slices, and reviewing one bounded implementation slice against its stated goal, the repo's own instructions, and verification evidence before merge.",
+    "shortDescription": "Repo orientation, task composition, and change review.",
+    "longDescription": "Skills for orienting in a repository before consequential work, composing decomposed tasks into coherent delivery slices, and reviewing one bounded implementation change against its stated goal, the repo's own instructions, and verification evidence before merge.",
     "developerName": "Thomas Estep",
     "category": "Developer Tools",
     "capabilities": [
