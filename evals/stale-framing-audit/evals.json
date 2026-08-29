@@ -1,0 +1,101 @@
+{
+  "skill_name": "stale-framing-audit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "completed-migration-readme-still-describes-retired-store",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-001/ as the complete evidence available about this system -- there is nothing else to consult. Run a stale-framing audit before this new contributor adds a new task type.",
+      "expected_output": "Identifies README.md's Architecture and 'Running locally' sections as teaching a Redis-backed queue model that no longer matches the system: worker.py (the actual entry point) imports only postgres_queue, and redis_queue.py is unreferenced by anything that runs. Characterizes this as Contradicted (or Superseded, undated), names the induced mental model (a new contributor would start Redis and read redis_queue.py to understand enqueueing), ranks it high (root README, the only onboarding doc, concrete consequence of wasted setup effort and reading the wrong module), and recommends a corrective edit to the README rather than performing or designing the rewrite itself.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-001/README.md",
+        "evals/stale-framing-audit/cases/case-001/redis_queue.py",
+        "evals/stale-framing-audit/cases/case-001/postgres_queue.py",
+        "evals/stale-framing-audit/cases/case-001/worker.py",
+        "evals/stale-framing-audit/cases/case-001/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: names README.md's Architecture/Running-locally sections as the stale surface, grounded in worker.py importing only postgres_queue and redis_queue.py being unreferenced by anything reachable",
+        "REQUIRED: characterizes the finding as Contradicted or Superseded/undated (not Ambiguous, not left unresolved) -- the evidence here is not genuinely ambiguous",
+        "REQUIRED: states the induced mental model explicitly (a reader would believe Redis is the queue backend and start it / read redis_queue.py)",
+        "REQUIRED: does not rewrite the README itself or produce replacement README text as the deliverable -- names the finding and a smallest corrective action instead",
+        "The report notes README's high reach (root-level, the only onboarding document) as part of why this ranks highly, not merely that it's incorrect"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "true-statement-implies-wrong-write-authority",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-002/ as the complete evidence available about this system -- there is nothing else to consult. An engineer wants to add a 'mark worker unhealthy' feature from the ops dashboard and is about to write that logic based on the README's description of what the Coordinator does. Run a stale-framing audit first.",
+      "expected_output": "Identifies the README's claim that 'Coordinator manages worker state' as misleading emphasis: coordinator.py never writes to the workers table and has no database handle to it at all -- it only maintains an in-memory summary derived from worker_registry.py's published events. worker_registry.py is the sole writer. The report does not call the README claim literally false (it does route tasks based on worker state) but flags that its phrasing implies write authority the Coordinator doesn't have, and explicitly answers the engineer's question: the new write belongs in worker_registry.py, not the Coordinator.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-002/README.md",
+        "evals/stale-framing-audit/cases/case-002/worker_registry.py",
+        "evals/stale-framing-audit/cases/case-002/coordinator.py",
+        "evals/stale-framing-audit/cases/case-002/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: characterizes the README's 'Coordinator manages worker state' claim as Misleading emphasis / missing qualifier -- not Contradicted -- since the Coordinator does legitimately route tasks based on worker data",
+        "REQUIRED: grounds the finding in worker_registry.py being the only writer to the `workers` table and coordinator.py holding only an in-memory, event-derived summary with no database handle",
+        "REQUIRED: directly answers the engineer's question -- new worker-state writes belong in worker_registry.py, not coordinator.py",
+        "The report names the induced mental model explicitly (a reader would believe Coordinator has write authority over worker state) rather than only asserting the correction"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "readme-omits-newly-authoritative-permissions-component",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-003/ as the complete evidence available about this system -- there is nothing else to consult. A new engineer, following the README's architecture description, needs to add a new admin action and asks where its permission check belongs. Run a stale-framing audit first.",
+      "expected_output": "Identifies the README's Architecture section -- which explicitly scopes itself to 'Console's authorization is made up of two services' and names ProfileService as holding the is_admin/can_export gating flags -- as omitting permissions_service.py, which is the only component admin_actions.py actually calls to gate admin actions. profile_service.py's is_admin/can_export columns are read by nothing on the authorization path. Characterizes this as Omission (the README's own stated scope should include the actual authorization component), names the concrete wrong belief a reader would form (that profile flags gate admin access), and answers the engineer's question: the new permission check belongs in permissions_service.py.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-003/README.md",
+        "evals/stale-framing-audit/cases/case-003/profile_service.py",
+        "evals/stale-framing-audit/cases/case-003/permissions_service.py",
+        "evals/stale-framing-audit/cases/case-003/admin_actions.py",
+        "evals/stale-framing-audit/cases/case-003/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: characterizes the finding as Omission, explicitly tying it to the README's own stated scope ('Console's authorization is made up of two services') rather than a generic 'could be more complete' complaint",
+        "REQUIRED: grounds the finding in admin_actions.py calling permissions_service.check(), not any profile flag, and profile_service.py's is_admin/can_export columns being read by nothing on the authorization path",
+        "REQUIRED: names permissions_service.py explicitly as the missing component and answers the engineer's question -- the new check belongs there, not in ProfileService",
+        "The report does not treat profile_service.py's retained is_admin/can_export columns as evidence ProfileService still has authorization authority -- it correctly identifies them as vestigial/backward-compat-read columns"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "stale-agent-instructions-high-reach",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-004/ as the complete evidence available about this system -- there is nothing else to consult. An agent is about to follow AGENTS.md to add a migration. Run a stale-framing audit of AGENTS.md against the repository first.",
+      "expected_output": "Identifies AGENTS.md's migration instructions (add a .sql file under migrations/legacy_sql/, run ./migrate.sh) as Contradicted: the repository has no migrations/legacy_sql/ directory and no migrate.sh script; it uses Alembic (migrations/versions/, alembic.ini, and CI running `alembic upgrade head`). Ranks this as high-severity specifically because AGENTS.md is a Tier-1, high-reach governing instruction file that would directly misdirect the very next action the agent takes, not merely because the instructions are wrong. Recommends updating AGENTS.md to describe the Alembic workflow as the smallest corrective action, without performing a broader audit of the repository beyond this file's claim.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-004/AGENTS.md",
+        "evals/stale-framing-audit/cases/case-004/alembic.ini",
+        "evals/stale-framing-audit/cases/case-004/ci.yml",
+        "evals/stale-framing-audit/cases/case-004/migrations/versions/0007_add_orders_index.py",
+        "evals/stale-framing-audit/cases/case-004/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: characterizes AGENTS.md's migration instructions as Contradicted, grounded in the absence of migrations/legacy_sql/ and migrate.sh and the presence of migrations/versions/, alembic.ini, and CI running alembic",
+        "REQUIRED: explicitly names AGENTS.md's reach (root governing agent-instruction file) as part of why this ranks as a high-impact finding, not just that it's factually wrong",
+        "REQUIRED: states the concrete consequence -- an agent following AGENTS.md literally would create a file and run a script that don't exist / aren't the real migration path",
+        "The report does not perform or propose a rewrite of AGENTS.md itself -- it names the finding and the smallest corrective description needed"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "marked-history-untouched-unmarked-setup-doc-flagged",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-005/ as the complete evidence available about this system -- there is nothing else to consult. A contributor read docs/decisions/ and docs/setup.md while setting up their environment and wants a stale-framing audit before filing a setup bug.",
+      "expected_output": "Correctly leaves both ADRs alone: adr-003 is marked 'Status: Superseded by ADR-007' and adr-007 is marked 'Status: Accepted' and both accurately describe, respectively, a past and the current decision -- neither is a finding. Separately, flags docs/setup.md's step 2 ('Start Redis: docker-compose up redis') as Contradicted/Superseded-undated: docker-compose.yml has no redis service, and worker.py never imports a Redis client, reading only from Postgres. The report explicitly distinguishes the two ADRs (correctly left alone) from setup.md (correctly flagged), rather than treating 'this repo mentions Redis in old docs' as one undifferentiated finding.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-005/docs/decisions/adr-003-queue-backend.md",
+        "evals/stale-framing-audit/cases/case-005/docs/decisions/adr-007-queue-backend-postgres.md",
+        "evals/stale-framing-audit/cases/case-005/docs/setup.md",
+        "evals/stale-framing-audit/cases/case-005/docker-compose.yml",
+        "evals/stale-framing-audit/cases/case-005/worker.py",
+        "evals/stale-framing-audit/cases/case-005/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: explicitly states that adr-003 and adr-007 are NOT findings because they are properly marked/dated historical and current decision records respectively -- this must appear as an explicit statement (e.g. in a historical-material section), not just an absence of complaint about them",
+        "REQUIRED: flags docs/setup.md's Redis step as a finding, grounded in docker-compose.yml having no redis service and worker.py never referencing Redis",
+        "REQUIRED: characterizes the setup.md finding as Contradicted or Superseded/undated, not Ambiguous",
+        "The report does not recommend deleting or rewriting the ADRs, and does not lump the ADRs and setup.md together as the same kind of problem"
+      ]
+    }
+  ]
+}
