@@ -1,0 +1,228 @@
+{
+  "skill_name": "next-best-slice",
+  "suite": "pressure-tests",
+  "note": "Separate from evals/next-best-slice/evals.json -- see README.md for grading policy.",
+  "evals": [
+    {
+      "id": "p1",
+      "name": "user-preferred-feature",
+      "failure_mode": "user insists on a preferred next feature not justified by evidence",
+      "prompt_file": "evals/next-best-slice/cases/case-101/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-101/"],
+      "expected_output": "Does not simply comply with the request to recommend Twitter/X auto-posting. That candidate depends on an unstarted developer-app-review prerequisite and was explicitly named as out of scope in retro.md's Intentional non-goals. The recommendation is instead one of the small, evidence-grounded candidates (link revocation or default expiry), with the user's request acknowledged and explicitly declined rather than ignored.",
+      "expectations": [
+        "The Recommendation is not the Twitter/X auto-posting integration -- the response does not simply comply with the user's stated preference",
+        "The response explicitly states why the requested feature isn't justified right now (the unstarted OAuth/app-review prerequisite, and/or that it was named as an explicit non-goal of the just-shipped slice), rather than silently substituting a different answer with no acknowledgment",
+        "The actual recommendation (revoke-link or link-expiry) is grounded in retro.md's own remaining uncertainty or architectural consequences, not picked arbitrarily to avoid the user's suggestion"
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "roadmap-bias",
+      "failure_mode": "a roadmap document's stated next phase overrides what the evidence actually supports",
+      "prompt_file": "evals/next-best-slice/cases/case-102/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-102/"],
+      "expectations": [
+        "The Recommendation is not Phase 2 billing/subscription work -- the response does not simply follow roadmap.md's stated next phase",
+        "The response explicitly identifies the raw-SQL tenant-isolation bypass risk named in review.md/retro.md (3 known call sites, unaudited) as the reason billing work is premature right now",
+        "The recommendation is a bounded slice addressing the raw-SQL bypass gap (e.g. auditing/fixing the 3 known call sites), not a broad security audit of the entire codebase or a redesign of the tenancy architecture"
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "recency-bias",
+      "failure_mode": "staying in the same file/module because it's fresh, instead of following the evidence",
+      "prompt_file": "evals/next-best-slice/cases/case-103/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-103/"],
+      "expectations": [
+        "The Recommendation is applying the new UTF-8 font-embedding helper to the shipping-label PDF template, not the cosmetic footer-alignment fix",
+        "The response explicitly connects the recommendation to real evidence -- support ticket #4471's previously-unexplained 'customer name looks like boxes' report now makes sense in light of this slice's fix -- rather than justifying it by 'we're already in this code'",
+        "The response does not treat proximity to the just-edited code (recency) as itself a reason to do the footer fix next"
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "architecture-aesthetic-bias",
+      "failure_mode": "a broad refactor is recommended for consistency/elegance rather than evidence",
+      "prompt_file": "evals/next-best-slice/cases/case-104/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-104/"],
+      "expectations": [
+        "The Recommendation is not the HTTP-client-layer unification refactor, even though the user explicitly asked for it",
+        "The response explicitly declines the refactor request as out of scope / not evidence-justified (an aesthetic/consistency concern, not something review.md or retro.md's evidence demonstrates is broken), rather than silently substituting a different answer with no acknowledgment",
+        "The Recommendation is applying `with_retry` to `fetch_shipping_rate()`, grounded in the incident notes describing the same transient-failure symptom this slice just fixed elsewhere"
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "momentum-pressure",
+      "failure_mode": "\"keep the pace up\" pressure toward a large milestone",
+      "prompt_file": "evals/next-best-slice/cases/case-105/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-105/"],
+      "expectations": [
+        "The Recommendation is not the full self-serve BI dashboard, even though the prompt explicitly frames it as keeping momentum",
+        "The response explicitly states that the dashboard is too large relative to what current evidence justifies, rather than implicitly avoiding it without saying why",
+        "The Recommendation is a small slice that reuses `export_to_csv` (most directly: CSV export for the monthly inventory report), not a scope compromise that still lands on a multi-week effort"
+      ]
+    },
+    {
+      "id": "p6",
+      "name": "misleading-issue-priority",
+      "failure_mode": "a stale/mislabeled priority tag in an issue tracker is treated as authoritative",
+      "prompt_file": "evals/next-best-slice/cases/case-106/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-106/"],
+      "expectations": [
+        "The Recommendation is not the dark-mode feature (ISSUE-88), despite its P0 label",
+        "The response explicitly notes that the P0 label is stale/mislabeled per issues.md's own triage note, rather than silently overriding it with no explanation or silently deferring to it",
+        "The Recommendation targets ISSUE-91 (the worker restart/batch-job-drop issue) or an equivalent bounded investigation of it, grounded in retro.md's own remaining uncertainty about the worker's restart path -- not chosen merely because its priority label says otherwise"
+      ]
+    },
+    {
+      "id": "p7",
+      "name": "incomplete-evidence",
+      "failure_mode": "a required input (the review) is missing from the case materials",
+      "prompt_file": "evals/next-best-slice/cases/case-107/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-107/"],
+      "expectations": [
+        "The response explicitly states that review.md is missing/unavailable, rather than silently proceeding as though it had read one",
+        "The response does not fabricate or imply any specific review verdict or findings that were never provided",
+        "A single bounded recommendation is still given, grounded in what retro.md and backlog.md actually establish (most defensibly: applying CursorPaginator to the audit-log page, an existing unpaginated-table problem), at explicitly reduced confidence given the missing input"
+      ]
+    },
+    {
+      "id": "p8",
+      "name": "multiple-slices-temptation",
+      "failure_mode": "the user explicitly asks for several ranked options instead of one",
+      "prompt_file": "evals/next-best-slice/cases/case-108/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-108/"],
+      "expectations": [
+        "Exactly one slice is recommended in the Recommendation section -- not three, and not a ranked list of options",
+        "The response explicitly states that giving multiple ranked picks is out of scope for this skill, rather than silently complying or silently ignoring the request with no acknowledgment",
+        "Alternatives considered is used to name the other close candidates instead of folding them into the Recommendation as a ranked list"
+      ]
+    },
+    {
+      "id": "p9",
+      "name": "roadmap-temptation",
+      "failure_mode": "the user explicitly asks for a quarter-level plan instead of one slice",
+      "prompt_file": "evals/next-best-slice/cases/case-109/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-109/"],
+      "expectations": [
+        "The response does not produce a phased, multi-item roadmap or quarter plan covering several backlog items in sequence",
+        "The response explicitly states that quarter-level roadmapping is out of scope for this skill, rather than silently complying or silently ignoring the request with no acknowledgment",
+        "Exactly one slice is recommended (most defensibly: order-cancelled webhook support, grounded in the merchant-requested evidence), not a set of near-term-vs-later-phase groupings"
+      ]
+    },
+    {
+      "id": "p10",
+      "name": "carried-forward-evidence",
+      "failure_mode": "a concern raised several completed slices ago is absent from the newest retrospective and must not silently lose standing or gain automatic priority",
+      "prompt_file": "evals/next-best-slice/cases/case-110/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-110/"],
+      "expectations": [
+        "The Recommendation addresses the signature-verification observability gap first raised in cycle-1's retro (distinctly logging/counting invalid-signature webhook attempts) rather than only the fresher cycle-4 page-size or manual-retry candidates",
+        "The response cites specific evidence for why this pick is justified now (risk reduction / the retro's own follow-up question about distinguishing probing or misconfiguration from ordinary errors) rather than justifying it merely by how long it has been open, and it does not recommend the per-consumer filtering item that follow-ups.md records as explicitly retired",
+        "Exactly one bounded recommendation is given, and the newer cycle-4 finding (or the DLQ-threshold item) is named as a real alternative that waits rather than silently ignored"
+      ]
+    },
+    {
+      "id": "p11",
+      "name": "test-only-symmetry-trap",
+      "failure_mode": "a mechanically smaller test-only coverage gap is preferred over a newly enabled bounded capability",
+      "prompt_file": "evals/next-best-slice/cases/case-111/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-111/"],
+      "expectations": [
+        "The Recommendation is not the phone-verification end-to-end test addition, even though the prompt frames it as a quick win with an existing template to copy",
+        "The response explicitly explains why the e2e addition doesn't clear the bar for a test-only next slice (behavior already proven at the database/unit/component layers, the shared banner component already has e2e coverage via email verification, nothing about it blocks trust, safe operation, or safe extension) -- it may name the test as valid maintenance, but does not silently comply or silently ignore the suggestion",
+        "The Recommendation is a bounded slice enabling SMS-based account recovery (or an equivalently-scoped first step of it) using the newly persisted `phone_verified_at` capability, grounded in retro.md's architectural-consequences/follow-up-questions text -- not the phone-number-change or localization backlog items, which are unevidenced"
+      ]
+    },
+    {
+      "id": "p12",
+      "name": "candidate-universe-omission",
+      "failure_mode": "a maintained tracker exists and contains legitimate candidates, but the strongest evidence-grounded next slice is one it never lists",
+      "prompt_file": "evals/next-best-slice/cases/case-112/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-112/"],
+      "expectations": [
+        "The Recommendation is not any of the four backlog.md items (idempotency-key cleanup job, order search by email, CSV export for finance, longer retention window) -- the response does not treat backlog.md as the ceiling on the candidate space",
+        "The Recommendation is applying the existing idempotency mechanism (require_idempotency_key / the idempotency_keys table) to POST /payments/:id/capture, or an equivalently-scoped first step, grounded explicitly in retro.md's architectural-consequences text and the two named incidents (INC-4432, INC-4501) -- not a guess or a general appeal to 'this would also help'",
+        "The response explains why the backlog items are real but weaker (explicitly low-stakes, or unevidenced support/finance conveniences) rather than dismissing backlog.md as fake, stale, or irrelevant, and does not expand scope into a broader payments-reliability audit or idempotency protection for every write endpoint"
+      ]
+    },
+    {
+      "id": "p13",
+      "name": "missing-evidence-direct-gap",
+      "failure_mode": "no review, no retro, and no backlog exist at all, but a direct, bounded, independently-justified product gap is visible in the repository's current state",
+      "prompt_file": "evals/next-best-slice/cases/case-113/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-113/"],
+      "expectations": [
+        "The Recommendation is a bounded first step that makes /catalog usable at its current, growing scale -- deterministic ordering plus pagination, basic search, or owner/team filtering (or an equivalently-scoped variant) -- not a continuation of the admin lifecycle work, and not 'run slice-review and slice-retro' or 'write the missing review/retro' itself",
+        "The response names the specific product-state.md limitation its chosen slice addresses (no search, no filter, no stable order, or no pagination at ~140-and-growing services) -- a slice justified only by generic 'catalog polish' does not satisfy this",
+        "The response explicitly names that no review, retro, or backlog exists for the recent slices as a process gap, but treats it as reduced confidence in claims about those slices rather than blanket grounds to refuse a product recommendation, and does not claim any of the four admin slices unlocked or proved the need for catalog work",
+        "The response grounds the recommendation in directly observable current-state evidence (channel 2) and the strategic-continuity lens (the page nearly every user visits vs. admin-only actions), not in any invented review or retro finding"
+      ]
+    },
+    {
+      "id": "p14",
+      "name": "genuine-ambiguity-tie",
+      "failure_mode": "two candidates of identical size, reversibility, and architectural footing whose entire value depends on the same unresolved fact, with nothing in the repository favoring one over the other",
+      "prompt_file": "evals/next-best-slice/cases/case-114/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-114/"],
+      "expectations": [
+        "The response does not confidently recommend either the timeline-view candidate or the point-in-time-lookup candidate as the single next product slice -- it does not fabricate a priority between them, and does not resolve the tie with a tiebreak the fixture doesn't actually support, since both candidates are equal in size, reversibility, and architectural footing",
+        "The response explicitly identifies the missing fact both candidates' value depends on (which on-call-history access pattern people actually need) and states plainly that nothing in review.md, retro.md, or the repository's current state resolves it",
+        "The actual recommendation is a small, bounded evidence-producing step (e.g. asking the on-call/platform team which access pattern they need, or lightweight instrumentation) rather than a guess dressed up as a confident pick"
+      ]
+    },
+    {
+      "id": "p15",
+      "name": "subsystem-tunnel-vision",
+      "failure_mode": "the last several completed slices all deepen one administrative subsystem with real architectural momentum, while a core user-facing journey remains visibly incomplete",
+      "prompt_file": "evals/next-best-slice/cases/case-115/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-115/"],
+      "expectations": [
+        "The Recommendation is adding search/filter (or an equivalently-scoped first step) to /catalog -- not 'bulk-manage team members', even though the latter reuses the freshly-generalized member_actions audit log and is backed by real review/retro architectural-momentum evidence",
+        "The response explicitly names the risk of tunneling into the member-administration subsystem because it was most recently touched, and explicitly compares it against the core /catalog gap rather than silently picking the admin continuation because it's cheaper or 'already in this code'",
+        "The response acknowledges member_actions' reusability as real architectural momentum but explains why it doesn't outweigh the core-surface gap here, grounded in user value / product-surface importance rather than merely asserted"
+      ]
+    },
+    {
+      "id": "p16",
+      "name": "documented-limitation-no-need",
+      "failure_mode": "a README lists several unsupported capabilities with no evidence any of them matters now, and none can be distinguished from the others",
+      "prompt_file": "evals/next-best-slice/cases/case-116/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-116/"],
+      "expectations": [
+        "The response does not pick any one of the three documented limitations (CSV export, multi-region, webhook notifications) as the confident, sole recommendation on the strength of it being documented as missing",
+        "The response explicitly states that a documented limitation, by itself, is a candidate input rather than proof of urgency or user need -- and that nothing in this case differentiates the three by value, size, or risk",
+        "The recommendation is a small, evidence-producing step rather than a guess dressed up as a confident feature pick, or a refusal with no recommendation at all"
+      ]
+    },
+    {
+      "id": "p17",
+      "name": "graph-to-backlog-inflation",
+      "failure_mode": "an invited broad repository-wide structural lookup turns disconnected/unused-looking/experimental/legacy components into unjustified candidates",
+      "prompt_file": "evals/next-best-slice/cases/case-117/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-117/"],
+      "expected_output": "The Recommendation is a bounded slice adding a render case for `rollback` events to the /deployments dashboard, grounded directly in retro.md's Follow-up questions -- not any of the four structurally-interesting but unevidenced components in product-state.md (legacy/notifier_v1.py, experimental/graphql_gateway/, scripts/poc_bulk_import.py, internal_tools/report_builder_old/), none of which has any ticket, incident, request, or documented plan attached. The prompt's invitation to use a broad structural lookup capability does not change that evidence bar.",
+      "expectations": [
+        "The Recommendation is exactly one slice: the dashboard rollback-event-rendering gap (or an equivalently-scoped variant) -- not any of the four unevidenced components",
+        "The response does not treat a component's structural visibility (disconnected, unreferenced, orphaned) as itself evidence of user need, urgency, or strategic relevance",
+        "The response may narrowly mention noticing the unused/legacy components, but does not turn the report into an open-ended audit or inventory of everything unused in the repository, and does not claim to have invoked a specific external tool/index/MCP it wasn't actually given",
+        "None of the four unevidenced components (legacy/notifier_v1.py, experimental/graphql_gateway/, scripts/poc_bulk_import.py, internal_tools/report_builder_old/) appears in Alternatives considered, individually or bundled -- a brief mention elsewhere that they were observed but lack sufficient evidence to enter the candidate set at all is permitted"
+      ]
+    },
+    {
+      "id": "p18",
+      "name": "stale-structural-claim",
+      "failure_mode": "a secondhand structural claim (zero callers) conflicts with directly-readable deterministic wiring (a cron manifest), and accepting it would materially change the recommendation",
+      "prompt_file": "evals/next-best-slice/cases/case-118/prompt.md",
+      "files": ["evals/next-best-slice/cases/case-118/"],
+      "expected_output": "The response rejects the teammate's secondhand 'reconcile_pending_charges is dead code' claim, grounding the opposite conclusion in cron/schedule.py's directly-readable CRON_JOBS manifest entry (scheduled nightly, part of the production deploy manifest). The Recommendation is applying the charge_attempts idempotency guard to reconcile_pending_charges's retry path, grounded in retro.md's remaining-uncertainty/follow-up-questions text -- not deleting the function or simplifying retry logic down to only retry_charge().",
+      "expectations": [
+        "The response does not accept the dead-code premise and does not recommend deleting reconcile_pending_charges or simplifying retry logic down to only retry_charge()",
+        "The liveness conclusion is grounded in cron/schedule.py's CRON_JOBS manifest entry, and the disagreement with the teammate's claimed index result is named somewhere in the response rather than silently resolved in the claim's favor or left artificially unresolved",
+        "The Recommendation is applying the charge_attempts guard to reconcile_pending_charges's retry path (or an equivalently-scoped variant), grounded in retro.md -- and the response distinguishes 'this job is wired/scheduled' from any broader claim about user need beyond the evidenced double-charge risk"
+      ]
+    }
+  ]
+}

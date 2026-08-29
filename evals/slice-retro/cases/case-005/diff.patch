@@ -1,0 +1,40 @@
+diff --git a/search/views.py b/search/views.py
+index 1111111..2222222 100644
+--- a/search/views.py
++++ b/search/views.py
+@@ -1,3 +1,17 @@
++from django.db import connection
++from django.http import JsonResponse
++
++
++def search(request):
++    q = request.GET.get("q", "").strip()
++    if not q:
++        return JsonResponse({"results": []})
++    with connection.cursor() as cur:
++        cur.execute(
++            "SELECT id, title FROM articles_fts WHERE articles_fts MATCH %s LIMIT 20",
++            [q],
++        )
++        rows = cur.fetchall()
++    return JsonResponse({"results": [{"id": r[0], "title": r[1]} for r in rows]})
+diff --git a/search/test_views.py b/search/test_views.py
+index 3333333..4444444 100644
+--- a/search/test_views.py
++++ b/search/test_views.py
+@@ -1,3 +1,22 @@
++import pytest
++
++
++@pytest.mark.django_db
++def test_search_returns_matching_articles(client, fts_fixture):
++    response = client.get("/search", {"q": "kubernetes"})
++    titles = [r["title"] for r in response.json()["results"]]
++    assert "Kubernetes networking basics" in titles
++    assert "Unrelated article" not in titles
++
++
++@pytest.mark.django_db
++def test_search_caps_at_20_results(client, fts_fixture_25_matches):
++    response = client.get("/search", {"q": "python"})
++    assert len(response.json()["results"]) == 20

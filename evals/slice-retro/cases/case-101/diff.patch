@@ -1,0 +1,35 @@
+diff --git a/media/thumbnails.py b/media/thumbnails.py
+index 1111111..2222222 100644
+--- a/media/thumbnails.py
++++ b/media/thumbnails.py
+@@ -1,3 +1,15 @@
++import os
++
++from PIL import Image
++
++
++def make_thumbnail(path):
++    ext = os.path.splitext(path)[1].lower()
++    if ext not in (".jpg", ".jpeg", ".png"):
++        raise ValueError(f"unsupported file type: {ext}")
++    img = Image.open(path)
++    img = img.resize((200, 200))
++    thumb_path = path.replace(ext, f".thumb{ext}")
++    img.save(thumb_path)
++    return thumb_path
+diff --git a/media/test_thumbnails.py b/media/test_thumbnails.py
+index 3333333..4444444 100644
+--- a/media/test_thumbnails.py
++++ b/media/test_thumbnails.py
+@@ -1,3 +1,12 @@
++from PIL import Image
++
++from media.thumbnails import make_thumbnail
++
++
++def test_creates_200x200_thumbnail(tmp_path):
++    src = tmp_path / "photo.jpg"
++    Image.new("RGB", (800, 600)).save(src)
++    thumb_path = make_thumbnail(str(src))
++    with Image.open(thumb_path) as thumb:
++        assert thumb.size == (200, 200)

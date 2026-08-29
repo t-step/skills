@@ -1,0 +1,89 @@
+{
+  "skill_name": "next-best-slice",
+  "evals": [
+    {
+      "id": 1,
+      "name": "dependency-unlock",
+      "prompt": "Recommend the next slice. Materials are in evals/next-best-slice/cases/case-001/: review.md, retro.md, backlog.md.",
+      "expected_output": "Recommends protecting /api/account with the new require_auth decorator: small, directly builds on the capability the retro says now exists for the first time, fixes a real access-control gap (any caller can currently read any account's details), and is a genuine dependency unlock rather than a preference call. The RBAC system and routing refactor both wait as too large / not evidence-justified yet.",
+      "files": ["evals/next-best-slice/cases/case-001/"],
+      "expectations": [
+        "The Recommendation is the /api/account protection slice (applying require_auth and reading the user id from the verified token), not the RBAC system, the routing refactor, or rate limiting",
+        "Why now explicitly ties the recommendation to the architectural consequence named in retro.md (any route can now require auth via one decorator) rather than to general priority or preference",
+        "Alternatives considered explains why the RBAC system and the routing refactor wait — evidence-grounded reasons (too large / not justified by anything in the review or retro), not just 'not now'"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "user-value-vs-prerequisite",
+      "prompt": "Recommend the next slice. Materials are in evals/next-best-slice/cases/case-002/: review.md, retro.md, backlog.md.",
+      "expected_output": "A genuine judgment call between two defensible picks: swapping to an indexed search backend (addresses the review-flagged, non-hypothetical growth risk: 380ms on 500 rows vs. a 118k-row and growing production catalog) or instrumenting production search latency first (the smallest way to get a real number before committing to the swap). Either is acceptable if the reasoning explicitly engages with the flagged scale numbers using the skill's own criteria. What's not acceptable: picking a pure UI feature (highlighting/filters) while ignoring the scale risk entirely, or jumping to a bigger initiative than an indexed-search swap (e.g. a full search-platform migration).",
+      "files": ["evals/next-best-slice/cases/case-002/"],
+      "expectations": [
+        "The Recommendation is either the FTS5/indexed-search swap or the production-latency-instrumentation slice -- not the highlighting or filters candidates, and not an oversized rewrite/migration beyond a bounded swap",
+        "Why now explicitly cites the specific numbers from review.md/retro.md (380ms on the 500-row fixture, ~118,000-row and growing production catalog) rather than a generic 'search should be fast' justification",
+        "The response explicitly weighs the chosen candidate against the other defensible one (indexed-search swap vs. instrumentation) using criteria like size, reversibility, or risk reduction, rather than picking one without acknowledging the other was a real option"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "equally-attractive-candidates",
+      "prompt": "Recommend the next slice. Materials are in evals/next-best-slice/cases/case-003/: review.md, retro.md, backlog.md.",
+      "expected_output": "All three notification channels (email, SMS, push) are genuinely close in value and size. A good recommendation picks exactly one -- email or push are the more defensible picks since both reuse existing infrastructure (SMTP creds already exist; push tokens are already registered), while SMS requires provisioning a brand-new external vendor account -- and states the tiebreak plainly rather than implying the choice was more obvious than it is. Recommending more than one channel, or a phased multi-channel plan, fails regardless of which channel is picked.",
+      "files": ["evals/next-best-slice/cases/case-003/"],
+      "expectations": [
+        "Exactly one channel is recommended (email, SMS, or push) -- not two, not all three, not a sequenced/phased list of channels",
+        "The recommendation names a concrete, evidence-grounded tiebreak (e.g. reuses existing SMTP credentials, or reuses existing push-token infrastructure) rather than presenting the choice as though it were the only reasonable option",
+        "Alternatives considered explicitly acknowledges the other channel(s) were close calls rather than dismissing them as obviously wrong"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "narrow-experiment-vs-milestone",
+      "prompt": "Recommend the next slice. Materials are in evals/next-best-slice/cases/case-004/: review.md, retro.md, backlog.md.",
+      "expected_output": "Recommends the bounded 500-SKU A/B test with real conversion tracking, not the full ~118,000-SKU catalog rollout. The retro's evidence (two editors' unscored, unblinded impression) is far too thin to justify replacing real copy site-wide, and a full rollout is much harder to reverse. The A/B test is sized specifically to answer the retro's own open question (does this move a real metric) before any larger commitment.",
+      "files": ["evals/next-best-slice/cases/case-004/"],
+      "expectations": [
+        "The Recommendation is the bounded 500-SKU A/B test, not the full-catalog rollout, the regenerate-button feature, or the additional-languages feature",
+        "Why now / Why they wait explicitly identifies that the full rollout is not justified by the current evidence (an informal, unscored editor read-through is not a customer-behavior measurement) and is harder to reverse once shipped site-wide",
+        "What this slice proves is framed around settling the retro's actual open question (whether AI copy moves a real business metric), not around shipping AI descriptions as a feature in itself"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "deferred-not-yet-justified",
+      "prompt": "Recommend the next slice. Materials are in evals/next-best-slice/cases/case-005/: review.md, retro.md, backlog.md.",
+      "expected_output": "Does not recommend building the Redis-backed distributed rate limiter: it was deferred for a specific infrastructure reason (Redis not provisioned) that nothing in this evidence shows has changed, and nothing shows the per-instance gap is actually being exploited. The justified next step is the small rejection-metric slice, which would produce the evidence needed to know whether the deferred work is actually needed.",
+      "files": ["evals/next-best-slice/cases/case-005/"],
+      "expectations": [
+        "The Recommendation is not the Redis-backed distributed rate limiter -- the response recognizes it's still not justified by anything in review.md or retro.md",
+        "The response explains specifically why the Redis limiter isn't yet justified: it was deferred for an infrastructure reason (Redis unavailable) that this evidence doesn't show has changed, not just 'let's not do the big thing'",
+        "The Recommendation is the rejection-metric/logging slice (or an equivalently small evidence-producing slice) rather than the allowlist or admin-dashboard candidates, which don't address the open cross-instance question at all"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "evidence-changes-direction",
+      "prompt": "Recommend the next slice. Materials are in evals/next-best-slice/cases/case-006/: review.md, retro.md, backlog.md.",
+      "expected_output": "Recommends increasing the cache capacity from 128 to 2048 entries and re-measuring against the same p95/hit-rate benchmark -- the smallest, cheapest way to test one of the three hypotheses the retro's falsified assumption raised (sizing vs. key-space vs. not-cacheable), rather than jumping straight to a bigger commitment (a shared Redis cache prototype) or continuing to invest in the original, now-falsified direction (cache warming, rolling the same approach out to more endpoints) without first learning why hit rate is low.",
+      "files": ["evals/next-best-slice/cases/case-006/"],
+      "expectations": [
+        "The Recommendation is the capacity-increase-and-remeasure slice, not cache warming, not rolling the pattern out to 6 other endpoints, and not (as the primary pick) the shared Redis cache prototype",
+        "Why now explicitly ties back to the falsified assumption in retro.md (in-process caching alone did not meet the 50ms target) and to the specific open hypotheses retro.md's follow-up question raises",
+        "The response explains why rolling the same in-process-cache pattern out to more endpoints is premature given the falsified assumption -- it doesn't treat this slice's cache approach as already proven successful"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "gather-more-evidence",
+      "prompt": "Recommend the next slice. Materials are in evals/next-best-slice/cases/case-007/: review.md, retro.md, backlog.md.",
+      "expected_output": "Recommends extending the canary (larger sample and/or longer window, sized to reach statistical significance) rather than rolling out to 100% or rolling back entirely. Both of those are premature commitments given data eng's own statement that the current error-rate delta is noise, not a real signal. The satisfaction-survey candidate is a plausible-sounding distraction that doesn't address the actual open question.",
+      "files": ["evals/next-best-slice/cases/case-007/"],
+      "expectations": [
+        "The Recommendation is to extend the canary (larger sample and/or longer duration, sized to reach significance) rather than a full rollout, a full rollback, or the satisfaction-survey candidate",
+        "The response explicitly states that neither rollout nor rollback is currently justified, citing data eng's own statement that the 1.28% vs 1.39% delta is within normal noise for this sample size -- it does not treat the delta as either a validated or falsified safety claim",
+        "What this slice proves is framed as answering the open statistical question (is the new flow's error rate actually different), not as a feature or UX improvement"
+      ]
+    }
+  ]
+}

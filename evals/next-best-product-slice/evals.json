@@ -1,0 +1,53 @@
+{
+  "skill_name": "next-best-product-slice",
+  "evals": [
+    {
+      "id": 1,
+      "name": "workflow-completion-vs-architectural-continuation",
+      "prompt": "Recommend the next product slice. Materials are in evals/next-best-product-slice/cases/case-001/: review.md, retro.md, backlog.md.",
+      "expected_output": "Recommends recipient-visible validation errors (backlog item 2): recipients currently cannot tell why a submission was rejected and cannot reliably complete the request, a workflow-completion gap for the recipient role. The date-range field type (item 1), despite strong dependency-unlocking evidence from the just-shipped FieldValidator registry, is a new capability on a request-submission workflow that already completes -- it does not close the gap that blocks recipients today.",
+      "files": ["evals/next-best-product-slice/cases/case-001/"],
+      "expectations": [
+        "The Recommendation is recipient-visible validation errors (backlog item 2), not the date-range field type (item 1), bulk creation (item 3), or custom branding (item 4)",
+        "The response names the recipient as the intended user and grounds the pick in workflow completion/trust -- recipients cannot currently tell what to fix and give up -- not a generic 'this helps users' claim",
+        "The response explicitly weighs and sets aside item 1 despite acknowledging its real dependency-unlocking/architectural-momentum evidence, on the grounds that it doesn't touch the recipient-facing gap"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "clean-single-candidate",
+      "prompt": "Recommend the next product slice. Materials are in evals/next-best-product-slice/cases/case-002/: review.md, retro.md, backlog.md.",
+      "expected_output": "Recommends letting billing admins download their own invoices (backlog item 1) using the already-verified generate_invoice(), grounded in docs/roles.md's description of the billing-admin role and 12 support tickets. Items 2 and 3 have no usage or ticket evidence and are correctly declined.",
+      "files": ["evals/next-best-product-slice/cases/case-002/"],
+      "expectations": [
+        "The Recommendation is backlog item 1 (billing-admin invoice download), not items 2 or 3",
+        "The response names the billing-admin role explicitly and grounds the pick in docs/roles.md plus the 12 logged tickets",
+        "Items 2 and 3 are explicitly declined for lacking any ticket or usage signal, not silently omitted"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "capability-exists-no-surface-no-recent-slice",
+      "prompt": "Recommend the next product slice. Materials are in evals/next-best-product-slice/cases/case-003/: product-state.md.",
+      "expected_output": "No review, retro, or backlog exists. The response should still recommend exposing report subscriptions to team leads -- ReportScheduler.subscribe() is real, running in production (for the internal admin team), and documented as intended for team leads, but no team lead has ever been able to reach it. The response names the missing recent-slice evidence as a process gap without treating it as blocking, since gather steps 1-3 (demonstrated intent, wired-in capability, traceable workflow) stand on their own.",
+      "files": ["evals/next-best-product-slice/cases/case-003/"],
+      "expectations": [
+        "The Recommendation exposes report-subscription creation/management to team leads (a minimal UI, command, or API path calling the existing ReportScheduler.subscribe()), not an unrelated feature",
+        "The response explicitly notes that no review, retro, or backlog exists, and does not treat that absence as grounds to decline a recommendation",
+        "The grounding is explicitly channel-2/demonstrated-intent (the capability runs in production, the onboarding docs describe it as meant for team leads, no team lead has ever used it) -- not speculation about what team leads might want"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "genuine-tiebreak-on-size",
+      "prompt": "Recommend the next product slice. Materials are in evals/next-best-product-slice/cases/case-004/: review.md, retro.md, backlog.md.",
+      "expected_output": "Recommends the status badge on the tenant's existing request list (backlog item 1) over the dedicated status-timeline page (item 2): both are equally evidenced and grounded in the same tenant role and support tickets, but item 1 is smaller and touches no new route. The response names size/reversibility as the explicit tiebreak and treats item 2 as a genuine close alternative, not a wrong answer. Item 3 (recurring scheduling) is declined for lacking evidence.",
+      "files": ["evals/next-best-product-slice/cases/case-004/"],
+      "expectations": [
+        "The Recommendation is backlog item 1 (status badge on the existing list), not item 2 (dedicated timeline page) or item 3 (recurring scheduling)",
+        "The response explicitly names the tiebreak used (smaller, no new route/page) rather than presenting the choice as though item 2 were obviously wrong",
+        "Item 2 is named in Alternatives considered as a genuine close call with the same evidence behind it, not dismissed as unevidenced or inferior in value"
+      ]
+    }
+  ]
+}

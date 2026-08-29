@@ -1,0 +1,71 @@
+diff --git a/utils/phone.py b/utils/phone.py
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/utils/phone.py
+@@ -0,0 +1,15 @@
++"""Generic phone-number normalization utility.
++
++Not tied to signup or any other specific flow -- built as a standalone
++helper so any part of the app that needs this formatting later can just
++import it.
++"""
++import re
++
++
++def normalize_phone_number(raw: str) -> str | None:
++    digits = re.sub(r"\D", "", raw)
++    if len(digits) == 10:
++        return f"+1{digits}"
++    if len(digits) == 11 and digits.startswith("1"):
++        return f"+{digits}"
++    return None
+diff --git a/utils/test_phone.py b/utils/test_phone.py
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/utils/test_phone.py
+@@ -0,0 +1,12 @@
++from utils.phone import normalize_phone_number
++
++
++def test_ten_digit_number():
++    assert normalize_phone_number("555-123-4567") == "+15551234567"
++
++
++def test_eleven_digit_with_leading_one():
++    assert normalize_phone_number("1 (555) 123-4567") == "+15551234567"
++
++
++def test_garbage_input_returns_none():
++    assert normalize_phone_number("not a number") is None
+diff --git a/signup_flow.py b/signup_flow.py
+index 3333333..4444444 100644
+--- a/signup_flow.py
++++ b/signup_flow.py
+@@ -1,10 +1,16 @@
++from utils.phone import normalize_phone_number
++
++
+ def handle_signup(form: dict) -> dict:
+     user = {
+         "email": form["email"],
+-        "phone": form.get("phone", ""),
+     }
++    phone = normalize_phone_number(form.get("phone", ""))
++    if phone:
++        user["phone"] = phone
+     save_user(user)
+     return user
+diff --git a/test_signup_flow.py b/test_signup_flow.py
+index 5555555..6666666 100644
+--- a/test_signup_flow.py
++++ b/test_signup_flow.py
+@@ -1,3 +1,10 @@
+ from signup_flow import handle_signup
++
++
++def test_signup_stores_normalized_phone(monkeypatch):
++    monkeypatch.setattr("signup_flow.save_user", lambda u: None)
++    user = handle_signup({"email": "a@example.com", "phone": "(555) 123-4567"})
++    assert user["phone"] == "+15551234567"

@@ -1,0 +1,55 @@
+diff --git a/reports/export.py b/reports/export.py
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/reports/export.py
+@@ -0,0 +1,17 @@
++import csv
++import io
++
++
++def export_orders_csv(orders) -> str:
++    buf = io.StringIO()
++    writer = csv.writer(buf)
++    writer.writerow(["order_id", "customer_email", "total_cents", "created_at"])
++    for order in orders:
++        writer.writerow([
++            order["order_id"],
++            order["customer_email"],
++            order["total_cents"],
++            order["created_at"],
++        ])
++    return buf.getvalue()
+diff --git a/reports/test_export.py b/reports/test_export.py
+new file mode 100644
+index 0000000..2222222
+--- /dev/null
++++ b/reports/test_export.py
+@@ -0,0 +1,20 @@
++from reports.export import export_orders_csv
++
++
++def test_export_three_orders():
++    orders = [
++        {"order_id": 1, "customer_email": "a@example.com", "total_cents": 1099, "created_at": "2026-08-01T10:00:00Z"},
++        {"order_id": 2, "customer_email": "b@example.com", "total_cents": 500, "created_at": "2026-08-02T11:00:00Z"},
++        {"order_id": 3, "customer_email": "c@example.com", "total_cents": 2500, "created_at": "2026-08-03T12:00:00Z"},
++    ]
++    csv_text = export_orders_csv(orders)
++    lines = csv_text.strip().splitlines()
++    assert lines[0] == "order_id,customer_email,total_cents,created_at"
++    assert lines[1] == "1,a@example.com,1099,2026-08-01T10:00:00Z"
++    assert lines[3] == "3,c@example.com,2500,2026-08-03T12:00:00Z"
+diff --git a/app.py b/app.py
+index 3333333..4444444 100644
+--- a/app.py
++++ b/app.py
+@@ -12,3 +12,9 @@ def list_orders():
+     return jsonify(get_completed_orders())
++
++
++@app.route("/reports/orders/export")
++def export_orders():
++    orders = get_completed_orders()
++    csv_text = export_orders_csv(orders)
++    return Response(csv_text, mimetype="text/csv")

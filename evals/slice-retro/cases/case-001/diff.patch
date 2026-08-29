@@ -1,0 +1,51 @@
+diff --git a/net/client.py b/net/client.py
+index 1111111..2222222 100644
+--- a/net/client.py
++++ b/net/client.py
+@@ -1,10 +1,21 @@
++import time
++
+ import requests
+
+
+-def fetch_with_retry(url, max_attempts=3):
+-    return requests.get(url, timeout=5)
++def fetch_with_retry(url, max_attempts=3):
++    last_exc = None
++    for attempt in range(max_attempts):
++        try:
++            return requests.get(url, timeout=5)
++        except requests.RequestException as exc:
++            last_exc = exc
++            if attempt < max_attempts - 1:
++                time.sleep(0.1 * (2 ** attempt))
++    raise last_exc
+diff --git a/net/test_client.py b/net/test_client.py
+index 3333333..4444444 100644
+--- a/net/test_client.py
++++ b/net/test_client.py
+@@ -1,3 +1,26 @@
++from unittest.mock import patch, MagicMock
++
++import pytest
++import requests
++
++from net.client import fetch_with_retry
++
++
++def test_succeeds_after_two_failures():
++    responses = [requests.RequestException("boom"), requests.RequestException("boom"), MagicMock(status_code=200)]
++    with patch("net.client.requests.get", side_effect=responses):
++        with patch("net.client.time.sleep") as mock_sleep:
++            result = fetch_with_retry("http://example.com", max_attempts=3)
++    assert result.status_code == 200
++    assert mock_sleep.call_count == 2
++    assert mock_sleep.call_args_list[0][0][0] == 0.1
++    assert mock_sleep.call_args_list[1][0][0] == 0.2
++
++
++def test_raises_after_exhausting_attempts():
++    with patch("net.client.requests.get", side_effect=requests.RequestException("boom")):
++        with patch("net.client.time.sleep"):
++            with pytest.raises(requests.RequestException):
++                fetch_with_retry("http://example.com", max_attempts=3)

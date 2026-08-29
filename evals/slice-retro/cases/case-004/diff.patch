@@ -1,0 +1,50 @@
+diff --git a/middleware.py b/middleware.py
+index 1111111..2222222 100644
+--- a/middleware.py
++++ b/middleware.py
+@@ -1,5 +1,32 @@
++import time
++from collections import defaultdict, deque
++
++_WINDOW_SECONDS = 60
++_MAX_REQUESTS = 100
++_request_log = defaultdict(deque)
++
++
++def check_rate_limit(ip):
++    now = time.time()
++    log = _request_log[ip]
++    while log and now - log[0] > _WINDOW_SECONDS:
++        log.popleft()
++    if len(log) >= _MAX_REQUESTS:
++        return False
++    log.append(now)
++    return True
++
++
+ def rate_limit_middleware(get_response):
+     def middleware(request):
++        if not check_rate_limit(request.client_ip):
++            return HttpResponse(status=429)
+         return get_response(request)
+     return middleware
+diff --git a/test_middleware.py b/test_middleware.py
+index 3333333..4444444 100644
+--- a/test_middleware.py
++++ b/test_middleware.py
+@@ -1,3 +1,17 @@
++from middleware import check_rate_limit, _request_log
++
++
++def test_allows_up_to_limit_then_blocks():
++    _request_log.clear()
++    ip = "10.0.0.5"
++    results = [check_rate_limit(ip) for _ in range(101)]
++    assert results[:100] == [True] * 100
++    assert results[100] is False
++
++
++def test_different_ips_tracked_independently():
++    _request_log.clear()
++    assert all(check_rate_limit("10.0.0.1") for _ in range(100))
++    assert check_rate_limit("10.0.0.2") is True

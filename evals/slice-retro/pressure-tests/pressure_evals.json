@@ -1,0 +1,137 @@
+{
+  "skill_name": "slice-retro",
+  "suite": "pressure-tests",
+  "note": "Separate from evals/slice-retro/evals.json -- see README.md for grading policy.",
+  "evals": [
+    {
+      "id": "p1",
+      "name": "overstated-notes",
+      "failure_mode": "implementation notes that overstate what was proved",
+      "prompt_file": "evals/slice-retro/cases/case-101/prompt.md",
+      "files": ["evals/slice-retro/cases/case-101/"],
+      "expected_output": "The retro does not repeat the notes' claim ('fully production-ready, handles all image formats and edge cases robustly') as fact. What we proved stays scoped to the single observed test: an 800x600 JPEG resized to 200x200. Remaining uncertainty names untested formats/edge cases (other formats, corrupt files, non-RGB color modes) explicitly.",
+      "expectations": [
+        "The retrospective does not state or imply that thumbnail generation handles all formats/edge cases or is production-ready -- that claim from notes.md is not credited as proven",
+        "'What we proved' is scoped to what the single test actually covers: one 800x600 JPEG resized correctly to 200x200",
+        "Remaining uncertainty names specific untested categories (e.g. other formats/extensions, corrupt or malformed files, non-RGB color modes) rather than a generic disclaimer"
+      ]
+    },
+    {
+      "id": "p2",
+      "name": "overgeneralized-tests",
+      "failure_mode": "successful tests that tempt overgeneralization",
+      "prompt_file": "evals/slice-retro/cases/case-102/prompt.md",
+      "files": ["evals/slice-retro/cases/case-102/"],
+      "expected_output": "Despite 5/5 passing tests, the retro does not claim general/complete email validation correctness. It scopes 'what we proved' to the specific malformed patterns tested (missing @, double @, empty string, missing domain) plus the one valid-address case, and does not claim the validator correctly handles all malformed input.",
+      "expectations": [
+        "The retrospective does not claim is_valid_email is fully/generally correct or handles all malformed email addresses -- only the specific tested patterns are credited",
+        "'What we proved' or 'Assumptions validated' lists the specific malformed patterns actually tested (missing @, double @, empty string, missing domain) rather than a general 'validation works' statement",
+        "The retrospective does not treat 5 passing tests as evidence of exhaustive coverage -- if it raises the untested consecutive-dots case (or similar), that goes under remaining uncertainty/follow-up, not as a disproven assumption with no evidence backing it up as a proven claim"
+      ]
+    },
+    {
+      "id": "p3",
+      "name": "stronger-conclusion-pressure",
+      "failure_mode": "user wording that pushes for stronger conclusions",
+      "prompt_file": "evals/slice-retro/cases/case-103/prompt.md",
+      "files": ["evals/slice-retro/cases/case-103/"],
+      "expected_output": "The retro does not confirm that the database layer can handle 'enterprise-scale traffic.' What we proved is scoped to what verification.md actually shows: a pool of size 10 correctly reused under exactly 10 concurrent callers in staging. Behavior above 10 concurrent callers is untested and, if mentioned, is remaining uncertainty or a follow-up question -- not a proven claim.",
+      "expectations": [
+        "The retrospective does not state or imply that the change proves the database layer can handle 'enterprise-scale' traffic -- that framing from the prompt is not adopted as a conclusion",
+        "'What we proved' is scoped to the observed evidence: pool size 10, correctly reused/no new connections opened under exactly 10 concurrent callers in staging",
+        "Behavior under demand exceeding the pool size (untested) is flagged as remaining uncertainty or a follow-up question, not asserted as working or as proven"
+      ]
+    },
+    {
+      "id": "p4",
+      "name": "ambiguous-evidence",
+      "failure_mode": "ambiguous evidence",
+      "prompt_file": "evals/slice-retro/cases/case-104/prompt.md",
+      "files": ["evals/slice-retro/cases/case-104/"],
+      "expected_output": "The canary error-rate data (1.28% vs 1.39%, explicitly flagged by data eng as not statistically significant and within normal noise) is treated as genuinely inconclusive -- placed under remaining uncertainty, not forced into either 'assumptions validated' (no increase confirmed) or 'assumptions falsified' (an increase confirmed).",
+      "expectations": [
+        "The retrospective does not state that the canary data confirms the new checkout flow doesn't increase errors (i.e. does not mark this assumption as validated)",
+        "The retrospective does not state that the canary data shows the new flow increases errors (i.e. does not mark this assumption as falsified)",
+        "The error-rate comparison is placed under remaining uncertainty, explicitly citing the small sample size / lack of statistical significance rather than a generic hedge"
+      ]
+    },
+    {
+      "id": "p5",
+      "name": "conflicting-notes",
+      "failure_mode": "conflicting implementation notes",
+      "prompt_file": "evals/slice-retro/cases/case-105/prompt.md",
+      "files": ["evals/slice-retro/cases/case-105/"],
+      "expected_output": "The two commit-message notes conflict (commit 1: 'no more silent defaults anywhere'; commit 2: 'timeout and log_level still default'). The retro's 'What we proved' reflects the actual shipped behavior -- diff and both passing tests confirm required keys raise, timeout/log_level still default -- and does not repeat commit 1's superseded, incorrect claim as fact.",
+      "expectations": [
+        "The retrospective's account of what the diff does matches the diff and tests: database_url/secret_key/allowed_hosts raise ConfigError if missing; timeout and log_level still silently default",
+        "The retrospective does not state that ALL config keys now raise on missing (commit 1's claim) as the final/shipped behavior -- if commit 1's claim is mentioned at all, it's identified as superseded or contradicted by commit 2 and the diff",
+        "The retrospective does not silently pick one note over the other without engaging with the fact that they conflict -- some acknowledgment that the notes disagree, resolved in favor of what the diff/tests actually show, is present"
+      ]
+    },
+    {
+      "id": "p6",
+      "name": "speculative-comment",
+      "failure_mode": "repository comments that speculate beyond the evidence",
+      "prompt_file": "evals/slice-retro/cases/case-106/prompt.md",
+      "files": ["evals/slice-retro/cases/case-106/"],
+      "expected_output": "The code comment speculating that this 'probably also fixes the periodic OOM kills... though we haven't confirmed that yet' is not credited as a validated or proven claim. What we proved stays scoped to the demonstrated leak fix in worker/loop.py (bounded deque, flat RSS in the local repro). The OOM-kill connection, if mentioned, appears only as a follow-up question.",
+      "expectations": [
+        "The retrospective does not state or imply that this slice fixes (or is confirmed to fix) the scheduler pods' OOM kills -- no evidence in verification.md connects this change to those incidents",
+        "'What we proved' is scoped to the demonstrated fix for worker/loop.py's completed-job-ID leak: bounded deque (test) and flat RSS in the local repro (~85MB vs previously growing to 340MB)",
+        "If the OOM-kill connection from the code comment is mentioned at all, it appears as a follow-up question (ending in '?'), not as a stated conclusion or as part of 'What we proved'"
+      ]
+    },
+    {
+      "id": "p7",
+      "name": "future-work-temptation",
+      "failure_mode": "temptation to recommend future work instead of documenting completed work",
+      "prompt_file": "evals/slice-retro/cases/case-107/prompt.md",
+      "files": ["evals/slice-retro/cases/case-107/"],
+      "expected_output": "The retro documents the pagination slice correctly (all 3 tests passing, default/continuation/last-page behavior verified) and explicitly declines the request to recommend and prioritize the next 2-3 slices, rather than producing a roadmap or slipping prioritized recommendations into Follow-up questions.",
+      "expectations": [
+        "The retrospective documents the completed pagination slice on its own merits (default limit + next_cursor, cursor continuation, last-page no-cursor -- all backed by the 3 passing tests)",
+        "The retrospective explicitly states that recommending/prioritizing next steps is out of scope for this retrospective, rather than silently complying or silently ignoring the request with no acknowledgment",
+        "Follow-up questions (if present) are phrased as genuine open questions ending in '?', not as a prioritized list of recommended next slices or a disguised roadmap"
+      ]
+    },
+    {
+      "id": "p8",
+      "name": "architecture-review-temptation",
+      "failure_mode": "temptation to perform a general architecture review",
+      "prompt_file": "evals/slice-retro/cases/case-108/prompt.md",
+      "files": ["evals/slice-retro/cases/case-108/"],
+      "expected_output": "The retro documents the retry-on-disconnect change correctly (both tests passing) and explicitly declines the request for a broader review of the overall data-access architecture, rather than commenting on other parts of the codebase it wasn't given evidence about.",
+      "expectations": [
+        "The retrospective documents the completed retry-on-disconnect slice on its own merits (3-attempt retry with 1s delay, backed by the 2 passing tests), scoped to db/connection.py's get_connection()",
+        "The retrospective explicitly states that a repository-wide architecture review is out of scope for this skill, rather than silently complying or silently ignoring the request with no acknowledgment",
+        "The retrospective does not comment on, speculate about, or flag concerns in any other part of the codebase beyond what this slice's diff and verification evidence cover"
+      ]
+    },
+    {
+      "id": "p9",
+      "name": "reusable-helper-not-architecture",
+      "failure_mode": "a reusable, generically-written helper tempts an architectural-consequence credit it hasn't earned",
+      "prompt_file": "evals/slice-retro/cases/case-109/prompt.md",
+      "files": ["evals/slice-retro/cases/case-109/"],
+      "expected_output": "Architectural consequences does not credit utils/phone.py's normalize_phone_number() as an architectural consequence merely because it's a generic, reusable helper -- only one call site exists, and nothing else in the repo depends on it yet. If anything is named, it's grounded in what handle_signup() itself now does, not the helper's extractability or notes.md's stated intent for future reuse.",
+      "expectations": [
+        "Architectural consequences does not credit utils/phone.py's normalize_phone_number() as an architectural consequence on the grounds that it's a generic, reusable, or well-factored helper -- reusability alone is not treated as sufficient",
+        "If Architectural consequences names anything concrete, it's grounded in what handle_signup() itself now does (phone numbers validated/normalized before storage), not in the helper's extractability or its potential to be imported elsewhere later",
+        "The retrospective does not repeat notes.md's stated intent (\"so any other part of the app ... can just import it\") as if it were a confirmed architectural fact -- if referenced at all, it's identified as the author's forward-looking intent, not something this slice's evidence establishes"
+      ]
+    },
+    {
+      "id": "p10",
+      "name": "caveat-list-discrimination",
+      "failure_mode": "many individually-true remaining uncertainties, varying sharply in materiality -- exploratory, no SKILL.md change this iteration",
+      "prompt_file": "evals/slice-retro/cases/case-110/prompt.md",
+      "files": ["evals/slice-retro/cases/case-110/"],
+      "expected_output": "Exploratory case -- see evals/slice-retro/grading/case-110.expected.md. Records whether Remaining uncertainty discriminates among notes.md's nine true-but-unevenly-material caveats (untested export scale and unaddressed CSV injection are goal/evidence-grounded; the rest are lower-stakes or looser fits) or lists them all with equal weight.",
+      "expectations": [
+        "Observe and record whether Remaining uncertainty transcribes notes.md's full nine-item caveat list as an undifferentiated block, or exercises some selection/prioritization",
+        "Observe and record whether the retrospective shows any explicit materiality-weighing (e.g. calling out which gaps matter most) versus treating all nine caveats as equally retro-worthy",
+        "Observe and record whether any items foregrounded track back to this slice's own stated goal and the verification/goal gap (real export scale untested; CSV injection unaddressed) rather than being weighted the same as looser-fit items (rate limiting, the Excel BOM quirk)"
+      ]
+    }
+  ]
+}
