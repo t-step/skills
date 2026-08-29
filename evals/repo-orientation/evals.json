@@ -1,0 +1,101 @@
+{
+  "skill_name": "repo-orientation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "conventional-single-application",
+      "prompt": "I need to work in this repository and have never seen it before. Get me oriented before I start. The repository is at evals/repo-orientation/cases/case-001/repo/.",
+      "expected_output": "A single-application Flask + SQLAlchemy API is correctly identified: entry point app/main.py, Postgres as the system of record (via psycopg2-binary + SQLAlchemy models), and test/lint commands (pytest, ruff check .) sourced from AGENTS.md/pyproject.toml/CI, not invented.",
+      "files": ["evals/repo-orientation/cases/case-001/repo/"],
+      "expectations": [
+        "Purpose and repository shape correctly describe a single Flask API application (not a monorepo or multi-service system), naming app/main.py or app/__init__.py as the entry point",
+        "Development and verification names pytest for tests and ruff for lint, sourced from AGENTS.md/pyproject.toml/CI rather than invented commands, and does not claim to have run and observed them passing",
+        "Systems of record names Postgres (via SQLAlchemy/psycopg2) as the persistence layer, grounded in app/models.py and pyproject.toml dependencies"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "monorepo-shared-packages",
+      "prompt": "I need to work in this repository and have never seen it before. Get me oriented before I start. The repository is at evals/repo-orientation/cases/case-002/repo/.",
+      "expected_output": "Identifies two applications (apps/web, apps/api) and two shared packages (packages/core, packages/ui) under npm workspaces + Turborepo, and correctly states the dependency direction: apps depend on packages, not the reverse.",
+      "files": ["evals/repo-orientation/cases/case-002/repo/"],
+      "expectations": [
+        "Repository shape names both apps/web and apps/api as separate applications and packages/core and packages/ui as shared packages, not as a single undifferentiated codebase",
+        "Architectural seams states the dependency direction as apps -> packages (not packages -> apps), grounded in the actual import statements and/or the workspace manifest, not just the folder names",
+        "Development and verification references the root package.json scripts (build/test/lint delegating to turbo run ...) as the actual commands, not per-package ad hoc commands invented independently"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "scoped-nested-instructions",
+      "prompt": "I need to work in this repository and have never seen it before. Get me oriented before I start. The repository is at evals/repo-orientation/cases/case-003/repo/.",
+      "expected_output": "Governing instructions section lists both the root AGENTS.md (repo-wide: pytest + black) and src/payments/AGENTS.md (scoped: PCI constraints, sign-off requirement, extra pytest marker) as separate entries with their correct scope.",
+      "files": ["evals/repo-orientation/cases/case-003/repo/"],
+      "expectations": [
+        "Governing instructions explicitly names src/payments/AGENTS.md as a separate, more specific instruction file scoped to src/payments/, not merged silently into the root policy",
+        "Governing instructions states at least one concrete constraint unique to the scoped file (e.g. no full card numbers/CVV in logs, #payments-oncall sign-off, or the `pytest src/payments -m pci` command)",
+        "The root AGENTS.md's repo-wide rules (pytest before commit, black formatting) are also reported, distinguished from the payments-specific rules rather than conflated with them"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "readme-contradicts-executable-config",
+      "prompt": "I need to work in this repository and have never seen it before. Get me oriented before I start. The repository is at evals/repo-orientation/cases/case-004/repo/.",
+      "expected_output": "Notes the conflict between README.md (claims Postgres, claims `npm test` runs a suite) and the executable facts (package.json depends on better-sqlite3 not pg, and the `test` script is a no-op stub) — and sides with the executable facts.",
+      "files": ["evals/repo-orientation/cases/case-004/repo/"],
+      "expectations": [
+        "Systems of record and ownership (or an equivalent section) states the actual database is SQLite (better-sqlite3), not Postgres, based on package.json dependencies and src/db.js, even though the README claims Postgres",
+        "Development and verification does not claim `npm test` runs a real test suite — it identifies (in that section or Risk and confusion points) that the test script is a no-op stub (`echo \"no tests yet\" && exit 0`), contradicting the README",
+        "The report explicitly names the README-vs-executable-config conflict rather than silently picking one source and staying quiet about the discrepancy"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "multiple-entry-points-one-production-path",
+      "prompt": "I need to work in this repository and have never seen it before. Get me oriented before I start. The repository is at evals/repo-orientation/cases/case-005/repo/.",
+      "expected_output": "Identifies server.py (via worker.py) as the current production entry point, grounded in Procfile and Dockerfile both pointing at it, while server_legacy.py/worker_legacy.py are named as a leftover alternate path, not a second production path.",
+      "files": ["evals/repo-orientation/cases/case-005/repo/"],
+      "expectations": [
+        "Repository shape or Architectural seams names server.py/worker.py as the current production path, citing the Procfile and/or Dockerfile as the evidence",
+        "server_legacy.py/worker_legacy.py is named as an alternate/superseded path (e.g. in Risk and confusion points or Repository shape), not presented as an equally-current second entry point",
+        "The distinction is grounded in deployment configuration (Procfile/Dockerfile) actually pointing only at server.py, not merely in the filenames or the README's own summary of history"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "incomplete-setup-documentation",
+      "prompt": "I need to work in this repository and have never seen it before. Get me oriented before I start. The repository is at evals/repo-orientation/cases/case-006/repo/.",
+      "expected_output": "Reports the Makefile's test/lint/build targets as the actual documented commands (README has none), and does not claim these commands were run or passed — only that they are documented in the Makefile.",
+      "files": ["evals/repo-orientation/cases/case-006/repo/"],
+      "expectations": [
+        "Development and verification names the Makefile's `test`, `lint`, and/or `build` targets (pytest -q, flake8, python -m build) as the commands, sourced from the Makefile since the README has no setup/verification instructions",
+        "The report does not claim any command was run or observed to pass — it marks the commands as documented/discovered, not verified, or explicitly states no execution was observed",
+        "Governing instructions or Unknowns notes that the README lacks setup/contribution documentation, rather than silently inventing typical instructions (e.g. a fabricated `pip install -e .` step) not actually present anywhere in the repo"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "intentional-unusual-layout",
+      "prompt": "I need to work in this repository and have never seen it before. Get me oriented before I start. The repository is at evals/repo-orientation/cases/case-007/repo/.",
+      "expected_output": "Recognizes the domain/boundary/adapters layout as an intentional ports-and-adapters (hexagonal) architecture per docs/architecture.md, and does not flag it as a risk, inconsistency, or something to redesign.",
+      "files": ["evals/repo-orientation/cases/case-007/repo/"],
+      "expectations": [
+        "Architectural seams names the domain -> boundary -> adapters dependency direction (adapters depend on boundary/domain, never the reverse) and attributes it to docs/architecture.md's deliberate ports-and-adapters design, not to disorganization",
+        "The report does not list the domain/boundary/adapters naming or structure in Risk and confusion points as a defect, inconsistency, or something needing to be redesigned",
+        "Where work belongs correctly maps new business rules to domain/, new port definitions to boundary/, and new infrastructure/framework code to adapters/"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "necessarily-partial-orientation",
+      "prompt": "I need to work in this repository and have never seen it before. Get me oriented before I start. The repository is at evals/repo-orientation/cases/case-008/repo/.",
+      "expected_output": "Honestly reports that there is no package manifest, no test setup, no CI, and no README — governing instructions, systems of record, and development/verification sections are explicitly marked as not established from available evidence, rather than fabricated.",
+      "files": ["evals/repo-orientation/cases/case-008/repo/"],
+      "expectations": [
+        "Governing instructions and/or Development and verification explicitly states that no instruction file, manifest, README, or test/CI configuration exists, rather than inventing plausible-sounding ones (e.g. a fabricated pip/venv setup or a guessed test command)",
+        "Unknowns names at least one concrete, real gap (e.g. no documented way to run or verify main.py, unclear whether notes.txt reflects current usage) rather than a generic disclaimer",
+        "The report does not claim a system of record, build tool, or dependency manager that isn't actually evidenced by any file in the repository"
+      ]
+    }
+  ]
+}
