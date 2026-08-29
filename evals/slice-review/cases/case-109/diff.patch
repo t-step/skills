@@ -1,0 +1,44 @@
+diff --git a/inventory/restock.py b/inventory/restock.py
+index 1111111..2222222 100644
+--- a/inventory/restock.py
++++ b/inventory/restock.py
+@@ -14,3 +14,13 @@ def days_until_stockout(units_on_hand: int, daily_usage_rate: float) -> int:
+     if daily_usage_rate <= 0:
+         return -1
+     return int(units_on_hand / daily_usage_rate)
++
++
++def should_expedite_reorder(units_on_hand: int, daily_usage_rate: float) -> bool:
++    if daily_usage_rate <= 0:
++        return False
++    remaining_days = days_until_stockout(units_on_hand, daily_usage_rate)
++    lead_time = 5
++    if remaining_days == -1:
++        return False
++    return remaining_days < lead_time
+diff --git a/inventory/test_restock.py b/inventory/test_restock.py
+index 3333333..4444444 100644
+--- a/inventory/test_restock.py
++++ b/inventory/test_restock.py
+@@ -1,4 +1,4 @@
+-from inventory.restock import needs_restock, days_until_stockout
++from inventory.restock import needs_restock, days_until_stockout, should_expedite_reorder
+
+
+ def test_needs_restock_at_threshold():
+@@ -6,3 +6,15 @@ def test_needs_restock_at_threshold():
+
+ def test_days_until_stockout_basic():
+     assert days_until_stockout(100, 10) == 10
++
++
++def test_expedite_when_stockout_before_lead_time():
++    assert should_expedite_reorder(20, 10) is True
++
++
++def test_no_expedite_when_stockout_after_lead_time():
++    assert should_expedite_reorder(100, 5) is False
++
++
++def test_no_expedite_when_usage_rate_zero():
++    assert should_expedite_reorder(50, 0) is False

@@ -1,0 +1,36 @@
+diff --git a/email/send_queue.py b/email/send_queue.py
+new file mode 100644
+index 0000000..5555555
+--- /dev/null
++++ b/email/send_queue.py
+@@ -0,0 +1,8 @@
++import queue
++
++class EmailService:
++    @staticmethod
++    def send(to: str, subject: str, body: str) -> None:
++        queue.enqueue("send_email", to=to, subject=subject, body=body)
+diff --git a/signup.py b/signup.py
+index 1111111..2222222 100644
+--- a/signup.py
++++ b/signup.py
+@@ -1,6 +1,6 @@
+-from email.legacy_sender import LegacyEmailSender
++from email.send_queue import EmailService
+
+ def on_signup_complete(user):
+-    LegacyEmailSender.send(user.email, "Welcome!", f"Hi {user.name}, welcome aboard.")
++    EmailService.send(user.email, "Welcome!", f"Hi {user.name}, welcome aboard.")
+diff --git a/email/test_send_queue.py b/email/test_send_queue.py
+new file mode 100644
+index 0000000..6666666
+--- /dev/null
++++ b/email/test_send_queue.py
+@@ -0,0 +1,7 @@
++from email.send_queue import EmailService
++
++def test_email_service_enqueues(monkeypatch):
++    calls = []
++    monkeypatch.setattr("email.send_queue.queue.enqueue", lambda *a, **k: calls.append((a, k)))
++    EmailService.send("a@example.com", "Subject", "Body")
++    assert calls
