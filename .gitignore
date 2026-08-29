@@ -5,3 +5,9 @@
 # authored runs/*.md writeups stay tracked; only the raw per-run
 # subdirectories are ignored.
 evals/*/runs/*/
+
+# evidence-verification fixtures need real git history + a real SQLite
+# ledger, not just files to read -- each case's repo/ is generated
+# deterministically by its own setup.sh (fixed dates/content -> fixed
+# SHAs) rather than committed as a nested repo.
+evals/evidence-verification/cases/*/repo/

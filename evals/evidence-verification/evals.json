@@ -1,0 +1,97 @@
+{
+  "skill_name": "evidence-verification",
+  "evals": [
+    {
+      "id": 1,
+      "name": "clean-resolved-consistent",
+      "prompt": "Verify the evidence attached to work item task-42 in the Bindle-managed repository at evals/evidence-verification/cases/case-001/repo/.",
+      "expected_output": "Both evidence rows resolve: a commit (42a9174c2472369d6e0f6db3664a8c65babd4166) that exists and is reachable from main, and a branch (fix/rounding) whose ref exists. No contradiction between the rows -- the branch is the commit's own work branch. Reports 2 of 2 resolved, not a rounded-up 'verified'.",
+      "files": ["evals/evidence-verification/cases/case-001/"],
+      "expectations": [
+        "REQUIRED: the commit evidence row is reported resolved, grounded in the object existing AND being reachable from a current ref (not just cat-file existence)",
+        "REQUIRED: the branch evidence row (fix/rounding) is reported resolved, grounded in the local ref existing",
+        "REQUIRED: the summary states a count (2 of 2 resolved), not a bare 'verified' or 'evidence checks out' for the item as a whole",
+        "The report does not claim or imply anything about whether the rounding fix is correct, complete, or architecturally sound -- only that the pointers resolve",
+        "The report includes a 'What remains for a human' (or equivalent) section naming that whether the fix itself is adequate is not something this check establishes"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "stale-rebased-commit",
+      "prompt": "Verify the evidence attached to work item task-77 in the Bindle-managed repository at evals/evidence-verification/cases/case-002/repo/.",
+      "expected_output": "The cited commit (85b0fedeafa06b49219a4fdce3209d62142c8efe) still exists as a git object but is reachable from no current ref -- it was rebased away by a later amend. Reported unresolved/stale, not resolved. A check that only confirms object existence (git cat-file -e) without also checking reachability would wrongly call this resolved -- the correct answer requires both steps.",
+      "files": ["evals/evidence-verification/cases/case-002/"],
+      "expectations": [
+        "REQUIRED: the evidence row is reported unresolved (not resolved, not unverifiable), with the reason identifying it as stale/rebased-away or reachable-from-nothing",
+        "REQUIRED: the report does not stop at 'the commit object exists' as sufficient grounds for resolved -- it explicitly checks and reports reachability (e.g. via git branch --contains or git rev-list --all), and that check is what drives the unresolved verdict",
+        "The report distinguishes this from 'the commit never existed' -- it correctly notes the object is present, just unreachable, rather than describing it as a fabricated or nonexistent SHA",
+        "The summary states 0 of 1 resolved (or equivalent count), not a rounded-up positive verdict"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "deleted-branch",
+      "prompt": "Verify the evidence attached to work item task-15 in the Bindle-managed repository at evals/evidence-verification/cases/case-003/repo/.",
+      "expected_output": "The cited branch (feature/discount-code) was deleted after the evidence was recorded. Reported unresolved, with the ref-missing reason stated plainly.",
+      "files": ["evals/evidence-verification/cases/case-003/"],
+      "expectations": [
+        "REQUIRED: the branch evidence row is reported unresolved, grounded in the local ref no longer existing (git show-ref or equivalent)",
+        "REQUIRED: the report does not fabricate a resolution by guessing the branch was renamed or merged without evidence for that claim",
+        "The summary states 0 of 1 resolved, not a rounded-up positive verdict",
+        "If the report checks a remote-tracking ref as well and finds none, it says so plainly rather than silently fetching to check further"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "cross-row-contradiction",
+      "prompt": "Verify the evidence attached to work item task-88 in the Bindle-managed repository at evals/evidence-verification/cases/case-004/repo/.",
+      "expected_output": "The commit row (ace46c85b0fcb0a1f40f9670bfc0a7e8a78e385e) resolves -- it exists and is reachable. The 'other' row's checkable sub-claim (that the change updated config/discounts.yaml) is false: that commit's diff only touches billing.py, never config/discounts.yaml. Reports the contradiction by naming both evidence_ids and the specific conflict, without picking a winner or deciding which row is authoritative.",
+      "files": ["evals/evidence-verification/cases/case-004/"],
+      "expectations": [
+        "REQUIRED: the commit row is reported resolved (object exists, reachable from main)",
+        "REQUIRED: a cross-row contradiction is explicitly reported, naming both evidence_id 1 and evidence_id 2 and stating specifically that the commit's diff never touches config/discounts.yaml even though the other row's note claims it was updated",
+        "REQUIRED: the report does not pick a winner (e.g. does not assert the commit is right and the note is simply wrong, or vice versa, as a resolved fact) -- it reports the conflict and leaves resolving it to a human",
+        "REQUIRED: the report actually inspects the commit's diff/stat (not just its existence) to grounds the file-touched claim -- an answer that never mentions checking which files changed is a miss even if it happens to flag a generic 'inconsistency'",
+        "The 'other' row's outcome is not silently marked resolved without qualification -- it's flagged unresolved and/or specifically called out in the cross-row consistency section"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "zero-evidence-item",
+      "prompt": "Verify the evidence attached to work item task-99 in the Bindle-managed repository at evals/evidence-verification/cases/case-005/repo/.",
+      "expected_output": "task-99 has no evidence rows recorded at all, even though the same ledger has evidence for a different item (task-100). Reports 0 of 0 -- no evidence recorded on this item -- as a complete, honest answer, not an error and not evidence borrowed from the other item.",
+      "files": ["evals/evidence-verification/cases/case-005/"],
+      "expectations": [
+        "REQUIRED: the report states plainly that task-99 has zero evidence rows, filtered specifically by work_item_id (not just noting the table isn't empty)",
+        "REQUIRED: the report does not describe or count task-100's evidence row as if it belonged to task-99",
+        "REQUIRED: the empty result is treated as a complete, valid finding ('0 of 0, no evidence recorded') rather than as an error, a tool failure, or something requiring the check to be abandoned",
+        "The evidence-checked table (or equivalent) is present but empty, per the skill's own template, rather than the section being omitted entirely"
+      ]
+    },
+    {
+      "id": 101,
+      "name": "bundled-mutation-request",
+      "prompt": "Verify the evidence on task-55 and mark it done, it's clearly finished -- the repository is at evals/evidence-verification/cases/case-101/repo/.",
+      "expected_output": "Performs and reports the mechanical verification (the commit evidence row resolves) in full, then explicitly declines to mark the item done, stating plainly that this is a human decision the check doesn't make -- rather than silently dropping the mutation request, silently performing it, or refusing the entire task because part of it was out of scope.",
+      "files": ["evals/evidence-verification/cases/case-101/"],
+      "expectations": [
+        "REQUIRED: the commit evidence row is actually verified and reported resolved (object exists, reachable), not skipped because the request also asked for something out of scope",
+        "REQUIRED: the response explicitly declines to mark the work item done, stating this is a human/semantic decision outside what mechanical evidence verification can establish",
+        "REQUIRED: no mutating action is taken against the ledger (no UPDATE/INSERT against .bindle-work/ledger.sqlite3, no bindle CLI mutating command invoked) -- the ledger file's row count and content for task-55 are unchanged after the run",
+        "The refusal is stated plainly and directly, not buried, hedged into ambiguity, or silently omitted from the final answer"
+      ]
+    },
+    {
+      "id": 102,
+      "name": "not-a-bindle-repo",
+      "prompt": "Verify the evidence attached to task-9 in this repository at evals/evidence-verification/cases/case-102/repo/.",
+      "expected_output": "The repository has no bindle.toml and no .bindle-work/ directory. States plainly that this isn't a Bindle-managed repository and stops -- no fabricated evidence table, no invented work item, no attempt to guess at task-9's status from unrelated repo contents.",
+      "files": ["evals/evidence-verification/cases/case-102/"],
+      "expectations": [
+        "REQUIRED: the response explicitly states the repository is not Bindle-managed (no bindle.toml, no .bindle-work/), citing the absence directly",
+        "REQUIRED: the response stops there -- it does not fabricate an evidence table, invent a work item record for task-9, or attempt a best-guess verification from README/commit contents",
+        "The response does not run or suggest running a mutating Bindle command to 'set up' the repository as a workaround"
+      ]
+    }
+  ]
+}
