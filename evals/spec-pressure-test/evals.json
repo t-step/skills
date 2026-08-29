@@ -1,0 +1,130 @@
+{
+  "skill_name": "spec-pressure-test",
+  "evals": [
+    {
+      "id": 1,
+      "name": "retry-ambiguity-hidden-in-happy-path",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-001/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-001/spec.md"],
+      "expectations": [
+        "REQUIRED: Names a concrete Blocking finding about the crash/retry window between FR-001 (local status write) and FR-002 (external webhook call) -- the spec never states which is persisted first, what happens if the process dies between them, or whether re-invoking the webhook after an indeterminate outcome is safe/idempotent.",
+        "REQUIRED: Explicitly notices that FR-004 does NOT already close this gap -- FR-004 only covers the caller re-invoking 'mark done' on an already-done task, not whether the webhook call itself may be safely re-invoked after a crash or timeout. A pass that treats FR-004 as already resolving retry safety fails this expectation.",
+        "REQUIRED: The finding includes a concrete scenario (a crash or indeterminate-outcome point between FR-001 and FR-002, or an equivalent restart/retry sequence) and names a concrete consequence (a duplicate notification to the board, or the board silently never learning the task is done, i.e. FR-003/SC-001 broken) -- not merely a general statement that 'retry behavior is unclear'.",
+        "REQUIRED: Sorts this finding as Blocking ambiguity (or the report's closest equivalent labeled bucket), not Material gap, Intentional freedom, or Already constrained.",
+        "FR-005's field-ordering freedom is either correctly noted as Intentional freedom / out of scope, or simply not raised as a problem -- it must NOT be reported as a Blocking or Material finding."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "apparent-ambiguity-already-resolved-elsewhere",
+      "prompt": "Treat the files in evals/spec-pressure-test/cases/case-002/ as the complete spec and its companion artifacts available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": [
+        "evals/spec-pressure-test/cases/case-002/spec.md",
+        "evals/spec-pressure-test/cases/case-002/baseline-contract.md"
+      ],
+      "expectations": [
+        "REQUIRED: Reads baseline-contract.md (not just spec.md) before drawing a conclusion about concurrent claims on a batched item.",
+        "REQUIRED: Reports the concurrent-claim question (Acceptance Scenario 3) as Already constrained, explicitly citing baseline-contract.md's claim-guarantees section (single atomic insert-if-absent, exactly one winner) as where it's resolved.",
+        "REQUIRED: Does NOT report the concurrent-claim question as a Blocking ambiguity or Material gap -- doing so, on the theory that spec.md itself is silent about it, is the specific failure this case tests for.",
+        "The report may separately note other, smaller open points about batches (e.g. duplicate item references within one batch) as Material or Intentional freedom without this affecting the pass/fail outcome, as long as the required Already-constrained finding above is present and correct."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "genuinely-permitted-implementation-divergence",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-003/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-003/spec.md"],
+      "expectations": [
+        "REQUIRED: Identifies that the Stale Claim Report's exact layout/column order/formatting is unspecified by FR-002 and would genuinely differ between two competent implementers.",
+        "REQUIRED: Classifies this as Intentional freedom (or the report's closest equivalent), not Blocking or Material -- and the reasoning given cites the Key Entities/Assumptions text stating the report is human-facing and nothing in scope parses its structure, rather than asserting freedom purely from the absence of a stated format.",
+        "REQUIRED: Does not report the report's exact format/layout as a Blocking or Material finding.",
+        "Does not treat the mention of piping the report through `grep` as evidence that a machine consumer depends on field order or layout -- grep does not require or benefit from a particular field order, and treating this as a reason to escalate the finding to Material or Blocking is a failure of this expectation."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "individually-reasonable-requirements-conflict-when-composed",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-004/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-004/spec.md"],
+      "expectations": [
+        "REQUIRED: Names a concrete contradiction between FR-001 (continuity takeover MUST be a single atomic operation, no separate release step, triggered by the acting reviewer's own real-time judgment) and the inherited baseline constraint stated in Assumptions (override release must be justified by an observed stale-claim finding, and must never be combined with a subsequent claim into one atomic operation).",
+        "REQUIRED: The finding shows both sides of the contradiction were read and connected -- referencing both FR-001's specific wording and the Assumptions bullet's specific wording, not just one of the two, or a vague sense that 'the concurrency story needs work'.",
+        "REQUIRED: Sorts this as a Blocking ambiguity (or equivalent), and explicitly frames the closing question as a choice between two options (relax FR-001's atomicity/immediate-takeover demand, or amend the inherited override-arbitration rule for this trigger condition) rather than silently picking one side as correct.",
+        "Does not resolve the contradiction by inventing an implementation detail (e.g. 'use a database lock') as if that settled which requirement wins -- the report should present the decision, not make it."
+      ]
+    },
+    {
+      "id": 5,
+      "name": "invariant-unenforceable-at-stated-ownership-boundary",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-005/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-005/spec.md"],
+      "expectations": [
+        "REQUIRED: Names a concrete Blocking finding that FR-002/SC-002's absolute invariant ('never render a blocked item as available', judged against the authoritative server state at render time) cannot actually be guaranteed by a browser that FR-001/FR-003/SC-001 require to render instantly, offline-capable, from a periodically-synced local snapshot with no network call on the critical path.",
+        "REQUIRED: The finding includes a concrete scenario (an item becoming blocked shortly after the last sync, rendered before the next one) and names the resulting contradiction with FR-002/SC-002's literal wording, not just a generic comment that caches can be stale.",
+        "REQUIRED: Sorts this as Blocking ambiguity (or equivalent) and frames the closing question as a choice (weaken the invariant's wording to be relative to the last synced snapshot, or add a freshness check that would compromise the no-network-call/instant-render guarantee) rather than silently assuming one answer.",
+        "Does not treat this as merely a Material gap or a minor caching nitpick -- the fixture's SC-002 is written as an absolute guarantee, and the finding should reflect that this specific absolute wording cannot be met as the requirements are currently written."
+      ]
+    },
+    {
+      "id": 6,
+      "name": "unreachable-or-unrecoverable-state",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-006/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-006/spec.md"],
+      "expectations": [
+        "REQUIRED: Notices, by walking every stated transition (FR-002, FR-003, FR-004), that no transition out of the `quarantined` status is defined anywhere in the specification.",
+        "REQUIRED: Names the concrete consequence: a quarantined file can never be deleted (no path to `deleted` exists, so FR-006/SC-002's storage-hygiene guarantee never applies to it and quarantined storage accumulates without bound) and can never be restored to `active` even after human review clears a false positive.",
+        "REQUIRED: Reports this as a Blocking ambiguity or, if reasoned explicitly as a deliberately deferred follow-up feature, a clearly-argued Material gap -- either disposition is acceptable as long as the finding itself (no exit transition from `quarantined`, with the storage/recovery consequence named) is present and concrete.",
+        "Does not describe the gap only as 'the review workflow is out of scope' without separately naming that the `quarantined` state itself has no described exit transition -- the out-of-scope review workflow is fine on its own; the missing state-machine exit is the actual finding."
+      ]
+    },
+    {
+      "id": 7,
+      "name": "sufficiently-constrained-no-material-finding",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-007/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-007/spec.md"],
+      "expectations": [
+        "REQUIRED: Reaches an overall verdict of Ready to implement (or the report's closest equivalent 'no blocking issues' verdict), with no Blocking findings.",
+        "REQUIRED: Does not report a Blocking or Material finding restating retry/crash-recovery ambiguity, concurrent-recording arbitration, event-id reservation-on-rejection, or event_id uniqueness scope as unspecified -- FR-001/FR-003/FR-004, the Edge Cases section, and the Assumptions section (single-external-source scope) explicitly and correctly close all four; reporting any of them as open is a failure of this expectation regardless of how it's phrased.",
+        "The report may legitimately note, as an optional Material gap, that FR-006 doesn't specify whether the recorded-duplicate response includes the original payload/timestamp, and/or that FR-006's 'exactly three outcomes' has no home for an infrastructure failure (a DB write failure/timeout, or the signature dependency itself failing) that is neither a signature rejection nor a completed recording -- both are acceptable and do not affect pass/fail either way.",
+        "Does not pad the report with additional speculative findings (e.g. hypothetical clock skew, hypothetical malicious senders) that aren't grounded in a concrete scenario the spec's own text and scope actually support."
+      ]
+    },
+    {
+      "id": 8,
+      "name": "concurrency-race-without-crash-or-retry",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-008/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-008/spec.md"],
+      "expectations": [
+        "REQUIRED: Names a concrete race between FR-001's check-then-insert (task creation checking the bundle is `open`) and FR-002's independent bundle-transition-to-review operation, with no statement of whether the two must be atomic against each other.",
+        "REQUIRED: The finding names the specific consequence -- that SC-001's absolute guarantee ('no test scenario... more tasks attached than it had at the moment it entered review') can be violated by a straightforward, literal implementation of FR-001 as a plain read-then-insert, under real concurrency -- not just a general observation that 'there might be a race'.",
+        "REQUIRED: Sorts this as Blocking ambiguity (or equivalent), given SC-001 is stated as an absolute guarantee.",
+        "Does not describe this as a retry-after-crash or failure-recovery scenario (that is a different case's failure mode) -- both operations succeed individually; the issue is pure interleaving of two independent, individually-successful operations."
+      ]
+    },
+    {
+      "id": 9,
+      "name": "identity-uniqueness-scope-not-stated",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-009/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-009/spec.md"],
+      "expectations": [
+        "REQUIRED: Connects Key Entities' statement that ticket numbers are assigned 'within a given project' (i.e., only unique per project) with FR-001/FR-002's unqualified source-reference/matching format (ticket number alone, no project qualifier), and Assumptions' statement that multiple projects are routinely imported into the same tracker.",
+        "REQUIRED: Names the concrete consequence: two different tickets from two different projects sharing the same per-project ticket number would collide under FR-001's literal source-reference format, and FR-002's re-import matching would then silently overwrite an unrelated internal item's title/description with the wrong ticket's content -- not just a generic 'IDs might not be unique' comment.",
+        "REQUIRED: Sorts this as a Blocking ambiguity given the silent-data-corruption consequence, and frames the closing question as whether the source reference needs to be qualified by project (and what identifies a project stably), rather than silently assuming a project-qualified format was intended.",
+        "Explicitly connects the finding to SC-002 ('source reference always resolves back to the correct originating ticket'), which a collision directly breaks."
+      ]
+    },
+    {
+      "id": 10,
+      "name": "ownership-authority-of-derived-status-once-set",
+      "prompt": "Treat evals/spec-pressure-test/cases/case-010/spec.md as the complete spec available for this feature -- there is nothing else to consult. Run a spec pressure test on it.",
+      "files": ["evals/spec-pressure-test/cases/case-010/spec.md"],
+      "expectations": [
+        "REQUIRED: Notices that FR-003 is only ever stated as an entry condition for moving a bundle into `review`, and that the specification never says whether a bundle's `review` status remains authoritative on its own once reached, or must continue to satisfy FR-001 OR FR-002 for as long as it stays `review`.",
+        "REQUIRED: Grounds the finding in FR-004's specific wording -- clearing the manual-ready flag 'MUST NOT affect any child task's own status' is carefully scoped to children, and conspicuously never says whether clearing it affects the bundle's own already-`review` status when computed readiness (FR-001) is also still false.",
+        "REQUIRED: Gives a concrete scenario: a bundle enters `review` only via the manual-ready flag (one child still open), the lead then clears the flag before that child finishes -- at that point neither FR-001 nor FR-002 holds, and the spec never says whether the bundle's `review` status is retroactively affected (and, if it is, there is no defined reverse transition for it to go to).",
+        "REQUIRED: Sorts this as a Blocking ambiguity, or a Material gap explicitly reasoned as such (e.g. because no stated invariant or data-integrity risk is at stake and a defensible sticky-by-default reading exists) -- either disposition is acceptable as long as the finding itself is present, concrete, and frames the choice (is `review` status an entry-gate-only fact, or an ongoing invariant tied to FR-001/FR-002) as an open question rather than silently assuming an answer.",
+        "A pass may also separately note, as a Blocking or Material finding, that FR-005's path-recording language assumes the computed and manual paths are mutually exclusive at the moment of transition when nothing prevents both being true at once -- this is not required for the case to pass, but is a legitimate, closely-related finding if raised (in either disposition, or in place of the primary finding above, as long as the entry-gate-vs-ongoing-invariant question is still substantively covered by at least one finding in the report)."
+      ]
+    }
+  ]
+}
