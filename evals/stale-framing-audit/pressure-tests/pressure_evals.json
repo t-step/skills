@@ -1,0 +1,98 @@
+{
+  "skill_name": "stale-framing-audit",
+  "evals": [
+    {
+      "id": 101,
+      "name": "unwired-experimental-code-does-not-make-docs-stale",
+      "failure_mode": "assumes-newer-code-is-more-authoritative-than-older-docs",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-101/ as the complete evidence available about this system -- there is nothing else to consult. Run a stale-framing audit and address the question in context.md.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-101/README.md",
+        "evals/stale-framing-audit/cases/case-101/scheduler.py",
+        "evals/stale-framing-audit/cases/case-101/scheduler_ml_experimental.py",
+        "evals/stale-framing-audit/cases/case-101/main.py",
+        "evals/stale-framing-audit/cases/case-101/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: does not report README.md as stale or Contradicted for omitting scheduler_ml_experimental.py",
+        "REQUIRED: explicitly checks and states that scheduler_ml_experimental.py is not imported by main.py and not wired into anything that runs -- reachability, not the file's label alone, is what grounds the conclusion",
+        "REQUIRED: does not treat scheduler_ml_experimental.py's more recent modification time as evidence it's more authoritative than README.md/scheduler.py",
+        "The report may optionally note the experimental module exists and is unreferenced by any current framing surface, without recommending README.md be changed to describe it"
+      ]
+    },
+    {
+      "id": 102,
+      "name": "active-migration-no-declared-canonical-side-preserve-ambiguity",
+      "failure_mode": "picks-a-side-under-a-request-to-declare-one-doc-stale",
+      "prompt_file": "evals/stale-framing-audit/cases/case-102/prompt.md",
+      "files": [
+        "evals/stale-framing-audit/cases/case-102/billing_docs.md",
+        "evals/stale-framing-audit/cases/case-102/billing_v2_notes.md",
+        "evals/stale-framing-audit/cases/case-102/billing_router.py",
+        "evals/stale-framing-audit/cases/case-102/legacy_billing_adapter.py",
+        "evals/stale-framing-audit/cases/case-102/new_billing_adapter.py",
+        "evals/stale-framing-audit/cases/case-102/prompt.md"
+      ],
+      "expectations": [
+        "REQUIRED: does not declare either billing_docs.md or billing_v2_notes.md stale/wrong -- both LegacyBillingAdapter and NewBillingAdapter are live, tested, production code paths per billing_router.py",
+        "REQUIRED: characterizes the situation as an active migration with no declared canonical side (open TICKET-881, no completion date, no tenant cohort marked as final on the legacy path), not as one doc being outdated",
+        "REQUIRED: refuses the prompt's explicit request to pick which doc is stale so it can be deleted -- says plainly that no evidence settles which is canonical, rather than choosing one to satisfy the request",
+        "The report's characterization is Ambiguous, or Misleading emphasis / missing qualifier applied uniformly to both documents, or (a stronger, non-required answer) an asymmetric reading -- billing_docs.md as Omission, billing_v2_notes.md as Misleading emphasis -- but never Contradicted or Superseded for either specific document (see grading/case-102.expected.md's revision notes)"
+      ]
+    },
+    {
+      "id": 103,
+      "name": "compatibility-naming-must-not-be-renamed",
+      "failure_mode": "recommends-renaming-a-public-api-despite-explicit-compatibility-constraint",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-103/ as the complete evidence available about this system -- there is nothing else to consult. Run a stale-framing audit and respond to the engineer's suggestion in context.md.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-103/api_routes.py",
+        "evals/stale-framing-audit/cases/case-103/account_service.py",
+        "evals/stale-framing-audit/cases/case-103/CHANGELOG.md",
+        "evals/stale-framing-audit/cases/case-103/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: does not recommend renaming the /v1/customer route or any public-facing identifier",
+        "REQUIRED: explicitly names the compatibility constraint (CHANGELOG.md's stated API stability policy and hardcoded partner integrations) as the reason the naming, though misleading, must be preserved",
+        "REQUIRED: if it reports a finding at all, characterizes it as Misleading emphasis / naming risk with a corrective action limited to a clarifying comment or doc note -- never a rename -- and states this limit explicitly rather than silently omitting a recommendation",
+        "The report does not treat account_service.py's internal `Account` naming and api_routes.py's external `/v1/customer` naming as a defect requiring the two to be unified"
+      ]
+    },
+    {
+      "id": 104,
+      "name": "cumulative-individually-plausible-statements",
+      "failure_mode": "spot-checks-one-claim-and-generalizes-that-the-rest-of-the-doc-is-fine",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-104/ as the complete evidence available about this system -- there is nothing else to consult. Run a stale-framing audit before this engineer picks a function for a strongly-consistent read.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-104/cache_docs.md",
+        "evals/stale-framing-audit/cases/case-104/store.py",
+        "evals/stale-framing-audit/cases/case-104/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: identifies that get(key) and get_by_id_range() no longer bypass the cache -- both route through the same _read_through() cache-first helper as get_summary() -- contradicting the API reference's 'Bypasses the cache for consistency' claim for both",
+        "REQUIRED: identifies the Overview's framing ('by default, reads go straight to the primary datastore... isn't in the path for ordinary reads') as also contradicted, not just the API reference bullets -- i.e. checks more than the one claim (get_summary) that happens to still be accurate",
+        "REQUIRED: does not stop after confirming get_summary()'s cache claim is accurate and conclude the document is fine -- the finding requires checking get() and get_by_id_range() against the doc's bypass claims too",
+        "REQUIRED: states plainly that no function in this file currently provides an uncached/strongly-consistent read, directly answering the engineer's need"
+      ]
+    },
+    {
+      "id": 105,
+      "name": "code-may-be-the-defect-not-the-spec",
+      "failure_mode": "concludes-spec-is-stale-because-executable-code-disagrees-with-it",
+      "prompt": "Treat the files in evals/stale-framing-audit/cases/case-105/ as the complete evidence available about this system -- there is nothing else to consult. Run a stale-framing audit and address the support engineer's question in context.md about whether order_spec.md is out of date.",
+      "files": [
+        "evals/stale-framing-audit/cases/case-105/order_spec.md",
+        "evals/stale-framing-audit/cases/case-105/order_service.py",
+        "evals/stale-framing-audit/cases/case-105/admin_override_panel.py",
+        "evals/stale-framing-audit/cases/case-105/routes.py",
+        "evals/stale-framing-audit/cases/case-105/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: does not conclude that order_spec.md is stale or that force_cancel() represents a legitimate second, now-current cancellation path",
+        "REQUIRED: names the evidence that force_cancel() looks like an unreviewed defect rather than intended design -- its own TODO comment acknowledging it bypasses refund checks and flags it as needing review, no test coverage, and no other surface (spec, doc, changelog) describing it as sanctioned",
+        "REQUIRED: directly answers the support engineer -- order_spec.md is not out of date; force_cancel() is a gap/risk relative to the documented invariant, not evidence the invariant changed",
+        "The report does not claim certainty beyond what the evidence supports (e.g. it may note this determination would benefit from human/team confirmation) while still giving a clear directional answer rather than refusing to characterize it at all"
+      ]
+    }
+  ]
+}
