@@ -39,6 +39,55 @@ out to be independent or only loosely coupled, the correct output is "these
 don't need to be coupled" -- stated plainly and left there, not softened
 into a design recommendation nobody asked for.
 
+## How this composes with the rest of this skill family
+
+Reuse grounding that already exists rather than re-deriving it from
+scratch -- but treat a sibling skill's report as grounding to build on, not
+as an authority that decides this skill's own questions for it:
+
+- **`repo-orientation`** may already show where a candidate entity's code
+  and persistence actually live. If it exists for this target, use it as a
+  pointer to where to look -- entry points, systems of record, executable
+  paths -- not as a source of lifecycle facts; it doesn't characterize
+  states, transitions, or invariants.
+- **`domain-orientation`** may already establish what a concept means and
+  note its own "Observed invariants / business rules." If a report exists
+  for this target, reuse that as a starting point for this audit's own
+  Invariants field rather than re-reading the same validation code cold --
+  but confirm a reused rule actually constrains this entity's transitions
+  before reporting it as a lifecycle invariant. A domain-level business
+  rule and a lifecycle's own transition invariant (an illegal transition, a
+  required precondition) are not automatically the same claim; a
+  domain-orientation finding is evidence to check against this entity's
+  actual transitions, not a lifecycle invariant already proven.
+- **`state-ownership-audit`** may already determine a fact's authority and
+  its consistency requirement with other representations, using the same
+  mechanism/consistency vocabulary this skill defines. If a report exists
+  for the fact in question, reuse its authority and consistency findings
+  as evidence instead of re-tracing every write path this audit already
+  traced. Authority over a fact is a different axis from lifecycle
+  transition semantics: knowing who may write a value doesn't by itself
+  decide what makes a transition legal, or which mechanism (independent,
+  sequencing, projection, transition-triggering) connects two lifecycles --
+  that classification, and the separate consistency-requirement judgment
+  built on it, remain this skill's own to make.
+
+Reused sibling output is grounding, not a verdict this skill inherits.
+Keep mechanism and consistency evaluated independently of each other
+exactly as "Characterize interactions" describes below, never inferring
+one from a label a sibling report attaches to the other -- collapsing
+mechanism into consistency (or the reverse) by inheritance is exactly the
+mistake "Characterize interactions" exists to prevent when it happens
+internally, and reusing another skill's conclusion is not an exemption
+from that same discipline. If fresh evidence gathered for this audit
+conflicts with a reused sibling finding, report the conflict explicitly
+rather than silently preferring whichever report ran first; an earlier
+report is prior grounding, not a settled fact this skill defers to.
+
+If a target's complexity means one of these hasn't been run and would
+materially change this audit's answer, say so and point at it, rather than
+reconstructing a shallow version of its analysis inline.
+
 ## Ground before characterizing anything
 
 The target can be broad -- an existing implementation, a feature or
@@ -311,7 +360,9 @@ that came up empty -- an absent section reads as "not considered."
 
 ## Scope and evidence inspected
 <What was actually read (files, spec sections, schema) to ground this
-audit. Name anything relevant that could not be inspected.>
+audit. Name any existing repo-orientation/domain-orientation/
+state-ownership-audit output reused, and anything relevant that could not
+be inspected.>
 
 ## Lifecycle inventory
 ### <entity>
