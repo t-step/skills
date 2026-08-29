@@ -1,0 +1,27 @@
+diff --git a/auth/session.py b/auth/session.py
+index 1111111..2222222 100644
+--- a/auth/session.py
++++ b/auth/session.py
+@@ -5,7 +5,7 @@ def is_valid_session(session, now: float) -> bool:
+     """True if the session has not expired."""
+-    if now > session.expires_at:
++    if now >= session.expires_at:
+         return False
+     return True
+diff --git a/auth/test_session.py b/auth/test_session.py
+index 3333333..4444444 100644
+--- a/auth/test_session.py
++++ b/auth/test_session.py
+@@ -10,3 +10,13 @@ def test_valid_before_expiry():
+     session = FakeSession(expires_at=100.0)
+     assert is_valid_session(session, now=50.0) is True
++
++
++def test_expired_after_expiry():
++    session = FakeSession(expires_at=100.0)
++    assert is_valid_session(session, now=150.0) is False
++
++
++def test_expired_exactly_at_expiry():
++    session = FakeSession(expires_at=100.0)
++    assert is_valid_session(session, now=100.0) is False

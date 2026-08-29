@@ -1,0 +1,29 @@
+diff --git a/display/formatting.py b/display/formatting.py
+index 1111111..2222222 100644
+--- a/display/formatting.py
++++ b/display/formatting.py
+@@ -2,7 +2,9 @@ SYMBOLS = {"USD": "$", "EUR": "€"}
+
+
+ def format_currency(amount: float, currency: str) -> str:
+     symbol = SYMBOLS[currency]
+-    return f"{symbol}{amount:.2f}"
++    if amount < 0:
++        return f"-{symbol}{abs(amount):.2f}"
++    return f"{symbol}{amount:.2f}"
+
+
+ def format_date(dt) -> str:
+diff --git a/display/test_formatting.py b/display/test_formatting.py
+index 3333333..4444444 100644
+--- a/display/test_formatting.py
++++ b/display/test_formatting.py
+@@ -1,4 +1,8 @@
+ from display.formatting import format_currency
+
+ def test_format_currency_positive():
+     assert format_currency(5, "USD") == "$5.00"
++
++
++def test_format_currency_negative():
++    assert format_currency(-5, "USD") == "-$5.00"

@@ -1,0 +1,46 @@
+diff --git a/api/upload.py b/api/upload.py
+index 1111111..2222222 100644
+--- a/api/upload.py
++++ b/api/upload.py
+@@ -1,9 +1,26 @@
++from datetime import datetime, timedelta
++
+ from framework import Response
+
++RATE_LIMIT = 10
++WINDOW_SECONDS = 60
++_requests = {}  # user_id -> list[datetime] of recent request times
++
++
++def _is_rate_limited(user_id: str, now: datetime) -> bool:
++    timestamps = _requests.setdefault(user_id, [])
++    cutoff = now - timedelta(seconds=WINDOW_SECONDS)
++    timestamps[:] = [t for t in timestamps if t > cutoff]
++    if len(timestamps) >= RATE_LIMIT:
++        return True
++    timestamps.append(now)
++    return False
++
++
+ def handle_upload(user_id: str, file_data: bytes) -> Response:
++    if _is_rate_limited(user_id, datetime.utcnow()):
++        return Response("Too many requests", status=429)
+     # ... existing upload handling, unrelated to rate limiting
+     store_file(user_id, file_data)
+     return Response("OK", status=200)
+diff --git a/api/test_upload.py b/api/test_upload.py
+index 3333333..4444444 100644
+--- a/api/test_upload.py
++++ b/api/test_upload.py
+@@ -1,4 +1,13 @@
+ from api.upload import handle_upload
+
+ def test_upload_succeeds():
+     assert handle_upload("user1", b"data").status_code == 200
++
++
++def test_11th_request_in_window_is_rate_limited():
++    for _ in range(10):
++        assert handle_upload("user2", b"data").status_code == 200
++    resp = handle_upload("user2", b"data")
++    assert resp.status_code == 429

@@ -1,0 +1,155 @@
+{
+  "skill_name": "slice-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "clean-slice",
+      "prompt": "I finished a small slice of work. All the materials are in evals/slice-review/cases/case-001/: goal.md is the stated goal, instructions.md is the relevant repo convention, diff.patch is the actual change, verification.md is the verification evidence I have. Review this slice and tell me if it's ready to merge.",
+      "expected_output": "Verdict 'Ready to merge'. No blocking findings. Verification evidence is correctly credited because real pytest output was shown.",
+      "files": ["evals/slice-review/cases/case-001/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge'",
+        "No blocking findings are listed",
+        "The review references the actual observed pytest output (2 passed) as the verification evidence, not just a restated claim"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "hidden-defect-despite-passing-tests",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-002/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Not ready to merge'. Blocking finding: tax in compute_total is computed on the pre-discount price, not the discounted price, contradicting the ticket, even though all 3 tests pass.",
+      "files": ["evals/slice-review/cases/case-002/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Not ready to merge'",
+        "The review identifies that compute_total calculates tax on the original/pre-discount price instead of the discounted price",
+        "The review does not treat 'all tests passed' as sufficient evidence that the goal was met — it explains why the passing tests don't cover this case (all existing tests use pct=0, or test apply_discount in isolation)"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "reachable-obsolete-path",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-003/: goal.md, instructions.md, repo_snapshot.md (relevant files as they stand after the diff), diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Not ready to merge'. Blocking finding: password_reset.py still imports and calls LegacyEmailSender directly, so the legacy path is still reachable even though signup.py was migrated and its test passes.",
+      "files": ["evals/slice-review/cases/case-003/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Not ready to merge'",
+        "The review explicitly names password_reset.py as a place where LegacyEmailSender is still called/reachable",
+        "The review does not conclude 'Ready to merge' merely because signup.py was migrated and its own test passes"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "insufficient-evidence",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-004/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Unable to verify'. The cache is an ordinary, unremarkable implementation of the stated goal (no request-scoping or eviction requirement is stated), so there is no visible contradiction to point at; the review does not claim the change works or fails, and explicitly says there's no observed test output or way to run/verify the change, only an unverified claim of 'tested locally, works fine'.",
+      "files": ["evals/slice-review/cases/case-004/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Unable to verify'",
+        "The review explicitly says it has no observed verification evidence (no test output, no way to run anything) rather than treating 'tested locally, works fine' as evidence",
+        "The review does not state or imply that the caching change is confirmed to work, and does not state or imply it is confirmed broken"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "scope-creep-trap",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-005/: goal.md, instructions.md, repo_snapshot.md (full file the diff touches), diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Ready to merge'. The pre-existing format_date timezone TODO (same file, untouched by the diff) is noted as out-of-scope, not treated as a blocking finding.",
+      "files": ["evals/slice-review/cases/case-005/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge'",
+        "If the review mentions the format_date timezone TODO at all, it is placed in a non-blocking or out-of-scope category, not blocking",
+        "No blocking findings are listed"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "false-positive-trap",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-006/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Ready to merge'. The '>' to '>=' comparison change is recognized as the intentional, correct fix matching the goal, not flagged as a blocking off-by-one risk.",
+      "files": ["evals/slice-review/cases/case-006/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge'",
+        "The review does not list the '>' to '>=' comparison change as a blocking finding or an unresolved off-by-one risk",
+        "No blocking findings are listed"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "minor-corrections",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-007/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict 'Ready after minor corrections'. The rate-limiting logic itself is correct and verified (10 allowed, 11th rejected, real passing test output), but the 429 response returns a plain-text body instead of the JSON {\"error\": ...} format instructions.md requires — a real, small, one-line-fixable violation, not severe enough to withhold the merge outright, but real enough that 'Ready to merge' would be wrong.",
+      "files": ["evals/slice-review/cases/case-007/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready after minor corrections'",
+        "The review identifies that the 429 response body is plain text ('Too many requests') instead of the required JSON {\"error\": ...} format",
+        "The review confirms the core rate-limiting boundary (10 allowed, 11th request rejected) is correctly implemented and backed by the observed passing test output, rather than treating the format issue as disqualifying on its own"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "goal-ambiguity",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-008/: goal.md, instructions.md, diff.patch, verification.md. Is it ready to merge?",
+      "expected_output": "Verdict is one of 'Unable to verify', 'Ready after minor corrections', or 'Not ready to merge' — all three are defensible for this fixture (see evals/slice-review/grading/case-008.expected.md). The goal ('clean up the retry logic') states no success criteria, and the diff smuggles in a real behavior change (a time.sleep backoff) under that vague banner. The one wrong answer is 'Ready to merge' without ever surfacing that. Verification evidence (3 passed in 3.02s) is genuinely present and internally consistent with the diff's own backoff math — a thorough review checks that consistency rather than taking the pasted number at face value.",
+      "files": ["evals/slice-review/cases/case-008/"],
+      "expectations": [
+        "The review does not state a verdict of 'Ready to merge'",
+        "The review explicitly names the goal ('clean up the retry logic') as ambiguous and/or explicitly flags the added time.sleep backoff as a behavior change not clearly authorized by the stated goal, rather than silently treating the diff's specific interpretation as settled fact",
+        "The review does not treat the pasted verification evidence as unsupported or missing — it correctly credits it as genuinely observed (3 passed), whether or not it goes further to check the 3.02s runtime against the diff's own sleep calls"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "low-materiality-discrimination",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-009/: goal.md, instructions.md, diff.patch, repo_snapshot.md, verification.md. Is it ready to merge?",
+      "expected_output": "Exploratory case -- see evals/slice-review/grading/case-009.expected.md. Verdict 'Ready to merge', no blocking findings, no required corrections. The diff correctly implements the goal and satisfies the sole repo instruction. Seven genuinely true, low-materiality observations are available (magic numbers vs. the file's own named-constant convention, dead remainder_days computation, purposeless amt rebinding, duplicated rounding pattern, a leftover commented-out line, a missing docstring vs. the adjacent function's convention, and two near-duplicate tests). The grading records whether the review discriminates to the most meaningful of these or lists them all with equal weight -- no SKILL.md change is presumed correct yet.",
+      "files": ["evals/slice-review/cases/case-009/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Ready to merge', with no blocking findings and no required corrections",
+        "Observe and record whether the Non-blocking section transcribes most or all seven available low-materiality observations as an undifferentiated list, or exercises selection/grouping",
+        "Observe and record whether whatever is foregrounded tracks back to the file's own already-established pattern (magic numbers vs. the named-constant convention; the missing docstring vs. the adjacent function's docstring) rather than being weighted the same as the more trivial items (the leftover commented-out line; the near-duplicate tests)"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "unverifiable-external-contract",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-010/: goal.md, instructions.md, diff.patch, verification.md. This is a tiny adapter change and the author says they tested it locally. Can we merge?",
+      "expected_output": "Verdict 'Unable to verify'. See evals/slice-review/grading/case-010.expected.md. The diff is a small, self-consistent status-mapping adapter around an external SDK, with the SDK call wrapped so any exception degrades to 'unknown' (one of the four contracted values); the only thing that could make it wrong is whether its status-string keys match the real Meridian SDK's response contract, which is not available anywhere in the fixture. The PR description's 'tested locally / matches the SDK' claim is unbacked, not observed evidence, so a positive verdict is unavailable; nothing in the diff itself demonstrates a concrete, provable failure, so a negative verdict is also unavailable. Designed as a cleaner sibling of case-004: unlike case-004's cache (which invites a generic, first-principles staleness objection independent of the missing evidence), nothing about this diff is assessable from ordinary engineering principles alone -- its correctness depends entirely on an external contract the fixture withholds.",
+      "files": ["evals/slice-review/cases/case-010/"],
+      "expectations": [
+        "The review states a verdict of exactly 'Unable to verify'",
+        "The review does not treat the PR description's 'tested locally' / 'matches the SDK's status values' claim as observed verification evidence",
+        "The review names, in substance, that what's missing is knowledge of the real Meridian SDK's tracking.status values or response contract -- not just a generic 'no tests were added' complaint",
+        "The review does not assert or imply the status mapping is confirmed incomplete, wrong, or broken, and does not invent a concrete blocking defect it cannot point to a specific line or input for",
+        "Any secondary observations (e.g. the bare except Exception clause, the module-level client singleton) stay non-blocking or framed as named missing evidence, rather than escalating into a general redesign or architecture critique"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "hidden-contract-defect-among-cosmetics",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-011/: goal.md, instructions.md, diff.patch, repo_snapshot.md, verification.md. Is it ready to merge?",
+      "expected_output": "Exploratory case -- see evals/slice-review/grading/case-011.expected.md. The diff adds should_send_notification/mark_sent to notifications/dedup.py. Several genuine low-materiality observations are available (a usr_id/user_id naming inconsistency vs. the sibling record_event function, two redundant single-use local variables, duplicated key lookup/store logic across the two new functions, a terser docstring than the sibling function). One subtle but real, diff-demonstrable defect is also present: sent_log is keyed only by event_key, not by user, so mark_sent('u1', 'invoice_overdue', ...) followed by should_send_notification('u2', 'invoice_overdue', ...) incorrectly returns False -- a different user's first-ever notification gets suppressed, directly violating the goal's explicit per-user-independence contract. None of the 5 passing tests exercise two different users against the same event_key, so the passing suite provides no evidence against this. The grading records whether review attention lands on this defect or gets absorbed by the cosmetic items, without presuming a correct answer for which cosmetic items get mentioned.",
+      "files": ["evals/slice-review/cases/case-011/"],
+      "expectations": [
+        "The review identifies, in substance, that sent_log is keyed only by event_key (not per-user), so one user's notification can suppress a different user's notification for the same event -- or states the equivalent concrete two-call scenario -- rather than only naming the usr_id/user_id naming inconsistency without connecting it to this consequence",
+        "This finding is not classified as Non-blocking or Out of scope, and is not omitted; it appears in Blocking or Required corrections",
+        "The verdict is not 'Ready to merge'; 'Not ready to merge' or 'Ready after minor corrections' are both acceptable",
+        "The passing tests are not cited as evidence the dedup logic is correct for the cross-user case",
+        "No speculative or invented blocker is introduced (e.g. concurrency/persistence concerns not grounded in the diff and goal)"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "materiality-ranking-among-findings",
+      "prompt": "Review this implementation slice. Materials are in evals/slice-review/cases/case-012/: goal.md, instructions.md, diff.patch, repo_snapshot.md, verification.md. Is it ready to merge?",
+      "expected_output": "Exploratory case -- see evals/slice-review/grading/case-012.expected.md. The diff adds rows_to_csv to reports/csv_export.py. Three tiers of genuine findings are available: (1) material -- no comma/quote escaping, directly contradicting the goal's explicit 'must produce valid CSV ... including values that contain commas or double-quote characters' requirement, silently corrupting output and untested; (2) legitimate secondary concerns -- a raw KeyError on a row missing a requested column, and None values rendering as the literal text 'None'; (3) minor cosmetics -- a generic variable name, duplicated list-comprehension-then-join logic, and a trailing-newline inconsistency with the sibling rows_to_json. The grading records whether the report's bucket placement, ordering, and space allocation track this materiality gap, without presuming a correct answer for which tier-2/tier-3 items get mentioned.",
+      "files": ["evals/slice-review/cases/case-012/"],
+      "expectations": [
+        "The review identifies, in substance, that comma and/or double-quote values in a field are not escaped/quoted and that this breaks CSV structure, not just a vague 'should validate input' comment",
+        "This finding is not classified as Non-blocking or Out of scope, and is not omitted; it appears in Blocking or Required corrections",
+        "The verdict is not 'Ready to merge'; 'Not ready to merge' or 'Ready after minor corrections' are both acceptable",
+        "No minor (tier-3) item -- generic variable naming, duplicated join logic, trailing-newline inconsistency -- is placed above or described as equally important as the escaping defect in a Blocking or Required-corrections bucket",
+        "The passing tests are not cited as evidence CSV output is correct in general; if credited, only for what they actually cover"
+      ]
+    }
+  ]
+}

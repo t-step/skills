@@ -1,0 +1,16 @@
+diff --git a/profiles/service.py b/profiles/service.py
+index 1111111..2222222 100644
+--- a/profiles/service.py
++++ b/profiles/service.py
+@@ -1,5 +1,11 @@
++_profile_cache = {}
++
++
+ def fetch_user_profile(user_id: int) -> dict:
+     """Fetch a user's profile, hitting the DB."""
+-    return db.query("SELECT * FROM profiles WHERE user_id = ?", user_id)
++    if user_id in _profile_cache:
++        return _profile_cache[user_id]
++    profile = db.query("SELECT * FROM profiles WHERE user_id = ?", user_id)
++    _profile_cache[user_id] = profile
++    return profile
