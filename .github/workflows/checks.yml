@@ -1,9 +1,9 @@
 name: checks
 
-# Backstop only: this repository is private and verification is local-first
-# (AGENTS.md, "Verification") -- scripts/check.sh must already have passed
-# locally before a PR is opened. CI re-runs the identical script so nothing
-# merges on a machine-local oversight.
+# Backstop: verification is local-first (AGENTS.md, "Verification") --
+# scripts/check.sh must already have passed locally before a PR is opened.
+# CI re-runs the identical script so nothing merges on a machine-local
+# oversight or a fork/PR that skipped the local check.
 
 on:
   push:
