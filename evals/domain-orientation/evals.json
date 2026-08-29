@@ -1,0 +1,77 @@
+{
+  "skill_name": "domain-orientation",
+  "evals": [
+    {
+      "id": 1,
+      "name": "business-rules-beyond-schema",
+      "prompt": "I need to work on the approval logic in this repository and don't know the domain yet. Get me oriented to the domain model before I touch anything. The repository is at evals/domain-orientation/cases/case-001/repo/.",
+      "expected_output": "Identifies Report, Expense, Employee, and Approval as first-class domain concepts, grounds the receipt-required-above-threshold rule and the self-approval/management-chain approval rule in rules.py as observed business invariants (not schema constraints), and treats AuditEvent as an implementation artifact rather than a modeled domain concept.",
+      "files": ["evals/domain-orientation/cases/case-001/repo/"],
+      "expectations": [
+        "Names at least the receipt-required-above-threshold rule and the cannot-self-approve / must-be-in-management-chain rule as observed business invariants grounded in rules.py, not merely restating models.py's field list or NOT NULL-level constraints",
+        "AuditEvent is identified as an implementation artifact (a generic append-only log with no invariant or business rule of its own), not given a full first-class domain-concept entry alongside Report/Expense/Employee/Approval",
+        "Report's status field is named as carrying its own lifecycle (draft/submitted/approved/rejected with transition guards in rules.py), flagged as a lifecycle-audit candidate rather than a full transition-by-transition characterization being inlined here"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "policy-not-persisted-row",
+      "prompt": "I need to work in this repository and don't know the domain yet. Get me oriented to the domain model before I touch anything. The repository is at evals/domain-orientation/cases/case-002/repo/.",
+      "expected_output": "Identifies the promotion gate/policy (soak time, required approvals) as the load-bearing domain concept even though it has no dedicated persisted table -- eligibility is computed fresh from POLICY, Deployment fields, and Approval rows -- rather than only listing Deployment and Approval as the domain model.",
+      "files": ["evals/domain-orientation/cases/case-002/repo/"],
+      "expectations": [
+        "Names the gate/policy concept (a named check a deployment must clear to be eligible to promote) as a first-class domain concept in its own right, grounded in gates/ and promotion.py, not merely described as implementation detail of the Deployment class",
+        "States explicitly that promotion eligibility is not a persisted field or row anywhere -- it's computed on demand from POLICY, the deployment's own fields, and Approval rows -- rather than inventing or implying a 'PromotionRequest' or eligibility-status entity that doesn't exist in the evidence",
+        "Approval is characterized as an input a gate reads (a vote/precondition), not as something with its own lifecycle or as the entity that decides eligibility"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "terminology-map-same-and-different",
+      "prompt": "I need to work in this repository and don't know the domain yet. Get me oriented to the domain model before I touch anything. The repository is at evals/domain-orientation/cases/case-003/repo/.",
+      "expected_output": "Correctly identifies billing.Customer and the API's 'account' as the same underlying concept under two names (grounded in get_account calling get_customer with the same id), and correctly identifies loyalty.Member as a genuinely distinct concept from Customer with different cardinality (one Member can link to multiple Customers via MemberCustomerLink; a Customer may have zero Members), rather than collapsing or conflating either pair.",
+      "files": ["evals/domain-orientation/cases/case-003/repo/"],
+      "expectations": [
+        "A terminology map or equivalent explicitly states that the API's 'account' (account_id, account_email) and billing.Customer are the same underlying concept under two different names, grounded in api/schemas.py's get_account calling billing's get_customer with the same id -- not just noted as coincidentally similar",
+        "Member is explicitly identified as NOT the same concept as Customer, grounded in the many-to-many MemberCustomerLink cardinality (one household Member can link to more than one Customer; a Customer can have zero Members) -- not collapsed into Customer/Account just because it's an adjacent-sounding people/identity concept",
+        "Authority is stated per concept: billing owns Customer identity, loyalty owns Member -- not one undifferentiated 'user identity' owner across both"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "tooling-domain-not-business",
+      "prompt": "I need to work in this repository and don't know the domain yet. Get me oriented to the domain model before I touch anything. The repository is at evals/domain-orientation/cases/case-004/repo/.",
+      "expected_output": "Recognizes this is a technical/tooling domain (a lease-based job queue), correctly maps Job/Lease/DeadLetterEntry and the fencing-token invariant as the domain concepts, and does not force retail/business vocabulary onto it or conclude there's no domain here because it's infrastructure.",
+      "files": ["evals/domain-orientation/cases/case-004/repo/"],
+      "expectations": [
+        "Domain shape (or equivalent) explicitly characterizes this as a technical/tooling domain (job queue / lease semantics), not a business domain, and does not force business-style vocabulary (customer, order, account) onto it",
+        "States the fencing-token invariant as an observed business/domain rule -- a stale completion (mismatched fencing_token) is silently dropped rather than erroring or completing the job -- grounded in leasing.py's complete()",
+        "Lease is identified as not independently persisted (it's fields grouped on Job's own storage, per Lease's own docstring and acquire()'s actual store calls) rather than treated as its own separately-stored entity"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "real-bounded-context-boundary",
+      "prompt": "I need to work in this repository and don't know the domain yet. Get me oriented to the domain model before I touch anything. The repository is at evals/domain-orientation/cases/case-005/repo/.",
+      "expected_output": "Correctly identifies auth.Account and billing.Account as two genuinely distinct domain concepts that happen to share a name, connected only through the explicit AccountLink translation table in integration/, and does not collapse them into one concept or claim a boundary exists between other parts of the repo without similar evidence.",
+      "files": ["evals/domain-orientation/cases/case-005/repo/"],
+      "expectations": [
+        "States that auth.Account (login identity) and billing.Account (subscription/plan) are two distinct domain concepts despite sharing the name 'Account', grounded in separate persistence (auth_db vs billing_db) and the fact that neither module imports the other directly",
+        "Identifies integration/link.py's AccountLink as the explicit translation/mapping boundary between the two, and correctly states the cardinality evidenced by its own docstring and resolve_billing_account (an auth Account has at most one linked billing Account; one with no link has never started a paid plan)",
+        "Does not claim a bounded-context split anywhere else in the repository beyond what integration/link.py's actual cross-import evidences"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "canonical-vs-derived-and-lifecycle-flagging",
+      "prompt": "I need to work in this repository and don't know the domain yet. Get me oriented to the domain model before I touch anything. The repository is at evals/domain-orientation/cases/case-006/repo/.",
+      "expected_output": "Correctly identifies Product.price_cents_usd as canonical and DisplayPrice as a derived, periodically-refreshed, potentially-stale projection with no independent authority -- grounded in fx_refresh.py -- and separately flags Product.status as a lifecycle-audit candidate rather than inlining its own transition analysis.",
+      "files": ["evals/domain-orientation/cases/case-006/repo/"],
+      "expectations": [
+        "States that Product.price_cents_usd is the canonical price and DisplayPrice is a derived/cached projection (not a peer price concept), grounded in fx_refresh.py computing DisplayPrice from price_cents_usd and never the reverse, and names that it can be stale relative to the source",
+        "Product.status is flagged as a lifecycle-audit candidate (states with transition guards in catalog/lifecycle.py) rather than the report producing its own full transition/invariant/interaction characterization of it",
+        "DisplayPrice is not described as carrying its own lifecycle or invariant of its own -- it has no transition guard, no illegal-value rule beyond being a recomputation of Product's price"
+      ]
+    }
+  ]
+}
