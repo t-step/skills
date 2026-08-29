@@ -1,0 +1,206 @@
+{
+  "skill_name": "task-composition",
+  "evals": [
+    {
+      "id": 1,
+      "name": "independent-vertical-paths",
+      "prompt": "Treat evals/task-composition/cases/case-001/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Proposes two vertical delivery slices -- one for CSV export (T1-T3) and one for notification opt-out (T4-T6) -- each delivering a coherent end-to-end capability with its own tests included, not split further by layer. Marks the two slices as safe to run in parallel, since neither references a file, table, or endpoint the other touches.",
+      "files": ["evals/task-composition/cases/case-001/tasks.md"],
+      "expectations": [
+        "Exactly two slices are proposed for the six tasks (not six, not one), one covering T1-T3 and one covering T4-T6",
+        "Each slice groups its endpoint/service/migration task together with its own direct test (T3 with T1-T2; T6 with T4-T5), not split into a separate implementation slice and test slice",
+        "The two slices are explicitly marked parallel-safe with each other, with a reason grounded in the fixture (no shared file/table/endpoint) rather than asserted without support",
+        "No horizontal enabler is introduced -- T4 (the migration) is treated as part of the opt-out slice, not pulled out as shared infrastructure, since nothing else depends on it"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "shared-migration-enabler",
+      "prompt": "Treat evals/task-composition/cases/case-002/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Isolates T1-T2 (the audit_log table and write_audit_entry helper) as a narrowly bounded horizontal enabler, justified by naming both downstream consumers it unblocks (refund and cancellation) and that leaving it embedded in either vertical slice would duplicate it in the other. Proposes the refund flow (T3-T5) and cancellation flow (T6-T8) as separate vertical slices, both depending on the enabler, and safe to run in parallel with each other once it's done.",
+      "files": ["evals/task-composition/cases/case-002/tasks.md"],
+      "expectations": [
+        "T1 and T2 are grouped into their own slice, distinct from both the refund slice and the cancellation slice",
+        "The enabler slice is justified by naming what it unblocks (both the refund and cancellation flows) and why keeping it embedded in one flow would duplicate or unsafely couple it with the other -- not just labeled 'shared' without justification",
+        "The refund slice (T3-T5) and cancellation slice (T6-T8) both list a dependency on the enabler slice",
+        "The refund slice and cancellation slice are marked safe to run in parallel with each other (after the enabler), since they don't share any files with each other",
+        "The enabler is not proposed as duplicated separately inside each of the two vertical slices"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "convergent-dispatch",
+      "prompt": "Treat evals/task-composition/cases/case-003/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Proposes the config subsystem (T1-T3) and coding-agent subsystem (T4-T5) as two independent vertical slices, safe to run in parallel with each other. Proposes dispatch (T6-T7) as a convergence/integration slice that explicitly depends on both prior slices being finished, since T6 needs both a validated AgentConfig and a working CodingAgent to exist. Folds the mechanical final-checks task (T8) into the dispatch slice rather than giving it its own slice.",
+      "files": ["evals/task-composition/cases/case-003/tasks.md"],
+      "expectations": [
+        "Config (T1-T3) and coding-agent (T4-T5) are proposed as two separate slices, marked safe to run in parallel with each other",
+        "Dispatch (T6-T7) is proposed as its own slice, explicitly depending on both the config slice and the coding-agent slice -- not just one of them, and not left as an implicit assumption",
+        "The convergence dependency is named as such (both prior slices required before dispatch can start), not silently folded into a single giant slice covering everything",
+        "T8 (lint + changelog) is combined with the dispatch slice rather than proposed as its own separate slice"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "numeric-order-mismatch",
+      "prompt": "Treat evals/task-composition/cases/case-004/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Recognizes that T2 (wiring RateLimiter into the search endpoint, numbered second) actually depends on T3 (adding the search_rate_limit config field, numbered third) because T2's code reads cfg.search_rate_limit, which doesn't exist until T3 runs. Groups T1-T4 into one coherent vertical slice (a small, tightly coupled feature) but explicitly calls out, as a topology observation, that the plan's numeric order (T2 before T3) does not reflect the real dependency (T2 needs T3's field) -- it does not silently execute or describe the tasks in raw numeric order as if that were the dependency order.",
+      "files": ["evals/task-composition/cases/case-004/tasks.md"],
+      "expectations": [
+        "The report explicitly identifies that T2 depends on T3 (the config field T2's code reads), not the other way around, despite T2 being numbered before T3",
+        "Somewhere in the report -- the topology-issues section, the slice's own internal notes, or both -- the mismatch between the plan's numeric order and the real dependency is named explicitly, not silently corrected without comment",
+        "The four tasks are not split into four separate slices merely because the numeric-order issue was noticed; a single small coherent slice (or an explicitly justified small split) is proposed",
+        "The proposed internal sequencing/description of the slice reflects the real dependency (T3's field existing before or together with T2's use of it), not the raw T1-T2-T3-T4 numbering"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "paired-implementation-test",
+      "prompt": "Treat evals/task-composition/cases/case-005/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Proposes exactly one vertical slice containing both T1 (the endpoint) and T2 (its direct test), on the grounds that there is no meaningful checkpoint or learning boundary between implementing the endpoint and proving it works. Does not propose T1 and T2 as two separate slices merely because they are two numbered tasks.",
+      "files": ["evals/task-composition/cases/case-005/tasks.md"],
+      "expectations": [
+        "Exactly one slice is proposed, containing both T1 and T2",
+        "The report states or clearly implies the reason for grouping them: no useful checkpoint separates implementation from its direct test here",
+        "No second slice is invented to hold verification separately, and no additional tasks or scope are fabricated beyond T1 and T2"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "concurrency-risk-boundary",
+      "prompt": "Treat evals/task-composition/cases/case-006/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Isolates T1 (the new distributed SessionStore, which changes concurrency semantics from process-local to shared/networked) as its own risk-boundary slice, tied explicitly to its direct concurrency verification (T5). Requires T2, T3, and T4 (the three call-site migrations) to depend at minimum on T1's implementation being done. Whether they must also wait for T5's verification to pass before starting is a defensible planning choice in either direction (source plan doesn't settle it, since the public interface is stated to stay the same) -- not itself graded pass/fail -- but whichever choice is made must be stated explicitly (e.g. named as a residual risk if migrations proceed before verification completes), not silently assumed. Proposes T2, T3, and T4 as separate (or jointly small) vertical slices that are safe to run in parallel with each other, since they touch different files.",
+      "files": ["evals/task-composition/cases/case-006/tasks.md"],
+      "expectations": [
+        "REQUIRED: T1 is proposed as its own slice (or as a slice paired specifically with T5, its direct verification), separate from T2, T3, and T4",
+        "REQUIRED: the reason given for isolating T1 names the concurrency-semantics change and/or that downstream call sites would otherwise build on an unverified assumption -- not just 'it's the first task'",
+        "REQUIRED: T2, T3, and T4 are each shown depending on at least T1's implementation being done. DEFENSIBLE EITHER WAY, not graded pass/fail on its own: whether T2/T3/T4 also depend on T5 (the verification) passing before they start. What IS required is that the choice actually made is stated explicitly -- e.g. if migrations may proceed before T5 completes, that is named as a known/residual risk rather than left as an unstated assumption. Silence about which choice was made, in either direction, is the actual failure this expectation checks for -- not which choice was made.",
+        "REQUIRED: T2, T3, and T4 are marked safe to run in parallel with each other, since the fixture states they don't share files",
+        "REQUIRED: T5 (the concurrency test) is attached to the T1 slice as its verification checkpoint -- not left stranded as an afterthought on one of the migration slices, and not omitted from the plan entirely"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "ambiguous-dependency",
+      "prompt": "Treat evals/task-composition/cases/case-007/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Does not confidently assert that T2 (rate-limit enforcement) either depends on T1 or is independent of it, because the fixture gives no file, endpoint, or interface for T2 to ground either claim. States plainly, as an open topology question, that T2's relationship to T1 cannot be established with reasonable confidence from what's given, rather than fabricating a plausible-sounding dependency or independence.",
+      "files": ["evals/task-composition/cases/case-007/tasks.md"],
+      "expectations": [
+        "The report does not state as settled fact that T2 depends on T1, and does not state as settled fact that T2 is independent of T1",
+        "The report explicitly flags T2's relationship to T1 as an open/ambiguous topology question, naming what's missing (which file/endpoint T2 touches, whether it wraps T1's endpoint)",
+        "The report does not invent a plausible-sounding dependency or file/endpoint for T2 that the fixture never states",
+        "T1 and T3 (which do have a stated relationship -- T3 tests T1) are still handled normally and are not caught up in the same uncertainty"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "shared-file-safe-parallelism",
+      "prompt": "Treat evals/task-composition/cases/case-008/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Proposes two vertical slices -- export (T1, T3) and import (T2, T4) -- despite both touching the same file, cli/commands.py. Marks them parallel-safe with each other, grounded in the file's documented extension pattern (independent additive blocks, no semantic dependency, order-independent registration, a trivial textual merge) rather than either ignoring the shared file or treating it as an automatic block on parallelism.",
+      "files": ["evals/task-composition/cases/case-008/tasks.md"],
+      "expectations": [
+        "Two slices are proposed (export: T1+T3; import: T2+T4), not one slice merging both into cli/commands.py work, and not four single-task slices",
+        "The report explicitly notes that T1 and T2 share a file (cli/commands.py) -- the shared file is not silently ignored",
+        "Despite the shared file, the two slices are marked safe to run in parallel with each other, with a reason grounded in the fixture's stated extension pattern (independent additive blocks, no semantic dependency, predictable/trivial merge) -- not a bare assertion of safety and not an appeal to 'they can use separate branches' as the reason",
+        "The report does not serialize the two slices solely because the pathname (cli/commands.py) overlaps"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "shared-file-unsafe-parallelism",
+      "prompt": "Treat evals/task-composition/cases/case-009/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Recognizes that T1 and T2, despite being two nominally separate discount-rule changes, are not safe to parallelize: they edit the same computation block in pricing/discount.py and the fixture states directly that T2's correct value depends on T1's tiered rate already being in place. Proposes a single slice (or an explicitly sequenced T1-then-T2 pairing) rather than two parallel slices, and does not treat isolated branches or a later merge as sufficient to make the two changes safe to build concurrently.",
+      "files": ["evals/task-composition/cases/case-009/tasks.md"],
+      "expectations": [
+        "The report does not propose T1 and T2 as two slices safe to run in parallel with each other",
+        "The reason given is grounded in the fixture's own stated fact that T2's loyalty-discount value depends on T1's bulk-discount rate already being in place -- not a generic 'shared file' caution without the semantic reason",
+        "If the report proposes isolated branches/workspaces or a later merge as a way to still parallelize T1 and T2, that is scored as a failure -- isolation does not resolve a stated semantic dependency",
+        "T3 (the combined test) is attached to whichever slice(s) hold T1 and T2, not left stranded"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "actual-dependency-cycle",
+      "prompt": "Treat evals/task-composition/cases/case-010/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Identifies that T1 and T2 form a genuine mutual/cyclic dependency (T1's implementation calls into T2, and T2's implementation reads T1's result) rather than inventing a plausible-sounding cross-slice build order for them. Names the cycle explicitly, under Topology issues or equivalent, not just in passing. Given how small T1 and T2 are, resolving the cycle by keeping them in one slice together (so no cross-slice ordering is needed) is a legitimate, defensible response -- the skill is not required to refuse to produce any plan at all when co-location is a credible resolution; that would be over-conservative. What would be wrong: presenting a confident T1-then-T2 or T2-then-T1 execution order across separate slices as if it resolves the dependency, silently treating T1/T2 as independent, or not naming the cycle at all.",
+      "files": ["evals/task-composition/cases/case-010/tasks.md"],
+      "expectations": [
+        "REQUIRED: the report explicitly names a cycle or mutual dependency between T1 and T2 -- not silence, and not a vague 'these are related' note",
+        "REQUIRED: the report does not present a confident cross-slice T1-then-T2 or T2-then-T1 execution order as if it resolves the dependency cleanly",
+        "REQUIRED: the cycle is named under Topology issues (or equivalent) explicitly -- not buried only inside one slice's Risk/uncertainty field with no mention anywhere else",
+        "DEFENSIBLE, not graded pass/fail on its own: resolving the cycle by keeping T1 and T2 in the same slice (so no cross-slice order is needed) given how small they are. WRONG: inventing an unstated design change (e.g. a new intermediate module) to silently break the cycle on the source material's behalf without naming it as a change, or asserting T1/T2 are independent when the fixture states they are not"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "mixed-realistic-plan",
+      "prompt": "Treat evals/task-composition/cases/case-011/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Proposes a horizontal enabler slice for signing (T4+T6, unblocking both T1 and T2), two independent vertical slices for the Slack and email handlers (T1+T7, T2+T8) that depend on the enabler and are parallel-safe with each other, a risk-boundary slice for the concurrent DeliveryQueue (T3+T9) that can proceed independently of the enabler/handler branches, and a convergence slice for dispatch (T5+T10) that depends on all three of the handler slices and the risk-boundary slice. Flags that T1 and T2's reference to T4 (numbered later) does not match the plan's numeric order.",
+      "files": ["evals/task-composition/cases/case-011/tasks.md"],
+      "expectations": [
+        "T4 (+T6) is proposed as a horizontal enabler slice, justified by naming that it unblocks both the Slack slice (T1) and the email slice (T2)",
+        "T1+T7 (Slack) and T2+T8 (email) are proposed as separate vertical slices, both depending on the T4 enabler slice, and marked parallel-safe with each other",
+        "T3+T9 (DeliveryQueue) is proposed as its own risk-boundary slice, with a reason naming the new concurrency semantics and the unverified dequeue-safety claim -- and is recognized as not depending on the enabler or either handler slice, so it can proceed in parallel with them",
+        "T5+T10 (dispatch) is proposed as a convergence slice explicitly depending on the handler slices (T1/T2) and the risk-boundary slice (T3) -- not just one or two of the three",
+        "The report explicitly flags that T1 and T2 reference T4's signing helper even though T4 is numbered after them -- a numeric-order observation, not silently absorbed without comment"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "technical-layer-batch-temptation",
+      "prompt": "Treat evals/task-composition/cases/case-012/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Keeps T1-T6 together as one vertical slice rather than splitting by file/layer into an API slice (T1, T2, T5) and a storage slice (T3), since an API-only grouping would only validate and return 200 without persisting anything -- a technical-layer completion, not the meaningful capability the plan is for. States the slice's delivered behavior as: an operator can register a webhook subscription through the API and read it back, with invalid input rejected and valid input durably persisted.",
+      "files": ["evals/task-composition/cases/case-012/tasks.md"],
+      "expectations": [
+        "T1-T6 are proposed together as one vertical slice (or, if split, every proposed sub-slice still independently satisfies the vertical grouping test -- see below), not split into an api/webhooks.py slice and a storage/webhook_store.py slice grouped by file",
+        "The slice's stated 'Delivers' is framed as the observable capability -- a subscription can be created via the API and read back, with invalid input rejected and valid input persisted -- not merely 'adds webhook API endpoints' or 'adds webhook validation' as if that alone were the deliverable",
+        "If a layer split (API vs. storage) is considered and rejected, the reasoning given is that an API-only grouping would validate and return success without persisting anything (grounded in the fixture's stated fact that persistence requires T3+T4), not a vaguer 'they're related' justification",
+        "T6 (the test) is included in the same slice as the implementation tasks, not proposed as a separate 'tests' slice",
+        "No task content is invented or re-decomposed beyond T1-T6 as given"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "legitimate-horizontal-enabler-behavior",
+      "prompt": "Treat evals/task-composition/cases/case-013/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Isolates T1 (verify_signed_request) as a horizontal enabler, justified by naming all three downstream consumers (purge-cache, reindex, rotate-keys) and the duplication/drift risk of implementing HMAC verification separately in each. Proposes purge-cache (T2+T5), reindex (T3+T6), and rotate-keys (T4+T7) as three separate vertical slices, each depending on the enabler and parallel-safe with each other.",
+      "files": ["evals/task-composition/cases/case-013/tasks.md"],
+      "expectations": [
+        "T1 is proposed as its own horizontal-enabler slice, distinct from the three admin-endpoint slices",
+        "The justification for isolating T1 names all three downstream consumers (purge-cache, reindex, rotate-keys), not just one, and states that embedding it in one endpoint's file would duplicate the HMAC logic in the other two (or require them to depend on that one endpoint's module)",
+        "T1's own 'Delivers' is framed as a meaningful, independently verifiable property (requests can be verified against the shared signing scheme) rather than only 'adds a verifier module'",
+        "The three endpoint slices (T2+T5, T3+T6, T4+T7) are each proposed as separate vertical slices depending on the enabler, and marked parallel-safe with each other (no shared files among the three)",
+        "The report does not propose absorbing T1 into just one of the three endpoint slices (e.g. folding it into purge-cache and having the other two depend on that file)"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "internal-capability-not-user-facing",
+      "prompt": "Treat evals/task-composition/cases/case-014/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Proposes T1-T5 as one vertical slice, stating its delivered behavior in system-property terms -- a worker that crashes mid-job no longer loses that job, because another worker reclaims and reprocesses it once its heartbeat goes stale -- and treats this as a fully valid, independently verifiable vertical delivery slice despite having no user-facing or product surface. Does not pull T1 (the migration) out as a horizontal enabler, since nothing else in the plan depends on it.",
+      "files": ["evals/task-composition/cases/case-014/tasks.md"],
+      "expectations": [
+        "T1-T5 are proposed together as one vertical slice, not split by layer (migration alone, worker-loop alone, reclaim-logic alone)",
+        "The slice's 'Delivers' is framed as an internal system property becoming true -- a crashed worker's in-flight job is automatically reclaimed and reprocessed by another worker -- not merely 'adds heartbeat column and reclaim function'",
+        "The report explicitly treats this as a valid vertical delivery slice despite having no user-facing/product surface -- it does not refuse, downgrade, or hedge on its validity for lacking one, and does not invent user-facing framing (e.g. a dashboard) that the fixture never states",
+        "T5 (the test) stays attached to this slice as its verification checkpoint, not left in a separate slice",
+        "T1 (the migration) is not proposed as a standalone horizontal enabler -- the fixture states nothing else depends on it"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "absorbable-pseudo-enabler",
+      "prompt": "Treat evals/task-composition/cases/case-015/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Keeps T1-T4 together as one vertical slice rather than carving T1 (PdfRenderer interface) and T2 (WeasyPrintRenderer) out as a standalone horizontal-enabler slice, since the fixture states T3 is the only consumer and nothing else in the plan or codebase depends on either. Delivered behavior is stated as: a report can be exported as a PDF through the API, with an unknown report id correctly rejected.",
+      "files": ["evals/task-composition/cases/case-015/tasks.md"],
+      "expectations": [
+        "T1 and T2 are NOT proposed as a standalone horizontal-enabler slice",
+        "T1-T4 are grouped into one vertical slice (or, if T1/T2 are split out at all, they remain in the same slice as T3/T4 rather than a separate one)",
+        "If reasoning is shown for not isolating T1/T2, it correctly applies the absorbable-enabler question: only one downstream consumer (T3) exists, so isolating them unlocks no additional parallelism and avoids no duplication -- not merely 'these are simple' or 'these are small'",
+        "The slice's 'Delivers' is framed as the observable capability (a report can be exported as a PDF, with an unknown id rejected), not 'adds a PDF rendering abstraction' or similar layer wording",
+        "T4 (the test) is included in the same slice"
+      ]
+    }
+  ]
+}
