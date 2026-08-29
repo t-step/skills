@@ -14,7 +14,7 @@ description: >-
   before implementation starts on a document with stated requirements, not
   a bare feature description. Distinct from a requirements-quality sweep, a
   cross-artifact coverage check, a spec-editing clarify loop, a diff review
-  (slice-review), or a lifecycle inventory (lifecycle-audit) -- refuses to
+  (change-review), or a lifecycle inventory (lifecycle-audit) -- refuses to
   rewrite the spec, decompose tasks, or pick a resolution.
 ---
 
@@ -324,7 +324,7 @@ Even when a request bundles it in:
   work into delivery units -- that's task decomposition and
   `task-composition`, both downstream of this skill.
 - Review an already-written diff or implementation against this or any
-  spec -- that's `slice-review`, and it runs after code exists; this skill
+  spec -- that's `change-review`, and it runs after code exists; this skill
   runs before any does.
 - Perform a general requirements-writing-quality sweep -- flagging vague
   adjectives, missing template sections, or un-quantified claims divorced

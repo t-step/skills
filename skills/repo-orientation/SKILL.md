@@ -12,7 +12,7 @@ description: >-
   repository, or someone asks to get oriented, understand this codebase,
   map out this repo, or figure out how it's put together — even if they
   don't say "orientation." Not a summary, architecture review, quality
-  audit, diff/PR review (slice-review), retrospective (slice-retro), or
+  audit, diff/PR review (change-review), retrospective (slice-retro), or
   next-slice call (next-best-slice) — it stops at the map, refusing
   next-work calls, plans, redesigns, or cleanup audits, even bundled in.
 ---
@@ -136,7 +136,7 @@ Even when a request bundles it in, an orientation does not:
 
 - Recommend or choose the next slice of work — that's `next-best-slice`.
 - Produce an implementation plan.
-- Review a specific diff or PR — that's `slice-review`.
+- Review a specific diff or PR — that's `change-review`.
 - Redesign the architecture or propose an alternative one.
 - Conduct a repository-wide cleanup or code-quality audit.
 - Invent repository intent from filenames or directory names alone.

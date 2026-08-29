@@ -14,7 +14,7 @@ description: >-
   repo-orientation (engineering map -- reuse, don't redo), lifecycle-audit
   (transition analysis for lifecycle-bearing entities -- flags candidates,
   stops there), spec-pressure-test (not-yet-built specs, not existing
-  code), and slice-review/task-composition (consume this, don't produce
+  code), and change-review/task-composition (consume this, don't produce
   it). Refuses to redesign the model, resolve drift, or invent semantics.
 ---
 
@@ -81,7 +81,7 @@ sides before starting:
   semantics an *already-existing* implementation embodies. Don't run this
   skill to find holes in a spec, and don't run spec-pressure-test to
   understand what current code means.
-- **`slice-review`, `task-composition`, and implementation-planning
+- **`change-review`, `task-composition`, and implementation-planning
   skills** consume domain understanding to review a diff or plan work.
   This skill produces the understanding; it does not review, plan, slice,
   or choose what to build.
@@ -289,7 +289,7 @@ Even when a request bundles it in:
   `spec-pressure-test`, and it runs on not-yet-built material; this skill
   runs on what's already implemented.
 - Review a diff or PR, judge merge readiness, or verify a completed
-  change. That's `slice-review`.
+  change. That's `change-review`.
 - Decompose work, slice a plan into sessions, or choose what to build
   next. That's `task-composition` or `next-best-slice`.
 - Propose a target domain model, rename concepts, resolve terminology

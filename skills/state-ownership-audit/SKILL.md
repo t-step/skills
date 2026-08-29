@@ -132,7 +132,7 @@ short, honest "nothing more to say here."
   adversarially checked for whether it decided anything at all. Given an
   undecided spec, report what's unresolved as unresolved; don't manufacture
   scenarios to attack wording that spec-pressure-test already owns.
-- **`slice-review`** and **`evidence-verification`** judge whether a change
+- **`change-review`** and **`evidence-verification`** judge whether a change
   or a claimed outcome is correct -- consumers of an ownership map, not
   producers of one. This skill doesn't review a diff or verify a "done"
   claim.
@@ -418,7 +418,7 @@ Even when a request bundles it in:
   and authority" category. Report an undecided spec's ownership as
   unresolved; don't adversarially test wording that skill already owns.
 - Review a diff, judge merge-readiness, or verify a "done" claim -- that's
-  `slice-review` (and, for Bindle mechanical evidence pointers specifically,
+  `change-review` (and, for Bindle mechanical evidence pointers specifically,
   `evidence-verification`).
 - Treat a legitimately partitioned, conditional, or transferred authority
   as if it should be a single global owner.

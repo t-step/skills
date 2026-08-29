@@ -15,10 +15,10 @@ The plugin directory is a release artifact, not an independent implementation �
 
 ## Published plugin
 
-**`software-engineering`** (v0.2.2) — a plugin with three published skills:
+**`software-engineering`** (v0.2.3) — a plugin with three published skills:
 
 - **`repo-orientation`** — builds a concise, evidence-backed operating map of a repository before consequential work begins: purpose, governing instructions, major execution paths, architectural seams, and honest unknowns.
-- **`slice-review`** — reviews one bounded implementation slice (a diff, PR, or "done" claim) against its stated goal, repo instructions, the actual diff, and verification evidence, producing one of four verdicts.
+- **`change-review`** — reviews one bounded implementation change (a diff, PR, or "done" claim) against its stated goal, repo instructions, the actual diff, and verification evidence, producing one of four verdicts.
 - **`task-composition`** — takes an already-decomposed spec or plan and composes its tasks into coherent, agent-sized execution groupings: vertical by default, a horizontal enabler only when it unlocks real parallel work, convergence points made explicit, and just enough dependency checking to catch cycles or misleading task order — never a priority call, a scheduler, or a durable task graph.
 
 All three `SKILL.md` files use only `name` and `description` frontmatter (the portable Agent Skills subset), so they need no per-harness rewriting — the same three files are installed verbatim by either client.
