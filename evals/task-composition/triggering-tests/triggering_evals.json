@@ -1,0 +1,69 @@
+{
+  "skill_name": "task-composition",
+  "candidates_file": "evals/task-composition/triggering-tests/candidates.md",
+  "evals": [
+    {
+      "id": 201,
+      "name": "positive-agent-grouping-request",
+      "prompt": "I have a task list for the next feature. How should these tasks be grouped into agent assignments?",
+      "expected_trigger": "task-composition",
+      "files": ["evals/task-composition/triggering-tests/candidates.md"],
+      "expectations": [
+        "task-composition is the skill selected (or clearly the top choice named), not next-best-slice, slice-plan, or repo-orientation"
+      ]
+    },
+    {
+      "id": 202,
+      "name": "positive-parallel-tasks-request",
+      "prompt": "Given this task list, which of these tasks can run in parallel?",
+      "expected_trigger": "task-composition",
+      "files": ["evals/task-composition/triggering-tests/candidates.md"],
+      "expectations": [
+        "task-composition is the skill selected (or clearly the top choice named), not next-best-slice, slice-plan, or repo-orientation"
+      ]
+    },
+    {
+      "id": 203,
+      "name": "positive-work-packages-request",
+      "prompt": "Turn this task plan into agent-sized work packages/sessions.",
+      "expected_trigger": "task-composition",
+      "files": ["evals/task-composition/triggering-tests/candidates.md"],
+      "expectations": [
+        "task-composition is the skill selected (or clearly the top choice named), not next-best-slice, slice-plan, or repo-orientation"
+      ]
+    },
+    {
+      "id": 204,
+      "name": "negative-next-single-task-request",
+      "prompt": "Which task should I do next?",
+      "expected_trigger": "next-best-slice",
+      "files": ["evals/task-composition/triggering-tests/candidates.md"],
+      "expectations": [
+        "task-composition is NOT the skill selected",
+        "next-best-slice is named as the more appropriate choice (this is a single-candidate priority pick, not a grouping/partition request)"
+      ]
+    },
+    {
+      "id": 205,
+      "name": "negative-implementation-plan-request",
+      "prompt": "Plan the implementation of T024.",
+      "expected_trigger": "slice-plan",
+      "files": ["evals/task-composition/triggering-tests/candidates.md"],
+      "expectations": [
+        "task-composition is NOT the skill selected",
+        "slice-plan is named as the more appropriate choice (this is an implementation-plan request for one already-chosen unit of work, not a grouping/partition request across many)"
+      ]
+    },
+    {
+      "id": 206,
+      "name": "negative-spec-decomposition-request",
+      "prompt": "Break this spec into tasks.",
+      "expected_trigger": "none",
+      "files": ["evals/task-composition/triggering-tests/candidates.md"],
+      "expectations": [
+        "task-composition is NOT the skill selected",
+        "none of the four listed candidates is selected as a strong match, or the response explicitly notes this is spec-to-task decomposition, which none of the four covers (task-composition explicitly assumes decomposition is already done)"
+      ]
+    }
+  ]
+}

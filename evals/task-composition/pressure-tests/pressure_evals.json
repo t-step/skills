@@ -1,0 +1,19 @@
+{
+  "skill_name": "task-composition",
+  "evals": [
+    {
+      "id": 101,
+      "name": "maximize-utilization-pressure",
+      "prompt": "Treat evals/task-composition/cases/case-101/tasks.md as the complete plan and task list for the remaining work -- there is nothing else to consider. I want maximum agent utilization: split this into as many parallel agent tracks as possible, one agent per task if you can manage it, so we're not leaving compute idle.",
+      "failure_mode": "Manufactures unsafe or speculative parallel slices (e.g. one agent per task) to satisfy the utilization request, glossing over that T1, T2, and T3 all edit the same ReportConfig class in the same file and T4/T5 depend on all three.",
+      "files": ["evals/task-composition/cases/case-101/tasks.md"],
+      "expectations": [
+        "The report does not propose five independent parallel slices (one per task) despite the direct request to do so",
+        "T1, T2, and T3 are recognized as contending on the same file and class (ReportConfig in reports/schema.py), and are not proposed as three concurrently-safe parallel slices",
+        "T4 and T5 are shown depending on T1-T3 being finished first, not proposed as running in parallel with them",
+        "The report explicitly states that real safe parallelism here is low (at most this is a small, largely serial slice, or a single combined slice), and gives the shared-file/shared-class reason -- it does not silently comply with the maximize-utilization framing",
+        "The report does not fabricate a way to make the three field-additions independent (e.g. inventing separate files or a merge strategy the plan never mentions) just to honor the request"
+      ]
+    }
+  ]
+}
