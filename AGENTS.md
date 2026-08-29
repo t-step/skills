@@ -6,7 +6,7 @@ Shared working instructions for this repository, read by every coding agent work
 
 This repository develops, evaluates, and distributes portable Agent Skills. Three trees, three distinct jobs — don't blur them:
 
-- `skills/` — canonical, editable Agent Skill source. Every `SKILL.md` is authored and revised here first. This tree is not itself installable.
+- `skills/` — canonical, editable Agent Skill source, and the intended authoring location for every skill going forward. Migration is not yet complete: a few already-published skills don't yet have canonical top-level source here. This tree is not itself installable.
 - `evals/` — evaluation evidence for the skills in `skills/`: agent-visible cases, isolated grading keys, and hand-written run summaries (`RESULTS.md`, `runs/*.md`).
 - `plugins/software-engineering/skills/` — a curated, published copy of the subset of canonical skills that have been deliberately released. This is a release projection of `skills/`, not a second authoring location. Claude Code and Codex both install from it via their own manifests (`.claude-plugin/`, `.agents/plugins/`, and `plugins/software-engineering/.claude-plugin/plugin.json` / `.codex-plugin/plugin.json`) — the same files, no per-harness fork.
 
@@ -45,7 +45,7 @@ Evals are evidence, not proof:
 
 ## Verification
 
-Run `bash scripts/check.sh` before any commit or PR touching `skills/` or `evals/`. It's the cheap, deterministic gate over those trees: strict skill-frontmatter lint, eval-isolation/answer-leakage check, and cross-skill dependency validation. This repository is private, so GitHub CI runs rarely — run this locally and confirm it passes; never rely on CI as the first execution of these checks.
+Run `bash scripts/check.sh` before any commit or PR touching `skills/` or `evals/`. It's the cheap, deterministic gate over those trees: strict skill-frontmatter lint, eval-isolation/answer-leakage check, and cross-skill dependency validation. Run it locally and confirm it passes before relevant commits/PRs; never rely on CI as the first execution of these checks.
 
 Plugin/release validation is a separate concern from `scripts/check.sh`. If a change touches `plugins/software-engineering/` (including its manifests), inspect the existing release/versioning rules — `.github/workflows/validate-release.yml` and `scripts/check-plugin-version-bump.sh` enforce that `plugin.json`'s version is bumped whenever the plugin's runtime contents change — rather than guessing at what's required.
 
