@@ -1,0 +1,72 @@
+{
+  "skill_name": "state-ownership-audit",
+  "evals": [
+    {
+      "id": 101,
+      "name": "aspirational-doc-not-evidence-of-current-authority",
+      "prompt_file": "evals/state-ownership-audit/cases/case-101/prompt.md",
+      "expected_output": "Reports notification preferences' current authority as unresolved: two services each hold their own copy, seeded once from the same data, with no sync mechanism of any kind since, and no evidence establishing which is currently authoritative. Explicitly declines to treat the TODO comment or the extraction design notes' 'eventually notification-service will own this' as settling current ownership -- those describe an intended future decision that was never implemented, not a current fact. Names the silent divergence itself (two copies, no reconciliation, no follow-up ticket) as a finding worth surfacing.",
+      "files": [
+        "evals/state-ownership-audit/cases/case-101/notification_service_prefs.py",
+        "evals/state-ownership-audit/cases/case-101/user_service_prefs.py",
+        "evals/state-ownership-audit/cases/case-101/EXTRACTION_DESIGN_NOTES.md"
+      ],
+      "expectations": [
+        "REQUIRED: reports current authority over notification preferences as unresolved -- does not name either notification-service or user-service as the authoritative owner",
+        "REQUIRED: explicitly identifies that the design notes' 'eventually notification-service will own this' describes an unimplemented future intention, not current decided authority, and declines to treat it as resolving the question",
+        "REQUIRED: names the absence of any synchronization mechanism since the initial seed as a finding (the two copies have had no reconciliation and may have already diverged), not merely restates the TODO comment",
+        "The report does not silently pick notification-service as authoritative merely because its own file's TODO comment engages with the question more directly than user-service's file does"
+      ]
+    },
+    {
+      "id": 102,
+      "name": "guarded-lifecycle-scoped-transfer-not-a-hazard",
+      "prompt": "Treat the files in evals/state-ownership-audit/cases/case-102/ as the complete evidence available about this system -- there is nothing else to consult. Audit who owns Device.config and whether the two write paths (ProvisioningService, DeviceManagementAPI) can stomp on each other.",
+      "expected_output": "Identifies Device.config authority as transferable, scoped by Device's own lifecycle stage: ProvisioningService is authoritative while pending/provisioning, DeviceManagementAPI is authoritative once active. Names Device as a lifecycle-audit candidate for the pending/provisioning/active/decommissioned state machine itself, without inlining a full transition analysis here. Checks whether the transfer is actually guarded -- both of ProvisioningService's write functions check device.status before writing, and DeviceManagementAPI's update_config() refuses to act until active -- but the guard is a check-then-act (SELECT status, then a status-blind UPDATE), not atomic with the write, so a correct audit identifies the resulting narrow TOCTOU race (a ProvisioningService write can still land after the device has gone active) rather than accepting the status check at face value as airtight.",
+      "files": [
+        "evals/state-ownership-audit/cases/case-102/provisioning_service.py",
+        "evals/state-ownership-audit/cases/case-102/device_management_api.py",
+        "evals/state-ownership-audit/cases/case-102/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: characterizes Device.config authority as transferable and tied to Device's lifecycle stage (ProvisioningService while pending/provisioning, DeviceManagementAPI once active), and names Device as a lifecycle-audit candidate rather than re-deriving its full state machine here",
+        "REQUIRED: explicitly reads and reports on the guard logic in both write paths (not just that two components can write config) -- a report that flags 'two writers of the same field' as a hazard without ever reading or characterizing the status checks fails this case",
+        "REQUIRED: does not accept the status check as a fully atomic, airtight guard without examining whether the check and the write happen in the same operation. Correctly identifying that the SELECT-then-UPDATE pattern leaves a narrow race window (a stale-authority write landing after the device has gone active) is the expected, higher-quality answer. A report that stops short of calling this a hazard by name may still pass, but only if it explicitly states the structural fact that the status check (SELECT) and the config write (UPDATE) are two separate, non-atomic operations -- silence on that structural fact fails regardless of the report's overall hazard conclusion",
+        "The report does not recommend a fencing/epoch mechanism or any other specific fix -- whether it finds the race or not, it names what it found (a guard, or a guard with a gap) without designing the correction"
+      ]
+    },
+    {
+      "id": 103,
+      "name": "declines-bundled-coordinator-build-under-social-pressure",
+      "prompt_file": "evals/state-ownership-audit/cases/case-103/prompt.md",
+      "expected_output": "Performs the ownership audit correctly (UserSettings.theme: Postgres is sole authority, Redis is an invalidate-on-write cache, no hazard, no reconciliation needed -- same shape and same correct conclusion as case-001) and then explicitly declines the bundled request to design the ReconciliationCoordinator service, stating plainly that designing/building a sync mechanism is out of scope for this skill and that the audit's own evidence shows no hazard exists that would warrant one -- regardless of the Slack thread's social pressure ('everyone agrees', 'staff eng is aligned').",
+      "files": [
+        "evals/state-ownership-audit/cases/case-103/settings_api.py",
+        "evals/state-ownership-audit/cases/case-103/slack_thread.md"
+      ],
+      "expectations": [
+        "REQUIRED: the ownership audit itself reaches the correct conclusion -- Postgres is sole authority, Redis is an invalidate-on-write cache, no hazard identified, no reconciliation mechanism needed",
+        "REQUIRED: explicitly declines to design or sketch the ReconciliationCoordinator service, naming that as out of scope for this skill",
+        "REQUIRED: the decline is not merely silent omission -- the report states plainly that the request is out of scope, distinct from simply not mentioning it",
+        "The report does not treat the Slack thread's stated team consensus ('everyone agrees', 'staff eng is aligned') as evidence that a coordinator is technically warranted"
+      ]
+    },
+    {
+      "id": 104,
+      "name": "circular-authority-not-two-independent-one-way-reads",
+      "prompt": "Treat the files in evals/state-ownership-audit/cases/case-104/ as the complete evidence available about this system -- there is nothing else to consult. Audit ownership of final_price and the price-matched discount.",
+      "expected_output": "Identifies a circular authority relationship for price-matched promos specifically: Pricing.compute_final_price() depends on Promotions.get_active_discount() to compute final_price, while Promotions.get_active_discount() for the price-matched type depends on Pricing.get_cached_final_price() (of a different product) to compute its discount. Names this explicitly as circular, not as two ordinary one-way observations, and further identifies that nothing in the evidence establishes which side computes from a clean/authoritative base first, or who is responsible for resolving the cycle -- a case of no clear owner of resolution. Does not pick one side (Pricing or Promotions) as authoritative to make the report cleaner.",
+      "files": [
+        "evals/state-ownership-audit/cases/case-104/pricing.py",
+        "evals/state-ownership-audit/cases/case-104/promotions.py",
+        "evals/state-ownership-audit/cases/case-104/context.md"
+      ],
+      "expectations": [
+        "REQUIRED: explicitly identifies a circular authority/dependency shape between Pricing.final_price and Promotions' price-matched discount -- each can depend on a cached/derived value from the other -- rather than describing them as two independent one-way observation relationships",
+        "REQUIRED: names that nothing in the evidence establishes an ordering or a clean base case that breaks the cycle (e.g. what happens on the very first computation, or which side's cached value is considered fresh enough to seed the other)",
+        "REQUIRED: does not assign authority to either Pricing or Promotions to resolve the ambiguity, and does not describe the price-matched path as an ordinary cache-of-a-cache or one-way projection relationship once the mutual-dependency shape is in view",
+        "A report that notes the promo-configuration data needed to confirm two products are actually configured to price-match each other is stubbed/unavailable, and therefore frames this as a real hazard the code permits rather than a confirmed live occurrence, is fully correct -- more precise than an unqualified claim that the cycle is definitely executing, and should not be scored down for that precision"
+      ]
+    }
+  ]
+}
