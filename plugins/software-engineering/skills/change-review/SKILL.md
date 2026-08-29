@@ -14,7 +14,7 @@ description: >-
   output was actually observed, and checks whether an old implementation a
   change claims to replace is still reachable. Judges this change on its
   own — not feature/milestone convergence, not evidence-pointer integrity,
-  not domain/lifecycle/ownership semantics — see "How this composes."
+  not full domain/lifecycle/ownership audits — see "How this composes."
 ---
 
 # Change Review
@@ -58,11 +58,21 @@ skill's job:
   touches, use what `domain-orientation`, `state-ownership-audit`, or
   `lifecycle-audit` have already established for this codebase if a
   report exists — reuse it as grounding rather than re-deriving it from
-  scratch. If no such report exists and the ambiguity is genuinely about
-  meaning or authority rather than about what this diff's own lines do,
-  say the semantic question is open and point at the specialized audit
-  that would settle it, rather than guessing an answer this skill isn't
-  positioned to check.
+  scratch, unless evidence in front of you now conflicts with what the
+  report says, in which case trust what you can currently observe.
+  Establishing the semantic fact yourself is still this skill's job when
+  the same kind of bounded evidence this skill already inspects — types,
+  schema, call sites, tests, nearby implementation — settles it
+  unambiguously; a finding built on a fact established that way is an
+  ordinary concrete finding, not a semantic audit. What isn't this
+  skill's job is the broader characterization those specialist skills
+  produce: don't trace or characterize the domain model, ownership/
+  authority map, or lifecycle beyond what this change's own surrounding
+  evidence shows. If no report exists and settling the question would
+  require that broader characterization, or the bounded evidence
+  genuinely conflicts or underdetermines an answer, say the semantic
+  question is open and point at the specialized audit that would settle
+  it, rather than guessing or reconstructing that audit inline.
 - **Was this change reviewed against a specification before it was
   built?** That's a different, earlier question — `spec-pressure-test`
   runs before code exists; this skill runs after.
