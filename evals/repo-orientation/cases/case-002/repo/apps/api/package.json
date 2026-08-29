@@ -1,0 +1,6 @@
+{
+  "name": "@acme/api",
+  "version": "0.1.0",
+  "dependencies": { "@acme/core": "*", "express": "^4" },
+  "scripts": { "build": "tsc", "test": "vitest run", "lint": "eslint src" }
+}
