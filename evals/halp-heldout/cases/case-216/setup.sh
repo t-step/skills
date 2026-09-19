@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Builds repo/ deterministically. Usage: ./setup.sh [absolute-output-dir]
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+source "$here/../../fixture-lib.sh"
+out="${1:-$here/repo}"
+# same repository as case 203, different question
+bash "$here/../case-203/setup.sh" "$out"

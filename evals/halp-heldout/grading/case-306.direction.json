@@ -1,0 +1,4 @@
+{
+  "a": "(?i)@page|margin|css|weasyprint",
+  "b": "(?i)reportlab|canvas"
+}

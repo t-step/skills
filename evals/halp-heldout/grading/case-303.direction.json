@@ -1,0 +1,4 @@
+{
+  "a": "(?i)phone",
+  "b": "UserSchema|schemas/|@acct/core"
+}

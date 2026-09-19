@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Builds repo/ deterministically. Usage: ./setup.sh [absolute-output-dir]
+set -euo pipefail
+here="$(cd "$(dirname "$0")" && pwd)"
+source "$here/../../fixture-lib.sh"
+out="${1:-$here/repo}"
+# T004 code and tests in the working tree (uncommitted)
+new_repo "$out"; through_t003 assumption
+write_ranking_defect; write_ranking_tests

@@ -1,0 +1,4 @@
+{
+  "a": "(?i)retry|attempt|range\\(3\\)",
+  "b": "celery|\\.delay\\(|apply_async|tasks\\.|send_email"
+}

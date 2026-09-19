@@ -1,0 +1,4 @@
+{
+  "a": "(?i)\\bttl\\b|expire|time\\.(AfterFunc|Now|Since|Duration)",
+  "b": "cache\\.Store|internal/cache|\\.Set\\("
+}

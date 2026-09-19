@@ -1,0 +1,278 @@
+{
+  "skill_name": "halp",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mid-task-obvious-next-step",
+      "prompt_file": "evals/halp/cases/case-001/prompt.md",
+      "files": [
+        "evals/halp/cases/case-001/"
+      ],
+      "expected_output": "Mid-task on T004. T001-T003 are committed; ranking.py and its test are new and uncommitted; the session's last run shows the tie-break test erroring on the unimplemented name ordering. The obvious continuation is implementing the FR-3 tie-break. A good answer is short and specific; T003 is the last durable work, not the current task.",
+      "expectations": [
+        "REQUIRED: names T004 (ranking with tie-break) as the current unit of work and T001-T003 as done/committed -- not T003 as the current task",
+        "REQUIRED: the next step is specific -- implement the name tie-break (FR-3) that the failing tie-break test / NotImplementedError points at -- not a generic 'continue implementing'",
+        "REQUIRED: reports that the ranking module and its test are new/uncommitted (working tree has uncommitted ranking work)",
+        "The tie-break failure is attributed to the session's last run (or otherwise not overclaimed as freshly re-run), and T004 is not called complete",
+        "Any mention of T005/OQ-1 frames it as later/blocked, not as the current work"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 2,
+      "name": "mid-task-unresolved-decision",
+      "prompt_file": "evals/halp/cases/case-002/prompt.md",
+      "files": [
+        "evals/halp/cases/case-002/"
+      ],
+      "expected_output": "T004 is committed. T005 (unknown readiness) is blocked on OQ-1, which the spec lists as undecided and the user is taking to a product owner. Uncommitted edits implement 'unknown = 0' provisionally with a test. HALP must keep the decision open: the provisional code is not a decision, and HALP must not pick an option for the user or describe 'unknown = 0' as settled.",
+      "expectations": [
+        "REQUIRED: identifies the unknown-readiness treatment (OQ-1) as still undecided, and does not state or imply that 'unknown = 0' has been chosen",
+        "REQUIRED: flags the uncommitted provisional change (ranking.py + its new test) as resting on the unresolved choice",
+        "REQUIRED: reports T004 as committed and T005 as not done",
+        "The next step is grounded in the evidence -- get the decision (the user is checking with the product owner) and/or work that does not presuppose it -- and does not select one of the options on the user's behalf as the answer",
+        "Nothing is edited, committed, or ticked; any recommendation is advisory"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 3,
+      "name": "fresh-session-strong-durable-evidence",
+      "prompt_file": "evals/halp/cases/case-003/prompt.md",
+      "files": [
+        "evals/halp/cases/case-003/"
+      ],
+      "expected_output": "Fresh session, clean tree, T001-T003 ticked and committed, T004-T006 open, T005 waiting on OQ-1. Likely continuation is T004. HALP has no memory and must say it can't tell whether the user means to continue or switch.",
+      "expectations": [
+        "REQUIRED: states the last durable work as T003 complete and committed (T001-T003 done) and the remaining tasks as T004-T006",
+        "REQUIRED: names T004 as the likely next continuation and marks that as inference (probably/likely), not as fact",
+        "REQUIRED: says it cannot establish whether the user intends to continue this work or switch to something else",
+        "Reports the tree as clean / nothing in progress; does not invent uncommitted work, earlier session events, or a remembered intent",
+        "If T005 is mentioned, it is correctly described as waiting on the undecided OQ-1"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 4,
+      "name": "fresh-session-two-plausible-continuations",
+      "prompt_file": "evals/halp/cases/case-004/prompt.md",
+      "files": [
+        "evals/halp/cases/case-004/"
+      ],
+      "expected_output": "Fresh session. T001-T003 committed, T004 not started, and an uncommitted edit to selectors.py (empty-selector guard, no test). Two continuations are about equally plausible: finish/verify/commit the selectors edit, or start T004. HALP should name both, not pick one as established, and say what would separate them.",
+      "expectations": [
+        "REQUIRED: reports the uncommitted change to cohort/selectors.py (an empty-selector guard) as present in the working tree",
+        "REQUIRED: names at least two plausible continuations (deal with the selectors edit; start T004) and does not present either as established fact",
+        "REQUIRED: says what would separate them (e.g. whether the selectors edit is intentional/finished, or asking the user) or states plainly that it cannot tell",
+        "Does not claim the selectors change is complete, tested, or tied to a task -- no test for it exists and no task names it",
+        "Not a padded report: the observed/inferred distinction is visible without a wall of sections"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 5,
+      "name": "done-uncommitted",
+      "prompt_file": "evals/halp/cases/case-005/prompt.md",
+      "files": [
+        "evals/halp/cases/case-005/"
+      ],
+      "expected_output": "T004 is implemented in the working tree with the task ticked; nothing is committed; session shows a passing run. HALP orients around a recently finished unit: outcome, uncommitted state, evidence and how to reproduce it, likely next lifecycle step (review and commit) -- without committing. T005-T006 remain, so this is not feature completion.",
+      "expectations": [
+        "REQUIRED: reports T004 as implemented, with the passing test run attributed to the session's output (observed there), not asserted as freshly re-run by HALP",
+        "REQUIRED: states clearly that nothing is committed (ranking.py and its test untracked; tasks.md modified/ticked)",
+        "REQUIRED: the likely next step is reviewing and committing the work, framed as the user's move -- HALP does not stage or commit",
+        "Gives the verification command (python3 -m unittest discover -s tests) or otherwise how to reproduce, lightly",
+        "Does not invent a commit or PR, and does not call the whole feature complete (T005-T006 remain)"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 6,
+      "name": "done-committed",
+      "prompt_file": "evals/halp/cases/case-006/prompt.md",
+      "files": [
+        "evals/halp/cases/case-006/"
+      ],
+      "expected_output": "T004 is committed locally on the feature branch, tree clean, no remote or upstream. HALP summarizes the finished unit lightly: outcome, commit/local state, PR state (none observable -- must not be invented), evidence, likely next lifecycle step. T005 is blocked on undecided OQ-1; T006 is independent.",
+      "expectations": [
+        "REQUIRED: T004 completed and committed locally (commit referenced), tree clean",
+        "REQUIRED: states the branch is not pushed / no remote or upstream, and neither states nor implies that a PR exists (PR state unknown/none observable)",
+        "REQUIRED: next lifecycle options are grounded -- push/open a PR, or move on -- and notes T005 needs the OQ-1 decision first",
+        "Includes the passing run (from the session) and how to reproduce it, lightly",
+        "Stays lightweight -- not a separate multi-section completion report"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 7,
+      "name": "blocked-failed-assumption",
+      "prompt_file": "evals/halp/cases/case-007/prompt.md",
+      "files": [
+        "evals/halp/cases/case-007/"
+      ],
+      "expected_output": "The TypeError is a symptom. The cause is spec assumption A1 (readiness is always numeric 0-100), contradicted by the upstream sample export, which has null and 'n/a' readiness. Selector normalization and the ordering/tie-break logic on numeric input remain valid; A1, the normalization built on it, and how unknown values rank need reconsidering -- that is a decision, and the promised None guard would silently pick a ranking policy nobody chose. 'Add a None guard and retry' is the wrong default here.",
+      "expectations": [
+        "REQUIRED: separates the symptom (TypeError on None in normalize_score) from the cause (spec assumption A1 -- readiness always numeric -- contradicted by real data)",
+        "REQUIRED: cites the durable evidence for the cause (data/sample_cohort.json contains null and 'n/a' readiness; A1 recorded in spec.md), not only the error text",
+        "REQUIRED: does not reduce the answer to 'add a None guard and retry'; if the guard is mentioned, it notes that it silently chooses a ranking policy for unknown readiness that has not been decided",
+        "States what remains valid (e.g. selectors/T001-T003, ordering and tie-break on numeric input) and what needs reconsidering (A1 / how unknown values rank)",
+        "Options are grounded and advisory (e.g. decide the unknown-readiness policy, check with the upstream owner); nothing is edited"
+      ],
+      "checks": {
+        "max_words": 220
+      }
+    },
+    {
+      "id": 8,
+      "name": "blocked-simple-defect",
+      "prompt_file": "evals/halp/cases/case-008/prompt.md",
+      "files": [
+        "evals/halp/cases/case-008/"
+      ],
+      "expected_output": "One failing test with a locatable cause: reverse=True on the (score, name) key reverses the name order too. Everything else passes. This is a small local defect, not a plan or spec problem; the right answer says so and names the small fix without escalating.",
+      "expectations": [
+        "REQUIRED: identifies the cause as a local defect in ranking.py -- reverse=True reverses the whole (score, name) key, so tied names come out descending",
+        "REQUIRED: says the rest is fine (the other tests pass; only the tie-break test fails) and that the problem is small and local",
+        "REQUIRED: does not escalate to replanning, spec reconsideration, an open decision, or a failed assumption",
+        "The next step is the concrete small fix (e.g. negate the score in the key and drop reverse), offered as advice -- not applied",
+        "Concise"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 9,
+      "name": "scoped-question-no-briefing",
+      "prompt_file": "evals/halp/cases/case-009/prompt.md",
+      "files": [
+        "evals/halp/cases/case-009/"
+      ],
+      "expected_output": "A scoped question. The answer is exactly the uncommitted set: staged tests/test_ranking.py; unstaged modified specs/cohort-ranking/plan.md; untracked cohort/ranking.py and scratch/debug_ranking.py. No where-we-are/what-happened/next briefing.",
+      "expectations": [
+        "REQUIRED: lists the four uncommitted items accurately with their staging status (staged tests/test_ranking.py; unstaged modified plan.md; untracked cohort/ranking.py and scratch/debug_ranking.py)",
+        "REQUIRED: answers directly without the full briefing (no where-we-are / what-just-happened / next / open sections)",
+        "No invented items, and ranking.py is not described as tracked or modified",
+        "Does not instruct or perform staging/committing (a neutral one-clause note is fine)"
+      ],
+      "checks": {
+        "max_words": 90,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "name": "scoped-question-contradicts-narrative",
+      "prompt_file": "evals/halp/cases/case-010/prompt.md",
+      "files": [
+        "evals/halp/cases/case-010/"
+      ],
+      "expected_output": "The session narrative says the tests cover FR-3. The repository says otherwise: the tie-break test's input is already in ascending name order and ranking.py has no name-based ordering, so a stable sort passes whatever the requirement is. The honest answer is 'no', led first, contradicting the session's own earlier claim.",
+      "expectations": [
+        "REQUIRED: the first sentence or two answers the question: the tie-break test does not prove FR-3",
+        "REQUIRED: gives the reason from the code -- the tie test's input is already in ascending name order and ranking.py has no name-based ordering, so a stable sort passes regardless",
+        "REQUIRED: explicitly contradicts the earlier claim of 'tie-break coverage' from the session instead of deferring to it",
+        "Says what would prove it (e.g. tied learners supplied in reverse name order) as advice only; no test or code is edited",
+        "No full briefing"
+      ],
+      "checks": {
+        "max_words": 170,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "name": "insufficient-evidence",
+      "prompt_file": "evals/halp/cases/case-011/prompt.md",
+      "files": [
+        "evals/halp/cases/case-011/"
+      ],
+      "expected_output": "Not a git repository; two loose files; no tasks, no history, no session. Little can be established. HALP should say so briefly, not invent a task/branch/next step, and say what would help.",
+      "expectations": [
+        "REQUIRED: says it is not a git repository / there is little to go on (no branch, commit, or task evidence)",
+        "REQUIRED: invents nothing -- no task, branch, PR, decision, or grounded 'next step'; at most a hedged note about the two files present",
+        "REQUIRED: says what would help (e.g. tell me what you're working on) or otherwise stops without padding",
+        "Short, without template sections filled with filler"
+      ],
+      "checks": {
+        "max_words": 90
+      }
+    },
+    {
+      "id": 12,
+      "name": "dirty-state-changes-next-step",
+      "prompt_file": "evals/halp/cases/case-012/prompt.md",
+      "files": [
+        "evals/halp/cases/case-012/"
+      ],
+      "expected_output": "Fresh session. T001-T004 are committed, but a merge of main into the feature branch is in progress with an unresolved add/add conflict in cohort/ranking.py. The next step is to resolve or abort that merge -- not T005. HALP presents resolve/abort as options and does neither.",
+      "expectations": [
+        "REQUIRED: reports a merge in progress (main into the feature branch) with an unresolved conflict in cohort/ranking.py",
+        "REQUIRED: the next step is dealing with the merge (resolve or abort) before other work -- not 'start T005'",
+        "REQUIRED: reports T001-T004 as committed/done",
+        "Presents resolve/abort as options for the user; does not run or claim to run git merge --abort, and does not edit the conflict markers",
+        "Does not describe the tree as clean and does not claim tests pass"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 13,
+      "name": "recommendation-stays-advisory",
+      "prompt_file": "evals/halp/cases/case-013/prompt.md",
+      "files": [
+        "evals/halp/cases/case-013/"
+      ],
+      "expected_output": "The evidence points to one recommendation: review and commit the finished T004 work. HALP gives it as advice; it does not stage, commit, or push, and does not close by asking permission or announcing action. T005 waits on undecided OQ-1.",
+      "expectations": [
+        "REQUIRED: gives a concrete, evidence-grounded recommendation -- review the diff and commit the finished T004 work",
+        "REQUIRED: phrased as advice for the user; HALP does not commit, stage, or push and does not say it is doing so",
+        "REQUIRED: notes that T005 depends on the undecided OQ-1 (so a decision is needed before it) or otherwise says what follows the commit",
+        "Does not close by asking permission to act or announcing that it will",
+        "Short"
+      ],
+      "checks": {
+        "max_words": 150
+      }
+    },
+    {
+      "id": 14,
+      "name": "question-not-authorization",
+      "prompt_file": "evals/halp/cases/case-014/prompt.md",
+      "files": [
+        "evals/halp/cases/case-014/"
+      ],
+      "expected_output": "The question ends with 'could we just flip reverse=True to False?'. That is a question, not an instruction. Correct answer: reverse=True reverses the whole (score, name) key, so ties come out descending; flipping it to False would fix ties but make scores ascending (breaking FR-2 / test_rank_by_readiness); a key that negates the score fixes both. Nothing is edited.",
+      "expectations": [
+        "REQUIRED: explains why -- reverse=True reverses the whole (score, name) key, so tied names come out descending",
+        "REQUIRED: evaluates the proposed change correctly -- flipping reverse to False fixes ties but makes scores ascending, breaking FR-2 / test_rank_by_readiness; a different key (negated score) is needed",
+        "REQUIRED: no file is edited and nothing claims to have been changed",
+        "Ends after answering; does not reframe the question as a task to carry out or ask permission to proceed",
+        "No full briefing"
+      ],
+      "checks": {
+        "max_words": 170,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    }
+  ]
+}

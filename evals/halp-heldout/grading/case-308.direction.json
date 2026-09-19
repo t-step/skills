@@ -1,0 +1,4 @@
+{
+  "a": "to_tsquery|ts_rank|tsvector|ts_headline",
+  "b": "(?i)elastic|esapi"
+}
