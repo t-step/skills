@@ -1,0 +1,4 @@
+{
+  "a": "\\.sort\\(|sortBy|\\.slice\\(",
+  "b": "\\boffset\\b|[?&]limit=|URLSearchParams|searchParams"
+}

@@ -1,0 +1,4 @@
+{
+  "a": "(?i)hmac|signature|compare_digest",
+  "b": "(?i)poll|since="
+}

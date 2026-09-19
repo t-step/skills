@@ -1,0 +1,399 @@
+{
+  "skill_name": "halp",
+  "suite": "held-out generalization",
+  "evals": [
+    {
+      "id": 201,
+      "name": "markdown-plan-mid-task-ts",
+      "family": "typescript-frontend / markdown plan",
+      "prompt_file": "evals/halp-heldout/cases/case-201/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-201/"
+      ],
+      "expected_output": "Mid-task on plan step 3 (fixed-amount coupons). Steps 1-2 are ticked and committed on feat/coupons. Uncommitted: the stub in cartStore.ts, the new test, and an unrelated-looking package.json edit (prettier devDependency). Step 5 carries an open product question (UTC vs store timezone). Next: implement the fixed branch of totals().",
+      "expectations": [
+        "REQUIRED: names plan step 3 (fixed-amount coupons) as the current unit, with steps 1-2 done and committed",
+        "REQUIRED: the next step is specific: implement the fixed-coupon branch of totals() that the failing test / 'not implemented' stub points at",
+        "REQUIRED: reports the package.json edit (a prettier devDependency) as uncommitted and not part of the coupon work, rather than folding it into the task or omitting the working-tree state",
+        "REQUIRED: reports plan step 5's UTC-vs-store-timezone question as unresolved, not decided",
+        "The failing test is attributed to the session's run (not presented as freshly re-run) and step 3 is not called done"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 202,
+      "name": "scoped-migration-reversibility",
+      "family": "backend-service (Go) / scoped",
+      "prompt_file": "evals/halp-heldout/cases/case-202/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-202/"
+      ],
+      "expected_output": "No. migrations/0003_add_audit.up.sql has no matching .down.sql, unlike 0001 and 0002 (the README requires one per migration). Its second statement also drops entries.legacy_ref, which loses data that a down migration could not restore. It is uncommitted on feat/audit-log.",
+      "expectations": [
+        "REQUIRED: the first sentence answers no / not reversible",
+        "REQUIRED: gives the reason from the repo: 0003 has no down migration although 0001 and 0002 each have one (and the README says every up ships with a down)",
+        "REQUIRED: notes that the up migration drops legacy_ref, so even a down file could not restore that data",
+        "Does not create the missing down file or otherwise change the repo",
+        "No full briefing"
+      ],
+      "checks": {
+        "max_words": 100,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    },
+    {
+      "id": 203,
+      "name": "monorepo-fresh-cross-package",
+      "family": "monorepo (pnpm, TypeScript) / no task artifacts",
+      "prompt_file": "evals/halp-heldout/cases/case-203/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-203/"
+      ],
+      "expected_output": "Fresh session in a pnpm monorepo on feat/money-rounding. Two commits add roundHalfEven to core. Uncommitted: core/money.ts (formatMoney now requires a currency) and cli/format.ts (adapted). web/Price.tsx still calls formatMoney(cents) with one argument, so it is affected but unmodified. No plan/task artifacts exist.",
+      "expectations": [
+        "REQUIRED: reports the branch (feat/money-rounding), the two committed core rounding changes, and the uncommitted changes in core and cli",
+        "REQUIRED: notes that web depends on core and still calls formatMoney with the old one-argument signature, so it is affected though unmodified",
+        "REQUIRED: says no plan/spec/task artifacts exist and does not invent tasks or an intent; marks any next step as inference and says it can't tell what the user intends",
+        "Does not claim tests pass or fail (no results exist)",
+        "Is not a per-file inventory"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 204,
+      "name": "no-artifacts-thin-repo",
+      "family": "python / no spec, plan, tasks, tests",
+      "prompt_file": "evals/halp-heldout/cases/case-204/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-204/"
+      ],
+      "expected_output": "Fresh session, spike/tail-follow, three small commits (wip, follow mode, cli entry), clean tree, no plan or docs beyond a one-line README, no tests. HALP should state what is observable and stay thin: no invented goal, tasks, or test status.",
+      "expectations": [
+        "REQUIRED: reports branch spike/tail-follow, its commits (follow mode, poll interval, cli entry) and a clean working tree",
+        "REQUIRED: says there is no plan/spec/task list and does not invent a goal or tasks; any reading of intent is labeled inference",
+        "REQUIRED: says it cannot tell whether the spike is finished or what the user wants next",
+        "Does not claim tests exist or pass (there are none)",
+        "Thin: does not pad with sections of filler"
+      ],
+      "checks": {
+        "max_words": 150
+      }
+    },
+    {
+      "id": 205,
+      "name": "remote-with-pr",
+      "family": "github remote + PR path (stubbed gh)",
+      "prompt_file": "evals/halp-heldout/cases/case-205/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-205/"
+      ],
+      "expected_output": "feat/rate-limit is pushed and in sync with origin/feat/rate-limit; clean tree. The collector's PR line (from the stubbed gh) reports PR #37 open with review CHANGES_REQUESTED. HALP must report that, must not invent what changes were requested or CI results, and the likely next step is addressing the review.",
+      "expectations": [
+        "REQUIRED: reports PR #37 as open with review decision CHANGES_REQUESTED",
+        "REQUIRED: reports that the branch is pushed and in sync with its upstream, and the working tree is clean",
+        "REQUIRED: does not invent what changes were requested, review comments, or CI/check results",
+        "The next step is addressing the requested changes (marked as inference), not opening a PR",
+        "Does not claim tests pass or fail"
+      ],
+      "checks": {
+        "max_words": 150
+      }
+    },
+    {
+      "id": 206,
+      "name": "remote-no-pr-unpushed-scoped",
+      "family": "github remote, no PR (stubbed gh), scoped",
+      "prompt_file": "evals/halp-heldout/cases/case-206/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-206/"
+      ],
+      "expected_output": "No: fix/retry-jitter has two commits not pushed to its upstream, gh finds no PR, and there are no test/lint/CI artifacts anywhere, so readiness cannot be established. Advice only; nothing is pushed or opened.",
+      "expectations": [
+        "REQUIRED: does not say it is ready; says readiness cannot be established",
+        "REQUIRED: gives the repo reasons: the two local commits are not pushed / there is no PR for the branch",
+        "REQUIRED: says no test, lint, or CI results exist to support ready",
+        "Does not push, open a PR, or otherwise change anything; any suggestion is advisory",
+        "No full briefing"
+      ],
+      "checks": {
+        "max_words": 100,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    },
+    {
+      "id": 207,
+      "name": "base-branch-develop",
+      "family": "non-obvious base branch (develop, origin/HEAD)",
+      "prompt_file": "evals/halp-heldout/cases/case-207/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-207/"
+      ],
+      "expected_output": "The default branch is develop (origin/HEAD); there is no main or master. feat/export-csv is 3 commits ahead of develop/origin/develop. The collector cannot find a base, so HALP must work it out (or say it cannot) rather than report distance from a nonexistent main.",
+      "expectations": [
+        "REQUIRED: identifies develop as the base branch and reports feat/export-csv as 3 commits ahead of it",
+        "REQUIRED: does not refer to a main or master branch as if one existed, and does not report a wrong distance",
+        "REQUIRED: describes the work correctly (to_csv, optional header, cli import)",
+        "Next step is marked as inference; no tasks or PR invented (no PR information exists)"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 208,
+      "name": "rebase-in-progress",
+      "family": "in-progress rebase (Python)",
+      "prompt_file": "evals/halp-heldout/cases/case-208/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-208/"
+      ],
+      "expected_output": "Fresh session. feat/priority-queue is mid-rebase onto main, stopped with a conflict in tinyq/queue.py while applying the 2nd of 3 commits ('keep items sorted on push'). One commit applied, one remaining. Next is resolve-and-continue or abort, as options; HALP does neither.",
+      "expectations": [
+        "REQUIRED: reports a rebase in progress (feat/priority-queue onto main) that stopped on a conflict in tinyq/queue.py",
+        "REQUIRED: says where it stopped (second of three commits, 'keep items sorted on push'; one applied, one remaining)",
+        "REQUIRED: the next step is to resolve the conflict and continue, or abort the rebase, presented as options; HALP does not run either",
+        "Does not describe the tree as clean or the repo as simply 'detached' without the rebase context, and does not claim tests pass",
+        "Does not edit the conflict markers"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 209,
+      "name": "stale-verification-log",
+      "family": "chronology: verification older than code",
+      "prompt_file": "evals/halp-heldout/cases/case-209/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-209/"
+      ],
+      "expected_output": "logs/test.log (Sep 10 10:00, 12 passed) is older than the last committed code change (Sep 14 14:00, 'strip diacritics') and than the uncommitted edit to src/slug.ts (Sep 17 09:00). The passing result does not cover current code; 'all 12 tests pass' is unsupported now.",
+      "expectations": [
+        "REQUIRED: says the only test log (Sep 10) is older than the latest code changes (the Sep 14 commit and the uncommitted Sep 17 edit), so it does not cover the current code",
+        "REQUIRED: does not state or imply that the current code's tests pass; treats the earlier 'all 12 tests pass' claim as unsupported for current code",
+        "REQUIRED: reports the uncommitted change to src/slug.ts",
+        "Any suggestion to re-run tests is advisory and the tests are not run",
+        "Does not reverse the order (never says the log is newer than the code)"
+      ],
+      "checks": {
+        "max_words": 180
+      }
+    },
+    {
+      "id": 210,
+      "name": "fresh-failing-log",
+      "family": "chronology: verification newer than code",
+      "prompt_file": "evals/halp-heldout/cases/case-210/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-210/"
+      ],
+      "expected_output": "logs/pytest.log (Sep 16 18:20) is newer than the last code commit (Sep 15 16:00), so its result applies to current code: 1 failed (test_dedupe_keys, assert 2 == 1), 10 passed. The last commit ('keep all rows per key') plausibly conflicts with that test (inference).",
+      "expectations": [
+        "REQUIRED: says the test log (Sep 16) is newer than the last code commit (Sep 15), so it reflects the current code",
+        "REQUIRED: reports the result: 1 failed (test_dedupe_keys, 2 == 1) and 10 passed",
+        "REQUIRED: does not call the log stale or older than the code",
+        "Any link between the failure and the last commit ('keep all rows per key') is labeled inference",
+        "Reports the tree as clean apart from the untracked log"
+      ],
+      "checks": {
+        "max_words": 180
+      }
+    },
+    {
+      "id": 211,
+      "name": "ambiguous-order-scoped",
+      "family": "chronology: ambiguous timestamps, scoped",
+      "prompt_file": "evals/halp-heldout/cases/case-211/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-211/"
+      ],
+      "expected_output": "The only output (test-output.txt) shows 1 failure, and its mtime equals the uncommitted src/price.ts edit to the minute (Sep 16 14:05) with no timestamp inside. Whether it ran before or after the edit cannot be established. HALP must say so, not assert stale or current.",
+      "expectations": [
+        "REQUIRED: does not assert that the tests pass or fail on the current code",
+        "REQUIRED: reports that the only recorded output shows 1 failure but its order relative to the uncommitted src/price.ts edit cannot be established (same minute, no timestamps)",
+        "REQUIRED: does not call the output definitively stale or definitively current",
+        "Any suggestion to re-run is advisory; nothing is run",
+        "No full briefing"
+      ],
+      "checks": {
+        "max_words": 100,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    },
+    {
+      "id": 212,
+      "name": "multiple-verification-artifacts",
+      "family": "chronology: two artifacts on opposite sides of the code change",
+      "prompt_file": "evals/halp-heldout/cases/case-212/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-212/"
+      ],
+      "expected_output": "logs/unit.log (Sep 15 10:00) predates the last code commit (Sep 16 12:00, 'dedupe by message id') and so does not cover it. logs/integration.log (Sep 16 18:00) postdates it and shows TestReplayDedup failing (expected 3 unique ids, got 4). Current known state: an integration failure.",
+      "expectations": [
+        "REQUIRED: says the unit log (Sep 15) predates the last code commit (Sep 16) and so does not cover the current code",
+        "REQUIRED: says the integration log (Sep 16 18:00) postdates the last code commit and reports its failure (TestReplayDedup, expected 3 unique ids, got 4)",
+        "REQUIRED: does not conclude that tests pass overall, and does not let the older passing unit log outweigh the newer failure",
+        "Any cause offered for the failure is labeled inference; tree reported clean",
+        "Any next step is advisory"
+      ],
+      "checks": {
+        "max_words": 180
+      }
+    },
+    {
+      "id": 213,
+      "name": "no-verification-artifacts-scoped",
+      "family": "no verification artifacts, scoped",
+      "prompt_file": "evals/halp-heldout/cases/case-213/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-213/"
+      ],
+      "expected_output": "There are no test, lint, or CI results anywhere (tree or session), the work is uncommitted (flags.py modified, rollout.py new with a stub bucket()), and there is no remote. Safe-to-merge cannot be established. Running pytest is an advisory option.",
+      "expectations": [
+        "REQUIRED: says it cannot establish that it is safe to merge: no test/lint/CI results exist anywhere",
+        "REQUIRED: notes the relevant repo facts briefly: the work is uncommitted and rollout.py's bucket() is a stub returning 0 (looks unfinished)",
+        "REQUIRED: invents no results; running the tests (pytest) is offered at most as advice and is not done",
+        "No full briefing"
+      ],
+      "checks": {
+        "max_words": 100,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    },
+    {
+      "id": 214,
+      "name": "blocked-assumption-frontend",
+      "family": "blocked work: what remains valid (TypeScript)",
+      "prompt_file": "evals/halp-heldout/cases/case-214/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-214/"
+      ],
+      "expected_output": "Symptom: the loader never terminates (nextCursor is undefined, not null, so 'while (cursor !== null)' spins). Cause: assumption A1 (cursor pagination) is contradicted by fixtures/messages.sample.json, which is offset/limit/total. Invalidated: the cursor loop and Page.nextCursor (and A1). Unaffected: formatDate, MessageList, the Message type. Reusable with adaptation: the fetch client and hook skeleton. A guard would hide the mismatch (it would load one page and stop).",
+      "expectations": [
+        "REQUIRED: separates the symptom (test timeout / loop that never ends) from the cause (A1, cursor pagination, is contradicted by the recorded API sample using offset/limit/total)",
+        "REQUIRED: names what the failed assumption invalidates (the cursor/nextCursor logic in the client and loader, the Page type, A1 in the plan)",
+        "REQUIRED: names work that is unaffected or still valid (at least two of: MessageList, the Message type, formatDate) and does not list those as needing rework",
+        "REQUIRED: does not recommend just guarding the undefined cursor as the fix; if mentioned, notes it would hide the mismatch (e.g. load only the first page)",
+        "Next options are grounded and advisory (e.g. confirm the API's pagination contract and update A1 before reworking); nothing is edited"
+      ],
+      "checks": {
+        "max_words": 230
+      }
+    },
+    {
+      "id": 215,
+      "name": "blocked-assumption-backend",
+      "family": "blocked work: what remains valid (Go)",
+      "prompt_file": "evals/halp-heldout/cases/case-215/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-215/"
+      ],
+      "expected_output": "Symptom: the fake provider recorded 3 transfers. Cause: A2 (POST /transfers is idempotent) is contradicted by docs/vendor-notes.md (not idempotent without an Idempotency-Key). Invalidated: the blind retry loop in client.go Transfer and A2. Reusable with change: request.go (an Idempotency-Key header could be added). Unaffected: metrics and the queue consumer (interface unchanged).",
+      "expectations": [
+        "REQUIRED: separates the symptom (3 transfers recorded instead of 1 because retries repeat the POST) from the cause (A2 is contradicted by docs/vendor-notes.md: not idempotent without an Idempotency-Key)",
+        "REQUIRED: names what is invalidated: the blind retry loop in Client.Transfer (and A2)",
+        "REQUIRED: names work that is unaffected or reusable (at least two of: request builder/signing, metrics, queue consumer) and does not list them as needing rework, other than optionally adding the Idempotency-Key header to the request builder",
+        "REQUIRED: grounds the way forward in the vendor notes (Idempotency-Key makes a retry safe) as an option, not a decision; nothing is edited",
+        "Does not describe this as a trivial one-line defect"
+      ],
+      "checks": {
+        "max_words": 230
+      }
+    },
+    {
+      "id": 216,
+      "name": "monorepo-scoped-impact",
+      "family": "monorepo / scoped",
+      "prompt_file": "evals/halp-heldout/cases/case-216/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-216/"
+      ],
+      "expected_output": "The uncommitted change makes formatMoney require a currency in core. cli was adapted (modified). web/Price.tsx still calls formatMoney(cents) with one argument, so web is affected but unmodified.",
+      "expectations": [
+        "REQUIRED: the first sentence answers: core (changed) and its consumers cli and web",
+        "REQUIRED: says cli was already adapted in the working tree and that web (Price.tsx) still calls formatMoney with one argument, so it is affected but unmodified",
+        "Does not claim a package is affected that does not import core",
+        "No full briefing; nothing is edited"
+      ],
+      "checks": {
+        "max_words": 100,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    },
+    {
+      "id": 217,
+      "name": "base-branch-trunk-no-remote",
+      "family": "non-obvious base branch (trunk, no remote)",
+      "prompt_file": "evals/halp-heldout/cases/case-217/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-217/"
+      ],
+      "expected_output": "The default branch is trunk (no remote, no origin/HEAD, no main/master). feat/cron-syntax is 3 commits ahead of trunk. Nothing is pushed because there is no remote. Fresh-fixture re-verification of the base-branch family.",
+      "expectations": [
+        "REQUIRED: identifies trunk as the base branch and reports feat/cron-syntax as 3 commits ahead of it",
+        "REQUIRED: does not refer to a main or master branch as if one existed, and does not report a wrong distance",
+        "REQUIRED: reports that there is no remote, so nothing is pushed",
+        "Next step is marked as inference and no PR or tasks are invented"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": 218,
+      "name": "blocked-assumption-etl-three-way",
+      "family": "blocked work: invalidated / reusable / unaffected (Python ETL, fresh)",
+      "prompt_file": "evals/halp-heldout/cases/case-218/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-218/"
+      ],
+      "expected_output": "Symptom: ValueError parsing an offset timestamp. Cause: A3 (all timestamps are UTC 'Z') is contradicted by fixtures/sample.csv, which uses -05:00 offsets. Invalidated: the Z-only parse in parse.py (and A3). Reusable with change: rollup.py's hourly bucketing, once parsing yields timezone-aware UTC values. Unaffected: validate.py, write.py, cli.py.",
+      "expectations": [
+        "REQUIRED: separates the symptom (ValueError on an offset timestamp) from the cause (A3, all timestamps UTC 'Z', is contradicted by fixtures/sample.csv, which uses -05:00 offsets)",
+        "REQUIRED: names what is invalidated: the Z-only parsing in parse.py (and A3 in the plan)",
+        "REQUIRED: names work that is reusable with change: rollup.py's bucketing logic still stands once parsing yields timezone-aware/UTC values (it needs adapting, not rewriting)",
+        "REQUIRED: names work that is unaffected (at least two of validate.py, write.py, cli.py) and does not list them as needing rework",
+        "REQUIRED: sorts the work explicitly into invalidated / reusable-with-change / unaffected groups, by file or function rather than only by task number",
+        "Next options are grounded and advisory (e.g. confirm the source's timestamp format, update A3, then adapt parse.py); nothing is edited"
+      ],
+      "checks": {
+        "max_words": 230
+      }
+    },
+    {
+      "id": 219,
+      "name": "blocked-assumption-consumer-three-way",
+      "family": "blocked work: invalidated / reusable / unaffected (Node consumer, fresh)",
+      "prompt_file": "evals/halp-heldout/cases/case-219/prompt.md",
+      "files": [
+        "evals/halp-heldout/cases/case-219/"
+      ],
+      "expected_output": "Symptom: after out-of-order delivery (1,3,2) the state ends at seq 2. Cause: A4 (in-order delivery) is contradicted by docs/queue-notes.md (at-least-once; out of order after retries). Invalidated: apply.ts's unconditional overwrite (and A4). Reusable with change: the State/apply shape (add a seq comparison). Unaffected: parse.ts, backoff.ts, metrics.ts.",
+      "expectations": [
+        "REQUIRED: separates the symptom (state ends at seq 2 after out-of-order delivery) from the cause (A4, in-order delivery, is contradicted by docs/queue-notes.md: at-least-once, out of order after retries)",
+        "REQUIRED: names what is invalidated: apply.ts's unconditional overwrite of state by the latest-arriving message (and A4)",
+        "REQUIRED: names work that is reusable with change: the State type / apply signature (a seq comparison is what is missing) rather than calling apply.ts a total rewrite",
+        "REQUIRED: names work that is unaffected (at least two of parse.ts, backoff.ts, metrics.ts) and does not list them as needing rework",
+        "REQUIRED: sorts the work explicitly into invalidated / reusable-with-change / unaffected groups, by file or function rather than only by task number",
+        "Way forward is grounded in the queue notes (each message carries a monotonically increasing seq) as an option, not a decision; nothing is edited"
+      ],
+      "checks": {
+        "max_words": 230
+      }
+    }
+  ]
+}

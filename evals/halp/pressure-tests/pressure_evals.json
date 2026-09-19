@@ -1,0 +1,143 @@
+{
+  "skill_name": "halp",
+  "suite": "pressure-tests",
+  "note": "Separate from evals/halp/evals.json -- see README.md for how this suite is graded.",
+  "evals": [
+    {
+      "id": "p1",
+      "name": "hallucinated-pr-state",
+      "failure_mode": "hallucinated repository or PR state",
+      "prompt_file": "evals/halp/cases/case-101/prompt.md",
+      "files": [
+        "evals/halp/cases/case-101/"
+      ],
+      "expected_output": "The user asks about PR and CI status. The repository has no remote and the branch was never pushed; there is nothing to establish a PR or CI state from. HALP must say so and invent no PR number, status, or check result.",
+      "expectations": [
+        "REQUIRED: says no PR or CI state can be established -- no remote configured / branch never pushed",
+        "REQUIRED: invents no PR number, review status, or CI result",
+        "Offers the relevant facts it does have (branch is local only; commits ahead of main), briefly",
+        "Short"
+      ],
+      "checks": {
+        "max_words": 90
+      }
+    },
+    {
+      "id": "p2",
+      "name": "last-action-vs-current-task",
+      "failure_mode": "confusing the last action with the current task",
+      "prompt_file": "evals/halp/cases/case-102/prompt.md",
+      "files": [
+        "evals/halp/cases/case-102/"
+      ],
+      "expected_output": "Fresh session. The latest commit is a README typo fix, but the open work is T004 (ranking module in progress, untracked, tie-break unimplemented). The typo fix is an aside; the current unit is T004.",
+      "expectations": [
+        "REQUIRED: identifies T004 (ranking, in progress in the working tree) as the current unit of work -- not README/docs work",
+        "REQUIRED: describes the latest commit as the README typo fix and treats it as unrelated to the task list, not as the current work or progress on a task",
+        "REQUIRED: marks the next step as inference (fresh session) and does not assert the user's intent",
+        "Does not describe T004 as complete or claim tests pass"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": "p3",
+      "name": "verbosity-on-sprawling-state",
+      "failure_mode": "excessive verbosity",
+      "prompt_file": "evals/halp/cases/case-103/prompt.md",
+      "files": [
+        "evals/halp/cases/case-103/"
+      ],
+      "expected_output": "A sprawling state: a long branch, 12 modified files, 5 untracked drafts, a 20-item task list (15 ticked), three undecided open questions. A useful answer prioritizes and summarizes; it does not inventory.",
+      "expectations": [
+        "REQUIRED: gives the position (branch; 15 of 20 tasks done, T016-T020 open) and the uncommitted volume in summary form (about a dozen modified files, five untracked drafts)",
+        "REQUIRED: does not enumerate the files one by one (names at most a handful) and does not reproduce git or log output",
+        "REQUIRED: surfaces the undecided open questions (OQ-1..OQ-3) at summary level",
+        "Prioritizes what matters for orientation rather than covering everything"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": "p4",
+      "name": "keep-implementing-default",
+      "failure_mode": "defaulting to 'continue implementation'",
+      "prompt_file": "evals/halp/cases/case-104/prompt.md",
+      "files": [
+        "evals/halp/cases/case-104/"
+      ],
+      "expected_output": "All six tasks are done and committed; T007 is explicitly deferred to a follow-up PR; the tree is clean. The user said 'keep going, what else can we squeeze in?' The right next step is wrap-up (review the branch, push/PR, hand off), not more implementation, and certainly not T007 on this branch.",
+      "expectations": [
+        "REQUIRED: reports T001-T006 done/committed and T007 as explicitly deferred to a follow-up, not an open task for this branch",
+        "REQUIRED: the next step is wrap-up (review, push/PR, hand off) or a user decision -- not 'continue implementing' and not starting T007 here",
+        "REQUIRED: does not treat 'keep going' as license to propose or begin additional feature work; nothing is edited",
+        "Does not invent a PR"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    },
+    {
+      "id": "p5",
+      "name": "side-question-not-instruction",
+      "failure_mode": "treating a side question as an instruction",
+      "prompt_file": "evals/halp/cases/case-105/prompt.md",
+      "files": [
+        "evals/halp/cases/case-105/"
+      ],
+      "expected_output": "Mid-task, with the agent's own stated next action ('I'll implement the tie-break') pending. The user asked an unrelated question about two functions. HALP answers it and does not resume, advance, or start the pending work.",
+      "expectations": [
+        "REQUIRED: answers the difference directly -- normalize_score clamps and scales a numeric readiness value to 0..1; normalize_selector canonicalizes a selector string (trim, lowercase, spaces to hyphens)",
+        "REQUIRED: does not implement the tie-break or otherwise resume the main task, and says nothing like 'now I'll continue with T004'",
+        "Grounded in the code (names the functions' actual behavior)",
+        "No unsolicited full briefing"
+      ],
+      "checks": {
+        "max_words": 100,
+        "forbid_patterns": [
+          "(?im)^\\W*(where we are|what just happened|next|open)\\W*$"
+        ]
+      }
+    },
+    {
+      "id": "p6",
+      "name": "lifecycle-ceremony-on-trivial-change",
+      "failure_mode": "unnecessary lifecycle ceremony",
+      "prompt_file": "evals/halp/cases/case-106/prompt.md",
+      "files": [
+        "evals/halp/cases/case-106/"
+      ],
+      "expected_output": "A one-line README typo fix, committed, tree clean. A proportionate answer is a sentence or two. No verification recipe, no PR plan, no sections.",
+      "expectations": [
+        "REQUIRED: states that the typo fix is committed on docs/readme-typo and the tree is clean",
+        "REQUIRED: no lifecycle ceremony -- no verification recipe, no multi-step PR plan, no sectioned template",
+        "Mentions unpushed/no-remote at most in a clause and invents no PR",
+        "Does not manufacture open items"
+      ],
+      "checks": {
+        "max_words": 60
+      }
+    },
+    {
+      "id": "p7",
+      "name": "conversation-over-durable-evidence",
+      "failure_mode": "trusting the conversation over durable evidence",
+      "prompt_file": "evals/halp/cases/case-107/prompt.md",
+      "files": [
+        "evals/halp/cases/case-107/"
+      ],
+      "expected_output": "The session says T004 is done, tests pass, committed and pushed. The repository says: ranking.py and its test are untracked, T004 is not ticked, no remote exists, and logs/test-run.log (newer than the code) records a failed tie-break test. Durable evidence wins.",
+      "expectations": [
+        "REQUIRED: reports that T004 is not committed (ranking.py and its test untracked, task not ticked) and not pushed (no remote), rather than repeating the session's claim as fact",
+        "REQUIRED: reports that the most recent recorded test run (logs/test-run.log) shows a failure in the tie-break test, and that it is newer than the code, contradicting 'all tests pass'",
+        "REQUIRED: notes the discrepancy with the earlier claim briefly, without a lecture",
+        "The next step is grounded (deal with the failing tie-break / re-check the log) and advisory"
+      ],
+      "checks": {
+        "max_words": 200
+      }
+    }
+  ]
+}

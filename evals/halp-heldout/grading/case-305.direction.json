@@ -1,0 +1,4 @@
+{
+  "a": "invalidateQueries|useMutation|queryClient",
+  "b": "useEffect\\("
+}
