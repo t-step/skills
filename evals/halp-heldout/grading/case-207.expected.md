@@ -1,6 +1,6 @@
 # Expected outcome (for grading, not shown to the agent under test)
 
-The default branch is develop (origin/HEAD); there is no main or master. feat/export-csv is 3 commits ahead of develop/origin/develop. The collector cannot find a base, so HALP must work it out (or say it cannot) rather than report distance from a nonexistent main.
+The default branch is develop (origin/HEAD); there is no main or master. feat/export-csv is 3 commits ahead of develop/origin/develop. The collector detects develop from origin/HEAD and reports distance against it, so HALP should carry that through rather than report distance from a nonexistent main.
 
 ## Assertions
 
