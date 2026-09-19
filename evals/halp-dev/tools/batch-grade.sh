@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Grades + checkpoints a small batch. Usage: batch-grade.sh <manifest> <suite-dir> <workspace> <date-tag> <id>...
+# Grades + checkpoints a small batch (checkpoint = run.json + outputs/, see checkpoint.py). Usage: batch-grade.sh <manifest> <suite-dir> <workspace> <date-tag> <id>...
 # Prints one compact line per run: words/budget, repo-unchanged, pattern hits, action phrases, collector cost.
 set -euo pipefail
 tools="$(cd "$(dirname "$0")" && pwd)"; manifest="$1"; suite="$2"; ws="$3"; tag="$4"; shift 4
@@ -13,4 +13,4 @@ print(sys.argv[2], f"words={c['words']}/{c['max_words']}", "OK-budget" if c["wit
       "action=" + str(c["permission_or_action_phrases"]) if c["permission_or_action_phrases"] else "", f"| collector {k['seconds']}s {k['packet_bytes']}B gh={k['gh_attempted']}")
 P
 done
-bash "$tools/checkpoint.sh" "$ws" "$suite" "$tag" "$@"
+python3 "$tools/checkpoint.py" "$ws" "$suite" "$tag" "$@"

@@ -1,4 +1,0 @@
-{
-  "a": "(?i)strftime|%Y-%m|\\\"20\\d\\d-\\d\\d\\\"",
-  "b": "\\.year\\s*,\\s*\\w+\\.month|\\(year,\\s*month\\)|\\(y,\\s*m\\)|(?i:tuple)"
-}
