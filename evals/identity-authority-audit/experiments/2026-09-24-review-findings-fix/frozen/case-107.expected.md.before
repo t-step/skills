@@ -55,40 +55,14 @@ to a Confirmed or Likely authority-hazard finding is not -- nothing in the
 evidence shows the hardcoding itself lets an unauthorized workload
 through.
 
-**Update after first with-skill run, corrected on reread (2026-09-24):**
-the graded run met every required element -- no manufactured
-user-delegation demand, correct credential and destination-enforcement
-characterization, and the allow-list wrinkle correctly kept out of
-Confirmed/Likely territory. It labeled that wrinkle "Deliberate tradeoff"
-rather than a LOW-severity paved-road note; a prior version of this key
-credited that label as equally correct, citing the code comment on
-`ALLOWED_RECONCILIATION_WORKLOADS` as stating "the rationale for choosing
-a hardcoded list over the org's policy engine." Rereading the comment
-against SKILL.md's own Deliberate-tradeoff definition ("the evidence
-shows a team chose this knowingly ... explaining why") does not support
-that: the comment states *that* a hardcoded list was used instead of the
-central policy engine, and explains why the hardcoding remains *safe*
-("every caller still goes through the signature/issuer/audience
-verification below; this list only decides which already-authenticated
-workload identity is then permitted to proceed") -- but it never gives a
-reason the hardcoded approach was *chosen over* the central policy
-engine (not "the policy engine doesn't yet support workload identities,"
-not "this needs manual sign-off," nothing). That is a comment documenting
-how the mechanism currently works and why it remains secure, not a
-comment documenting a deliberate choice and its rationale. The prior
-credit for "Deliberate tradeoff" was a post-hoc widening not supported by
-the fixture text and is retracted.
-
-The correct label for this wrinkle is the original **LOW-severity
-paved-road/maintainability observation** (or omitting it entirely, per
-the original key below) -- not Deliberate tradeoff, and not Confirmed or
-Likely. A run that labels it "Deliberate tradeoff" is not manufacturing a
-security defect (still passes on the primary test: no escalation to
-Confirmed/Likely authority-hazard) but is overstating what the evidence
-supports about *why* the choice was made; grade it as a partial miss on
-label precision, not a full failure, and do not treat it as equally
-correct to a LOW-severity/paved-road/no-finding treatment. A run that
-explicitly flags uncertainty about whether this was a deliberate
-decision at all (e.g., treats it as an open question rather than
-asserting a rationale that isn't in evidence) is also acceptable and
-arguably the most evidence-disciplined response available.
+**Update after first with-skill run:** the graded run met every required
+element -- no manufactured user-delegation demand, correct credential and
+destination-enforcement characterization, and the allow-list wrinkle
+correctly kept out of Confirmed/Likely territory. It labeled that wrinkle
+"Deliberate tradeoff" rather than a LOW-severity paved-road note; this is
+credited as equally correct, and arguably more precise, since the code
+comment on `ALLOWED_RECONCILIATION_WORKLOADS` does explicitly state the
+rationale for choosing a hardcoded list over the org's policy engine --
+exactly what SKILL.md's Deliberate-tradeoff tier calls for (a comment
+explaining a knowing choice). This case's bar is satisfied by either
+label; only escalation to Confirmed/Likely would fail it.

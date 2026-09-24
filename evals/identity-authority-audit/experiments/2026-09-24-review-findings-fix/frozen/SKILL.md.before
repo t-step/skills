@@ -245,9 +245,7 @@ Sort every finding into exactly one tier:
   elsewhere.
 - **Ambiguity requiring verification** -- the evidence doesn't settle it
   either way, and the honest move is naming exactly what would settle it
-  (see "Evidence discipline"). Report these under "Open questions /
-  ambiguities," not "Findings" -- an item at this tier is not yet an
-  issue to fix, it's a question to answer.
+  (see "Evidence discipline").
 - **Deliberate tradeoff** -- the evidence shows a team chose this
   knowingly (a comment, ADR, ticket, or design note explaining why), even
   if it's a tradeoff you'd flag elsewhere. Report it as a tradeoff, not a
@@ -268,18 +266,6 @@ unobserved gateway), don't tag the finding Confirmed at that consequence
 level -- tag the structural fact Confirmed and the consequence Likely, or
 split the two into their own findings.
 
-That splitting has a floor, and Confirmed/Likely -- at any level -- stops
-being available below it: if the unresolved fact could determine whether
-the claimed defect exists at all, not merely how severe, scoped, or
-exploitable it is, the consequence is not a hedged finding, it's an open
-question. Ask "could naming this missing fact resolve to 'no defect
-here' about as easily as it resolves to 'defect confirmed'?" If yes,
-nothing about it belongs in Findings under any tier, however hedged --
-it belongs in "Open questions / ambiguities" below. Findings and open
-questions are different report sections precisely so that admitting
-uncertainty never has to be laundered through a Confirmed or Likely
-label to have somewhere to go.
-
 Within Confirmed and Likely findings only, a coarse consequence class may
 help a reader triage, and nothing finer than this:
 
@@ -297,13 +283,6 @@ findings, which aren't "issues" to rank by consequence at all. Order
 findings by practical importance (Confirmed HIGH first), not by which
 category came up first while reading.
 
-A finding's next step names what would verify or falsify it -- a fact to
-check, a config to read, a log to inspect -- not a mechanism or design
-change. "Confirm whether the gateway validates audience before this
-request arrives" is a Review-mode next step; "add audience validation at
-the gateway" is a Design-mode recommendation. Reviewing a finding is not
-an invitation to design its fix; leave that to a separate Design pass.
-
 Report:
 
 ```
@@ -314,28 +293,13 @@ Report:
 <Reused from an existing Explain report, or produced inline -- say which.>
 
 ## Findings
-<Confirmed, Likely, Deliberate-tradeoff, and Organization-specific-
-convention items only. An item earns Confirmed or Likely only if it
-clears the admission rule above -- no unresolved fact left that could
-determine whether the claimed defect exists at all.>
 ### <short finding name> -- <tier>[, <HIGH|MEDIUM|LOW> if Confirmed/Likely]
 - What was observed:
 - Why it matters:
 - Evidence:
 - Unresolved uncertainty:
-- Next verification step:
+- Smallest useful next check or change:
 (repeat, ordered by practical importance)
-
-## Open questions / ambiguities
-<Ambiguity-requiring-verification items -- including anything that would
-otherwise have entered Findings as Confirmed/Likely except that an
-unresolved fact could determine whether the defect exists at all. "None."
-is a complete answer when nothing is genuinely unresolved at this level.>
-### <short item name>
-- What is visible:
-- What remains unknown:
-- What evidence would resolve it:
-(repeat)
 
 ## Paved-road opportunities
 <Existing shared mechanisms -- auth middleware, gateway, token-exchange
@@ -346,8 +310,7 @@ target has no applicable paved road in evidence.>
 
 ## Unknowns
 <Facts that would matter but aren't establishable from inspected
-evidence and aren't themselves a candidate finding -- named, not silently
-dropped.>
+evidence -- named, not silently dropped.>
 
 ## Engagement profile
 <Optional; see below.>
@@ -355,9 +318,7 @@ dropped.>
 
 A target with no confirmed or likely issues is fully served by a short
 report saying so -- padding it with speculative findings to look thorough
-is worse than an honest "coherent as evidenced, nothing to flag." The
-same applies to Open questions / ambiguities: "None." is a complete
-answer when nothing in evidence is genuinely unresolved.
+is worse than an honest "coherent as evidenced, nothing to flag."
 
 ### Design
 

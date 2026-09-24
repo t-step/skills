@@ -6,6 +6,15 @@
 # subdirectories are ignored.
 evals/*/runs/*/
 
+# Same convention for a named experiment subdirectory
+# (evals/<skill>/experiments/<name>/): raw per-run outputs and the
+# assembled per-run prompt files (full SKILL.md + fixture copies) are
+# reconstructable, mechanical, and local; RESULTS.md, RUBRIC.md,
+# grading_out/*.md, frozen/, and checksum manifests stay tracked as the
+# hand-written analysis and audit trail.
+evals/*/experiments/*/runs/
+evals/*/experiments/*/prompts/
+
 # evidence-verification fixtures need real git history + a real SQLite
 # ledger, not just files to read -- each case's repo/ is generated
 # deterministically by its own setup.sh (fixed dates/content -> fixed
