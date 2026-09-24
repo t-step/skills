@@ -1,0 +1,70 @@
+diff --git a/src/diff/children.js b/src/diff/children.js
+index 1e44c5ca..503713c5 100644
+--- a/src/diff/children.js
++++ b/src/diff/children.js
+@@ -99,13 +99,16 @@ export function diffChildren(
+ 		newDom = childVNode._dom;
+ 		if (childVNode.ref && oldVNode.ref != childVNode.ref) {
+ 			if (oldVNode.ref) {
+-				applyRef(oldVNode.ref, null, childVNode);
++				applyRef(oldVNode.ref, null, childVNode, oldVNode);
+ 			}
+ 			refQueue.push(
+ 				childVNode.ref,
+ 				childVNode._component || newDom,
+ 				childVNode
+ 			);
++		} else if (oldVNode._refCleanup) {
++			// Transfer cleanup function to new vnode when ref stays the same
++			childVNode._refCleanup = oldVNode._refCleanup;
+ 		}
+ 
+ 		if (firstChildDom == null && newDom != null) {
+diff --git a/src/diff/index.js b/src/diff/index.js
+index 34d38028..ebffdb8f 100644
+--- a/src/diff/index.js
++++ b/src/diff/index.js
+@@ -557,11 +557,31 @@ function diffElementNodes(
+  * @param {Ref<any>} ref
+  * @param {any} value
+  * @param {VNode} vnode
++ * @param {VNode} [refVNode] The vnode that _refCleanup should be obtained/stored
+  */
+-export function applyRef(ref, value, vnode) {
++export function applyRef(ref, value, vnode, refVNode) {
+ 	try {
+-		if (typeof ref == 'function') ref(value);
+-		else ref.current = value;
++		if (typeof ref == 'function') {
++			// Check for a cleanup function from a previous ref call
++			let hasRefCleanup =
++				refVNode && typeof refVNode._refCleanup == 'function';
++			if (hasRefCleanup) {
++				refVNode._refCleanup();
++				refVNode._refCleanup = undefined;
++			}
++
++			// If we're setting a new value (not cleaning up), OR if we're cleaning up
++			// but there was no cleanup function (so we need to call ref(null) for backward compat)
++			if (value || !hasRefCleanup) {
++				let refCleanup = ref(value);
++				// Only store cleanup if we received a non-null value (element/component)
++				if (value && typeof refCleanup == 'function') {
++					vnode._refCleanup = refCleanup;
++				}
++			}
++		} else {
++			ref.current = value;
++		}
+ 	} catch (e) {
+ 		options._catchError(e, vnode);
+ 	}
+@@ -580,7 +600,7 @@ export function unmount(vnode, parentVNode, skipRemove) {
+ 
+ 	if ((r = vnode.ref)) {
+ 		if (!r.current || r.current === vnode._dom) {
+-			applyRef(r, null, parentVNode);
++			applyRef(r, null, parentVNode, vnode);
+ 		}
+ 	}
+ 

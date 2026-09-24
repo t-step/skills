@@ -1,0 +1,107 @@
+diff --git a/seaborn/_core/plot.py b/seaborn/_core/plot.py
+index 8915616b9057..f6a33a58b5a7 100644
+--- a/seaborn/_core/plot.py
++++ b/seaborn/_core/plot.py
+@@ -1569,6 +1569,8 @@ class Plotter:
+                         break
+                 else:
+                     title = self._resolve_label(p, var, data.names[var])
++                    if hasattr(scales[var], "_title_suffix") and scales[var]._title_suffix:
++                        title = f"{title} [{scales[var]._title_suffix}]"
+                     entry = (title, data.ids[var]), [var], (values, labels)
+                     schema.append(entry)
+ 
+diff --git a/seaborn/_core/scales.py b/seaborn/_core/scales.py
+index 55874bf2edc0..0451af70e8fc 100644
+--- a/seaborn/_core/scales.py
++++ b/seaborn/_core/scales.py
+@@ -67,6 +67,7 @@ class Scale:
+         self._tick_params = None
+         self._label_params = None
+         self._legend = None
++        self._title_suffix = None
+ 
+     def tick(self):
+         raise NotImplementedError()
+@@ -381,6 +382,12 @@ class ContinuousBase(Scale):
+             labels = axis.major.formatter.format_ticks(locs)
+             new._legend = list(locs), list(labels)
+ 
++            formatter = axis.major.formatter
++            if hasattr(formatter, "get_offset"):
++                offset = formatter.get_offset()
++                if offset:
++                    new._title_suffix = offset
++
+         return new
+ 
+     def _get_transform(self):
+diff --git a/seaborn/relational.py b/seaborn/relational.py
+index 18e18bb64ca8..50522f3cb1ae 100644
+--- a/seaborn/relational.py
++++ b/seaborn/relational.py
+@@ -243,18 +243,23 @@ class _RelationalPlotter(VectorPlotter):
+             else:
+                 locator = mpl.ticker.MaxNLocator(nbins=brief_ticks)
+             limits = min(self._hue_map.levels), max(self._hue_map.levels)
+-            hue_levels, hue_formatted_levels = locator_to_legend_entries(
++            hue_levels, hue_formatted_levels, hue_offset = locator_to_legend_entries(
+                 locator, limits, self.plot_data["hue"].infer_objects().dtype
+             )
+         elif self._hue_map.levels is None:
+             hue_levels = hue_formatted_levels = []
++            hue_offset = ""
+         else:
+             hue_levels = hue_formatted_levels = self._hue_map.levels
++            hue_offset = ""
+ 
+         # Add the hue semantic subtitle
+         if not legend_title and self.variables.get("hue", None) is not None:
++            hue_title = self.variables["hue"]
++            if hue_offset:
++                hue_title += f" [{hue_offset}]"
+             update((self.variables["hue"], "title"),
+-                   self.variables["hue"], **title_kws)
++                   hue_title, **title_kws)
+ 
+         # Add the hue semantic labels
+         for level, formatted_level in zip(hue_levels, hue_formatted_levels):
+@@ -275,18 +280,23 @@ class _RelationalPlotter(VectorPlotter):
+                 locator = mpl.ticker.MaxNLocator(nbins=brief_ticks)
+             # Define the min/max data values
+             limits = min(self._size_map.levels), max(self._size_map.levels)
+-            size_levels, size_formatted_levels = locator_to_legend_entries(
++            size_levels, size_formatted_levels, size_offset = locator_to_legend_entries(
+                 locator, limits, self.plot_data["size"].infer_objects().dtype
+             )
+         elif self._size_map.levels is None:
+             size_levels = size_formatted_levels = []
++            size_offset = ""
+         else:
+             size_levels = size_formatted_levels = self._size_map.levels
++            size_offset = ""
+ 
+         # Add the size semantic subtitle
+         if not legend_title and self.variables.get("size", None) is not None:
++            size_title = self.variables["size"]
++            if size_offset:
++                size_title += f" [{size_offset}]"
+             update((self.variables["size"], "title"),
+-                   self.variables["size"], **title_kws)
++                   size_title, **title_kws)
+ 
+         # Add the size semantic labels
+         for level, formatted_level in zip(size_levels, size_formatted_levels):
+diff --git a/seaborn/utils.py b/seaborn/utils.py
+index 2407853c5152..500387ef6a44 100644
+--- a/seaborn/utils.py
++++ b/seaborn/utils.py
+@@ -707,7 +707,7 @@ def locator_to_legend_entries(locator, limits, dtype):
+     formatter.set_locs(raw_levels)
+     formatted_levels = [formatter(x) for x in raw_levels]
+ 
+-    return raw_levels, formatted_levels
++    return raw_levels, formatted_levels, formatter.get_offset()
+ 
+ 
+ def relative_luminance(color):

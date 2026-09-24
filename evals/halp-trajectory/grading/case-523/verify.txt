@@ -1,0 +1,69 @@
+# verify.txt generated 2026-09-20T03:01:19Z on Darwin arm64; uv uv 0.12.1 (Homebrew 2026-07-31 aarch64-apple-darwin); cwd = scout/s3
+
+$ bash finalists/pytest-6197-package-init-marks/build.sh builds/ptvA
+ M src/_pytest/python.py
+[exit=0, 2s]
+
+$ bash finalists/pytest-6197-package-init-marks/build.sh builds/ptvB
+ M src/_pytest/python.py
+[exit=0, 2s]
+
+$ bash finalists/pytest-6197-package-init-marks/treehash.sh builds/ptvA
+84c6593dfe4b547c6a7122c96b61b943ec32d576
+[exit=0, 0s]
+
+$ bash finalists/pytest-6197-package-init-marks/treehash.sh builds/ptvB
+84c6593dfe4b547c6a7122c96b61b943ec32d576
+[exit=0, 0s]
+
+$ git -C builds/ptvA remote -v
+[exit=0, 0s]
+
+$ git -C builds/ptvA log --oneline -1
+e856638b Preparing release version 5.2.3 (#6190)
+[exit=0, 0s]
+
+$ git -C builds/ptvA diff --stat
+ src/_pytest/python.py | 1 -
+ 1 file changed, 1 deletion(-)
+[exit=0, 1s]
+
+$ du -sh builds/ptvA
+ 25M	builds/ptvA
+[exit=0, 0s]
+
+$ builds/ptvA/.venv/bin/python -c import sys; print(sys.version.split()[0])
+3.8.20
+[exit=0, 0s]
+
+$ .venv/bin/python -m pytest testing/test_collection.py testing/test_skipping.py testing/python/collect.py -q -p no:cacheprovider
+XFAIL testing/test_collection.py::TestPrunetraceback::test_collect_report_postprocessing
+  other mechanism for adding to reporting needed
+FAILED testing/test_skipping.py::test_skip_package - AssertionError: assert 1...
+FAILED testing/python/collect.py::TestModule::test_import_prepend_append - De...
+FAILED testing/python/collect.py::TestTracebackCutting::test_filter_traceback_path_no_longer_valid
+3 failed, 218 passed, 1 xfailed in 20.72s
+[exit=1, 24s]
+
+$ .venv/bin/python ../../finalists/pytest-6197-package-init-marks/probe.py
+{"eager_init_import": {"rc": 0, "summary": "1 passed in 0.07s"}, "package_marks_skip": {"rc": 1, "summary": "1 failed, 1 skipped in 0.06s"}, "path": "B"}
+[exit=0, 0s]
+
+## Probe on other states (same build dir; WIP stashed, state applied, then restored)
+$ [BASE = upstream base commit, no WIP] .venv/bin/python probe.py
+{"eager_init_import": {"rc": 2, "summary": "1 error in 0.08s"}, "package_marks_skip": {"rc": 0, "summary": "2 skipped in 0.06s"}, "path": "neither"}
+$ [GOLD (upstream fix)] .venv/bin/python probe.py
+{"eager_init_import": {"rc": 0, "summary": "1 passed in 0.05s"}, "package_marks_skip": {"rc": 1, "summary": "1 failed, 1 skipped in 0.06s"}, "path": "B"}
+$ [trajectory final (model45, defer-mount)] .venv/bin/python probe.py
+{"eager_init_import": {"rc": 0, "summary": "1 passed in 0.05s"}, "package_marks_skip": {"rc": 0, "summary": "2 skipped in 0.05s"}, "path": "A"}
+$ [trajectory final (model46, _visit_filter one-liner)] .venv/bin/python probe.py
+{"eager_init_import": {"rc": 0, "summary": "1 passed in 0.05s"}, "package_marks_skip": {"rc": 0, "summary": "2 skipped in 0.05s"}, "path": "A"}
+files dirty after restore:        1
+
+## Replay-method validation and baselines
+$ python3 rp2.py trajs/verified-model45-pytest-dev__pytest-6197.json dev/pytest6197 -1     (fresh checkout at base e856638b; all parallel tool calls replayed)
+final==submission (ignoring 'index' abbreviation lines): True     (1 file, +15/-2)   [NOTE: traj.py replay (first tool call per message only) does NOT reproduce this trajectory: it ends with an empty diff]
+$ python3 rp2.py ... 121   -> wip.patch (msg index 121 = traj.py step 49 of 63; 1 file, 1 deletion; scratch files fix.py/apply_fix.py/test_*.py/repro_test/ left out of wip.patch)
+Baseline (base commit) testing/test_collection.py testing/test_skipping.py testing/python/collect.py -> 219 passed, 1 xfailed, 2 failed (collect.py::test_import_prepend_append [pkg_resources DeprecationWarning], ::test_filter_traceback_path_no_longer_valid): both fail on base, unrelated
+WIP: same + testing/test_skipping.py::test_skip_package FAILED (assert 1 == 2 skipped)  -> 3 failed, 218 passed
+Gold (upstream fix) also fails test_skip_package because upstream DELETED that test in the same commit (test_patch), i.e. upstream accepted path B.

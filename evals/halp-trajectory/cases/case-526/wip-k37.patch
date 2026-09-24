@@ -1,0 +1,70 @@
+diff --git a/src/CollectionImpl.js b/src/CollectionImpl.js
+index afa54b69..0e5fd08e 100644
+--- a/src/CollectionImpl.js
++++ b/src/CollectionImpl.js
+@@ -8,6 +8,7 @@ import { IS_COLLECTION_SYMBOL } from './predicates/isCollection';
+ import { isKeyed, IS_KEYED_SYMBOL } from './predicates/isKeyed';
+ import { isIndexed, IS_INDEXED_SYMBOL } from './predicates/isIndexed';
+ import { isOrdered, IS_ORDERED_SYMBOL } from './predicates/isOrdered';
++import { isSet } from './predicates/isSet';
+ import { is } from './is';
+ import {
+   NOT_SET,
+@@ -747,7 +748,9 @@ function hashCollection(collection) {
+   if (collection.size === Infinity) {
+     return 0;
+   }
+-  const ordered = isOrdered(collection);
++  // Sets (including OrderedSet) should hash values regardless of order
++  // Only use ordered hashing for keyed collections (like OrderedMap)
++  const ordered = isOrdered(collection) && !isSet(collection);
+   const keyed = isKeyed(collection);
+   let h = ordered ? 1 : 0;
+   const size = collection.__iterate(
+diff --git a/src/OrderedMap.js b/src/OrderedMap.js
+index 5b0791a8..d2b061d3 100644
+--- a/src/OrderedMap.js
++++ b/src/OrderedMap.js
+@@ -62,10 +62,15 @@ export class OrderedMap extends Map {
+   }
+ 
+   __iterate(fn, reverse) {
+-    return this._list.__iterate(
+-      entry => entry && fn(entry[1], entry[0], this),
+-      reverse
+-    );
++    // Track actual count since list may have undefined entries (tombstones)
++    let iterations = 0;
++    this._list.__iterate(entry => {
++      if (entry) {
++        iterations++;
++        return fn(entry[1], entry[0], this);
++      }
++    }, reverse);
++    return iterations;
+   }
+ 
+   __iterator(type, reverse) {
+diff --git a/src/utils/deepEqual.js b/src/utils/deepEqual.js
+index 01b25aae..90c4e61f 100644
+--- a/src/utils/deepEqual.js
++++ b/src/utils/deepEqual.js
+@@ -5,6 +5,7 @@ import { isKeyed } from '../predicates/isKeyed';
+ import { isIndexed } from '../predicates/isIndexed';
+ import { isAssociative } from '../predicates/isAssociative';
+ import { isOrdered } from '../predicates/isOrdered';
++import { isSet } from '../predicates/isSet';
+ 
+ export default function deepEqual(a, b) {
+   if (a === b) {
+@@ -30,7 +31,9 @@ export default function deepEqual(a, b) {
+ 
+   const notAssociative = !isAssociative(a);
+ 
+-  if (isOrdered(a)) {
++  // Sets (including OrderedSet) should compare values regardless of order
++  // Only use ordered comparison for keyed collections (like OrderedMap)
++  if (isOrdered(a) && !isSet(a)) {
+     const entries = a.entries();
+     return (
+       b.every((v, k) => {

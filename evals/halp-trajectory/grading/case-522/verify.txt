@@ -1,0 +1,41 @@
+## build twice (fresh dirs; uv cache warm) and compare fingerprints
+$ /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/finalists/even-implies-finite/build.sh /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/work/v-even-implies-finite-a   [exit 0, 2.6s]
+    BUILD_OK dest=/private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/work/v-even-implies-finite-a head=6fd6531 fingerprint=c86fb1730887026f71db14f34ed4e2966a20aae4d00ca
+$ /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/finalists/even-implies-finite/build.sh /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/work/v-even-implies-finite-b   [exit 0, 2.7s]
+    BUILD_OK dest=/private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/work/v-even-implies-finite-b head=6fd6531 fingerprint=c86fb1730887026f71db14f34ed4e2966a20aae4d00ca
+fingerprint a: fingerprint=c86fb1730887026f71db14f34ed4e2966a20aae4d00cabbc3ecf4baa2055be3f
+fingerprint b: fingerprint=c86fb1730887026f71db14f34ed4e2966a20aae4d00cabbc3ecf4baa2055be3f
+IDENTICAL
+## state: git remote -v (expect empty), git status --short, head
+remote: []
+ M sympy/core/assumptions.py
+6fd6531 Merge pull request #16625 from asmeurer/travis-fix
+commits in history:        1
+## WIP diff stat
+ sympy/core/assumptions.py | 2 ++
+ 1 file changed, 2 insertions(+)
+## relevant tests on WIP state
+$ bash -c .venv/bin/python -W ignore bin/test sympy/core/tests/test_assumptions.py   [exit 1, 1.1s]
+      File "/private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/work/v-even-implies-finite-a/sympy/core/tests/test_assumptions.py", line 128, in test_neg_infinity
+        assert mm.is_integer is None
+    AssertionError
+    
+    === tests finished: 64 passed, 2 failed, 3 expected to fail, in 0.17 seconds ===
+    DO *NOT* COMMIT!
+## probe on WIP state
+$ .venv/bin/python -W ignore /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/finalists/even-implies-finite/probe.py   [exit 0, 0.6s]
+    {"path": "A", "tests": {"facts": {"even.is_finite": true, "odd.is_finite": true, "integer.is_finite": true, "rational.is_finite": null, "algebraic.is_finite": null, "irrational.is_finite": null, "real.is_finite": null, "oo.is_inte
+## probe on agent-model45-final (WIP replaced by that patch)
+$ .venv/bin/python -W ignore /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/finalists/even-implies-finite/probe.py   [exit 0, 0.7s]
+    {"path": "B", "tests": {"facts": {"even.is_finite": true, "odd.is_finite": true, "integer.is_finite": true, "rational.is_finite": true, "algebraic.is_finite": null, "irrational.is_finite": true, "real.is_finite": null, "oo.is_inte
+## probe on agent-model46-final (WIP replaced by that patch)
+$ .venv/bin/python -W ignore /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/finalists/even-implies-finite/probe.py   [exit 0, 0.7s]
+    {"path": "A", "tests": {"facts": {"even.is_finite": true, "odd.is_finite": true, "integer.is_finite": true, "rational.is_finite": null, "algebraic.is_finite": null, "irrational.is_finite": null, "real.is_finite": null, "oo.is_inte
+## probe on upstream-gold (WIP replaced by that patch)
+$ .venv/bin/python -W ignore /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/finalists/even-implies-finite/probe.py   [exit 0, 0.7s]
+    {"path": "B", "tests": {"facts": {"even.is_finite": true, "odd.is_finite": true, "integer.is_finite": true, "rational.is_finite": true, "algebraic.is_finite": true, "irrational.is_finite": true, "real.is_finite": null, "oo.is_inte
+## after restoring WIP:
+ M sympy/core/assumptions.py
+## base state (no WIP) probe
+$ .venv/bin/python -W ignore /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s4/finalists/even-implies-finite/probe.py   [exit 0, 0.7s]
+    {"path": "neither", "tests": {"facts": {"even.is_finite": null, "odd.is_finite": null, "integer.is_finite": null, "rational.is_finite": null, "algebraic.is_finite": null, "irrational.is_finite": null, "real.is_finite": null, "oo.i

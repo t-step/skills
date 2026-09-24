@@ -1,0 +1,9 @@
+Env: node v24.18.1, npm ci --ignore-scripts (2108 pkgs), npm cache warm (cold-network time not measured), macOS arm64.
+$ build.sh <dest> k13   -> exit 0, 4.7 s wall (warm cache), twice: treehash=ed3248da9bab both; base variant treehash=da39a3ee5e6b (empty diff)
+  (treehash = first 12 hex of shasum of `git diff HEAD`; dest HEAD=c6cce43, no remote, node_modules in .git/info/exclude)
+$ npx mocha test/unit/helpers/*.js --timeout 30000 --exit        -> 2 passing, 0.5 s
+$ npx mocha test/unit/adapters/http.js --timeout 30000 --exit    -> 111 passing (46 s)  [base]
+$ npx mocha test/unit/regression/SNYK-JS-AXIOS-7361793.js (gold test copied in): base FAILS (expected good, got bad), k13 WIP PASSES (0.5 s)
+Replay validation: `traj.py replay <traj> <repo> -1` on fresh base checkout vs info.submission: byte-IDENTICAL (`git diff` vs submission; patch.txt untracked ignored).
+Probe (node probe.mjs <repo>): base {"path":"neither"}; k13 {"path":"A","existing_spec_agrees_with_helper":false}; gold-src {"path":"A"}; hand-B {"path":"B","spec agrees":true}
+NOT verified: karma/browser specs (no browser), `npm run test:eslint`, full `npm test` on the WIP.

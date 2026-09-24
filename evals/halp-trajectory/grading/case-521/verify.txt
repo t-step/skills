@@ -1,0 +1,85 @@
+# verify.txt  slug=orm-iso-year-lookup  instance=django__django-14170  trajectory model=model46  checkpoint k=43
+# host: Darwin arm64, uv 0.12.1, git 2.55.0; env: CPython 3.10 venv, asgiref==3.7.2 pytz==2023.3 sqlparse==0.4.4, Django installed editable
+
+## 1. build (fresh dest; 3 builds so far, all at ~5-6 s) and tree hash
+build.sh <dest> (3rd build, timed): 6.8 s wall, exit 0. Rebuild over an existing fixture dest also works (marker-guarded rm -rf).
+tree hash = sha256( HEAD sha + `git diff --binary HEAD` + sorted untracked files name+content ), excluding .venv (git-excluded)
+build#1 = ed5552854177f707df9a12a72036e0a7236907ab90c10e0dcbf7a830f61cc54c
+build#3 = ed5552854177f707df9a12a72036e0a7236907ab90c10e0dcbf7a830f61cc54c
+identical: YES (builds #1 and #2 were also identical in a first pass, both 12-char prefixes matched)
+
+## 2. state of the built tree
+$ (cd <dest>) git status --short --branch
+[exit 0, 0.09s]
+## main
+ M django/db/models/lookups.py
+
+$ (cd <dest>) git log --oneline -3
+[exit 0, 0.02s]
+6efc35b Optimized django.utils.text.capfirst().
+
+$ (cd <dest>) git remote -v
+[exit 0, 0.01s]
+
+
+$ (cd <dest>) git diff --stat
+[exit 0, 0.03s]
+ django/db/models/lookups.py | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+## 3. relevant tests actually run, at the WIP state (the recorded failure reproduces)
+$ (cd <dest>) .venv/bin/python tests/runtests.py --parallel=1 db_functions.datetime.test_extract_trunc
+[exit 1, 0.61s]
+
+======================================================================
+FAIL: test_extract_year_lessthan_lookup (db_functions.datetime.test_extract_trunc.DateFunctionWithTimeZoneTests) [iso_year]
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s5/work/out/orm-iso-year-lookup-1/tests/db_functions/datetime/test_extract_trunc.py", line 170, in test_extr
+    self.assertEqual(str(qs.query).count('extract'), 0)
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 81 tests in 0.212s
+
+FAILED (failures=6, skipped=2)
+Destroying test database for alias 'default'...
+
+## 4. same tests at BASE (clean upstream commit) and GOLD (upstream gold patch applied, test_patch NOT applied)
+$ (cd <dest>) .venv/bin/python tests/runtests.py --parallel=1 db_functions.datetime.test_extract_trunc
+[exit 0, 0.62s]
+----------------------------------------------------------------------
+Ran 81 tests in 0.167s
+
+OK (skipped=2)
+Destroying test database for alias 'default'...
+
+$ (cd <dest>) .venv/bin/python tests/runtests.py --parallel=1 db_functions.datetime.test_extract_trunc
+[exit 0, 0.35s]
+----------------------------------------------------------------------
+Ran 81 tests in 0.111s
+
+OK (skipped=2)
+Destroying test database for alias 'default'...
+
+## 5. probe.py: WIP / GOLD / BASE
+WIP:
+$ (cd <dest>) .venv/bin/python /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s5/finalists/orm-iso-year-lookup/probe.py
+[exit 0, 0.48s]
+{"path": "A", "tests": {"results_correct": true, "iso_year_uses_between": false, "existing_extract_trunc_failures": 6}}
+
+GOLD:
+$ (cd <dest>) .venv/bin/python /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s5/finalists/orm-iso-year-lookup/probe.py
+[exit 0, 0.47s]
+{"path": "B", "tests": {"results_correct": true, "iso_year_uses_between": true, "existing_extract_trunc_failures": 0}}
+
+BASE:
+$ (cd <dest>) .venv/bin/python /private/tmp/claude-501/-Users-thomasestep-Developer-skills/6327469c-c5fa-4ab1-b3c8-6c6a5ac92c24/scratchpad/scout/s5/finalists/orm-iso-year-lookup/probe.py
+[exit 0, 0.54s]
+{"path": "neither", "tests": {"results_correct": false, "iso_year_uses_between": true, "existing_extract_trunc_failures": 0}}
+
+## 6. replay validation (traj.py-style replay of ALL steps on a fresh base checkout vs trajectory info.submission)
+replay ALL 51 steps (READ/TEST/pip steps skipped; macOS BSD `sed -i` replaced by a GNU-style shim so `sed -i 's/..//' f` commands replay) -> tracked `git diff --abbrev=10` identical to info.submission: YES (byte-for-byte)
+replay steps <= 43 twice on fresh checkouts -> identical diff, and identical to committed wip.patch: YES (cmp)
+untracked scratch files produced by the replay at k (copied into untracked/): see dossier
+note: replay of steps that `git show`/`git log` old commits emits harmless errors in the shallow clone (history-dependent READ-ish commands only)

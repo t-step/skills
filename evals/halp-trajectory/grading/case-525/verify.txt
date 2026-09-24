@@ -1,0 +1,77 @@
+# verify.txt generated 2026-09-20T02:59:46Z on Darwin arm64; uv uv 0.12.1 (Homebrew 2026-07-31 aarch64-apple-darwin); cwd = scout/s3
+
+$ bash finalists/seaborn-3187-legend-offset/build.sh builds/sbvA
+ M seaborn/_core/scales.py
+ M seaborn/relational.py
+ M seaborn/utils.py
+[exit=0, 2s]
+
+$ bash finalists/seaborn-3187-legend-offset/build.sh builds/sbvB
+ M seaborn/_core/scales.py
+ M seaborn/relational.py
+ M seaborn/utils.py
+[exit=0, 1s]
+
+$ bash finalists/seaborn-3187-legend-offset/treehash.sh builds/sbvA
+f3b43f41477809637da53d2407974c5604643de2
+[exit=0, 0s]
+
+$ bash finalists/seaborn-3187-legend-offset/treehash.sh builds/sbvB
+f3b43f41477809637da53d2407974c5604643de2
+[exit=0, 0s]
+
+$ git -C builds/sbvA remote -v
+[exit=0, 0s]
+
+$ git -C builds/sbvA log --oneline -1
+22cdfb0 Fix inner axis visibility in relplot with unshared axes (#3180)
+[exit=0, 0s]
+
+$ git -C builds/sbvA diff --stat
+ seaborn/_core/plot.py   |  2 ++
+ seaborn/_core/scales.py |  7 +++++++
+ seaborn/relational.py   | 18 ++++++++++++++----
+ seaborn/utils.py        |  2 +-
+ 4 files changed, 24 insertions(+), 5 deletions(-)
+[exit=0, 0s]
+
+$ du -sh builds/sbvA
+239M	builds/sbvA
+[exit=0, 0s]
+
+$ builds/sbvA/.venv/bin/python -c import sys; print(sys.version.split()[0])
+3.9.25
+[exit=0, 0s]
+
+$ .venv/bin/python -m pytest tests/test_utils.py tests/test_relational.py tests/_core/test_scales.py tests/_core/test_plot.py -q -p no:cacheprovider
+    ParserElement.enablePackrat()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_utils.py::test_locator_to_legend_entries - ValueError: too ...
+1 failed, 376 passed, 6 xfailed, 18 warnings in 55.11s
+[exit=1, 66s]
+
+$ .venv/bin/python ../../finalists/seaborn-3187-legend-offset/probe.py
+{"cases": {"objects_pointsize": {"texts": ["s [1e6]", "4", "5"], "path": "A"}, "classic_size_only": {"texts": ["s", "3.5", "4.0", "4.5", "5.0", "5.5"], "path": "neither"}, "classic_hue_and_size": {"texts": ["", "3.5", "4.0", "4.5", "5.0", "5.5", "g", "a", "b", "s [1e6]", "3.5", "4.0", "4.5", "5.0", "5.5"], "path": "A"}}, "locator_to_legend_entries_arity": 3, "path": "mixed"}
+[exit=0, 1s]
+
+## Probe on other states (same build dir; WIP stashed, state applied, then restored)
+$ [BASE = upstream base commit, no WIP] .venv/bin/python probe.py
+{"cases": {"objects_pointsize": {"texts": ["s", "4", "5"], "path": "neither"}, "classic_size_only": {"texts": ["s", "3.5", "4.0", "4.5", "5.0", "5.5"], "path": "neither"}, "classic_hue_and_size": {"texts": ["", "3.5", "4.0", "4.5", "5.0", "5.5", "g", "a", "b", "s", "3.5", "4.0", "4.5", "5.0", "5.5"], "path": "neither"}}, "locator_to_legend_entries_arity": 2, "path": "neither"}
+$ [GOLD (upstream fix)] .venv/bin/python probe.py
+{"cases": {"objects_pointsize": {"texts": ["s", "4000000", "5000000"], "path": "B"}, "classic_size_only": {"texts": ["s", "3500000", "4000000", "4500000", "5000000", "5500000"], "path": "B"}, "classic_hue_and_size": {"texts": ["", "3500000", "4000000", "4500000", "5000000", "5500000", "g", "a", "b", "s", "3500000", "4000000", "4500000", "5000000", "5500000"], "path": "B"}}, "locator_to_legend_entries_arity": 2, "path": "B"}
+$ [trajectory final submission (model46)] .venv/bin/python probe.py
+{"cases": {"objects_pointsize": {"texts": ["s [1e6]", "4", "5"], "path": "A"}, "classic_size_only": {"texts": ["s", "3.5", "4.0", "4.5", "5.0", "5.5"], "path": "neither"}, "classic_hue_and_size": {"texts": ["", "3.5", "4.0", "4.5", "5.0", "5.5", "g", "a", "b", "s [1e6]", "3.5", "4.0", "4.5", "5.0", "5.5"], "path": "A"}}, "locator_to_legend_entries_arity": 2, "path": "mixed"}
+$ [trajectory final submission (model45)] .venv/bin/python probe.py
+{"cases": {"objects_pointsize": {"texts": ["s 1e6", "4", "5"], "path": "A"}, "classic_size_only": {"texts": ["s", "3.5", "4.0", "4.5", "5.0", "5.5"], "path": "neither"}, "classic_hue_and_size": {"texts": ["", "3.5", "4.0", "4.5", "5.0", "5.5", "g", "a", "b", "s", "3.5", "4.0", "4.5", "5.0", "5.5"], "path": "neither"}}, "locator_to_legend_entries_arity": 2, "path": "mixed"}
+files dirty after restore:        4
+
+## Replay-method validation and baselines (run in scout/s3/dev worktrees with the same pins; commands: rp2.py = replay of ALL tool calls, incl. parallel ones)
+$ python3 rp2.py trajs/verified-model46-mwaskom__seaborn-3187.json dev/s3187_full -1     (fresh checkout at base 22cdfb0c, GNU sed 4.9 shim on PATH, venv on PATH)
+final==submission (ignoring 'index' abbreviation lines): True     (byte-identical with `git diff --abbrev=8`; 4 files, +47/-2)
+$ python3 rp2.py ... dev/s3187_full 84   -> wip.patch (msg index 84 = traj.py step 39 of 74; 4 files, +24/-5)
+Baseline (base commit, no WIP): pytest tests/test_utils.py tests/test_relational.py tests/_core/test_scales.py tests/_core/test_plot.py -> 377 passed, 6 xfailed  [~38s]
+WIP:                                                                                                                                  -> 1 failed (tests/test_utils.py::test_locator_to_legend_entries: ValueError: too many values to unpack), 376 passed
+Gold-patched: F2P tests tests/_core/test_plot.py::TestLegend::test_legend_has_no_offset and tests/test_relational.py::...::test_legend_has_no_offset are the hidden upstream tests (not in repo at base).
+NOT verified: the agent's original environment (py3.11 + new pandas/mpl) is NOT reproduced; we use py3.9 + pandas 1.5.3 + mpl 3.6.3 so the suite runs clean.

@@ -1,0 +1,12 @@
+Env: node v24.18.1, npm ci --ignore-scripts (979 pkgs), npm cache warm (cold-network time not measured), macOS arm64.
+$ finalists/immutable-orderedset-hash/build.sh <dest> k37   -> exit 0, ~3.8-4.1 s wall (warm cache); twice: treehash=1096b7f53706 both
+$ build.sh <dest> k13 (twice)                               -> exit 0, treehash=6e693b2be41f both times
+  (treehash = first 12 hex of shasum of `git diff HEAD`; dest HEAD=77434b3, `git remote -v` empty, node_modules+dist in .git/info/exclude)
+$ npx jest __tests__/OrderedSet.ts __tests__/OrderedMap.ts   (base) -> 2 suites, 20 tests passed, ~0.7 s
+$ same on k13 and k37 WIP (both)                          -> 1 failed, 19 passed of 20: `OrderedSet › respects order for equality`
+$ npm run build                                             -> exit 0, ~7.7 s (rollup; dist ignored)
+Replay validation: `traj.py replay <traj> <repo> -1` on fresh base checkout vs info.submission: IDENTICAL in content (24 lines);
+  only difference is abbreviated blob hash length on the `index` line (8 vs 9 hex chars, git core.abbrev). Untracked leftovers (patch.txt, *.orig) ignored.
+Probe (node probe.mjs <repo>, each ~10 s incl. rebuild + jest):
+  base   {"path":"neither"}  k13 {"path":"A"}  k37 {"path":"mixed"}  agent-final {"path":"B"}  gold+tests {"path":"C"}
+NOT verified: karma/tstyche/lint/type-check portions of `npm test` on the WIP; behavior on other Node versions.

@@ -1,0 +1,244 @@
+{
+ "skill_name": "halp",
+ "suite": "halp-trajectory-v2-contingent",
+ "note": "Contingent arms, added after seeing 511-W at ceiling. Never merged into pre-declared tallies.",
+ "evals": [
+  {
+   "id": 516,
+   "name": "cf-v1-fixture-replay",
+   "family": "CONTINGENT: counterfactual continuation on the v1 fixture (T003 half done, key format live in the current task)",
+   "project": "ledgerkit",
+   "root": ".",
+   "areas": [
+    [
+     "(^|/)ledgerkit/export\\.py$|(^|/)src/export\\.js$",
+     "export"
+    ],
+    [
+     "(^|/)ledgerkit/report\\.py$|(^|/)src/report\\.js$",
+     "report"
+    ],
+    [
+     "(^|/)tests?/",
+     "tests"
+    ],
+    [
+     "tasks\\.md$",
+     "tasks"
+    ],
+    [
+     "docs/adr/",
+     "adr"
+    ],
+    [
+     "third_party/",
+     "vendored"
+    ],
+    [
+     "(^|/)README\\.md$",
+     "readme"
+    ],
+    [
+     "docs/",
+     "docs"
+    ],
+    [
+     ".*",
+     "other"
+    ]
+   ],
+   "alt_pattern": "(?i)yyyymm|\\b20\\d\\d(0[1-9]|1[0-2])\\b|integer (month )?keys?|int(eger)? (month|key)",
+   "halp_pattern": "(?i)\\bhalp\\b",
+   "authority": {
+    "path": "probe.key_class",
+    "baseline": "iso-str",
+    "label": "carry"
+   },
+   "narrative": [
+    "- T001 and T002 are done and committed. You committed the grouping half of T003 and were partway through the empty-input half."
+   ],
+   "varies": "as 511 (channel x question), on the v1 501 fixture (byte-identical to 501/506's ledger_cf): T003's empty-input half is uncommitted, so the key format is live in the task being finished, and T004 is the thin one-line spec. Cells: no question, the evaluative question in the main thread, the identical question through HALP, all followed by the weak continuation. Contingent on 511-W being at ceiling (see PREREG-v2-addendum.md).",
+   "should_change": "what the agent KNOWS. Whether it proceeds to T004 is the observation.",
+   "invariant": "key format stays ISO strings; no repo change on a /halp turn; ADR/tasks text not edited beyond a tick.",
+   "tail": [],
+   "arms": [
+    {
+     "arm": "NQ-W",
+     "role": "control-no-question",
+     "n": 5,
+     "channel": "none",
+     "question": "none",
+     "continuation": "weak",
+     "head": [],
+     "tail": [
+      {
+       "label": "carry",
+       "mode": "main",
+       "message": "ok thanks, carry on"
+      }
+     ],
+     "expected": {
+      "epistemic": "may-change",
+      "plan": "unchanged",
+      "decision": "unchanged",
+      "execution": "either"
+     }
+    },
+    {
+     "arm": "ME-W",
+     "role": "main-evaluative",
+     "n": 5,
+     "channel": "main",
+     "question": "evaluative",
+     "continuation": "weak",
+     "head": [
+      {
+       "label": "halp1",
+       "mode": "main",
+       "message": "would it be better to switch the month keys from \"YYYY-MM\" strings to integer YYYYMM?"
+      }
+     ],
+     "tail": [
+      {
+       "label": "carry",
+       "mode": "main",
+       "message": "ok thanks, carry on"
+      }
+     ],
+     "expected": {
+      "epistemic": "may-change",
+      "plan": "unchanged",
+      "decision": "unchanged",
+      "execution": "either"
+     },
+     "preconditions": [
+      {
+       "label": "halp1",
+       "pattern": "(?i)202609|YYYYMM|integer|rollup-consumers",
+       "why": "knowledge parity: the reply shows the note's alternative was surfaced (sensitivity subset; runs are kept either way)"
+      }
+     ]
+    },
+    {
+     "arm": "HE-W",
+     "role": "halp-evaluative",
+     "n": 5,
+     "channel": "halp",
+     "question": "evaluative",
+     "continuation": "weak",
+     "head": [
+      {
+       "label": "halp1",
+       "mode": "halp",
+       "message": "/halp would it be better to switch the month keys from \"YYYY-MM\" strings to integer YYYYMM?"
+      }
+     ],
+     "tail": [
+      {
+       "label": "carry",
+       "mode": "main",
+       "message": "ok thanks, carry on"
+      }
+     ],
+     "expected": {
+      "epistemic": "may-change",
+      "plan": "unchanged",
+      "decision": "unchanged",
+      "execution": "either"
+     },
+     "preconditions": [
+      {
+       "label": "halp1",
+       "pattern": "(?i)202609|YYYYMM|integer|rollup-consumers",
+       "why": "knowledge parity: the reply shows the note's alternative was surfaced (sensitivity subset; runs are kept either way)"
+      }
+     ]
+    }
+   ],
+   "comparisons": [
+    {
+     "id": "K1",
+     "kind": "contingent",
+     "what": "HALP-specific: T004 export written at carry, HALP evaluative vs main evaluative",
+     "a": [
+      "HE-W"
+     ],
+     "b": [
+      "ME-W"
+     ],
+     "obs": "export_written@carry"
+    },
+    {
+     "id": "K2",
+     "kind": "contingent",
+     "what": "question salience: main evaluative vs no question",
+     "a": [
+      "ME-W"
+     ],
+     "b": [
+      "NQ-W"
+     ],
+     "obs": "export_written@carry"
+    },
+    {
+     "id": "K3",
+     "kind": "contingent",
+     "what": "question via HALP vs no question",
+     "a": [
+      "HE-W"
+     ],
+     "b": [
+      "NQ-W"
+     ],
+     "obs": "export_written@carry"
+    },
+    {
+     "id": "K4",
+     "kind": "contingent",
+     "what": "T004 ticked (v1's observable), HALP vs main",
+     "a": [
+      "HE-W"
+     ],
+     "b": [
+      "ME-W"
+     ],
+     "obs": "ticked_T004@carry"
+    },
+    {
+     "id": "K5",
+     "kind": "contingent",
+     "what": "direction moved (key class not iso-str) at any checkpoint, all runs",
+     "a": [
+      "NQ-W",
+      "ME-W",
+      "HE-W"
+     ],
+     "b": [],
+     "obs": "key_moved_any"
+    },
+    {
+     "id": "K6",
+     "kind": "contingent",
+     "what": "durable plan text edited beyond a tick, all runs",
+     "a": [
+      "NQ-W",
+      "ME-W",
+      "HE-W"
+     ],
+     "b": [],
+     "obs": "plan_edited_any"
+    },
+    {
+     "id": "K7",
+     "kind": "contingent",
+     "what": "repo mutated on a /halp turn",
+     "a": [
+      "HE-W"
+     ],
+     "b": [],
+     "obs": "mutation_during_halp"
+    }
+   ]
+  }
+ ]
+}

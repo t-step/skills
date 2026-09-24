@@ -1,0 +1,37 @@
+$ ./build.sh $D   (twice)  -> exit 0, ~8.6s each, TREE_HASH=1f35dc0eb4b331d7 both times, 328M on disk, no remote, 1 commit
+
+$ node probe.mjs $D
+{"path":"A","tests":{"unmount_calls_cleanup_once":true,"ref_change_calls_cleanup":true,"stable_ref_rerender_then_unmount":false,"shared_ref_fn_two_elements":true}}
+node probe.mjs $D  0.19s user 0.05s system 48% cpu 0.500 total
+exit=0
+
+$ ./test.sh $D   (refs.test.js, WIP tree)
+    ✔ should bind refs before componentDidMount
+    ✔ should call refs after element is added to document on initial mount
+    ✔ should call refs after element is added to document on update
+
+Finished in 0.002 secs / 0.013 secs @ 19:34:01 GMT-0700 (Pacific Daylight Time)
+
+SUMMARY:
+✔ 24 tests completed
+./test.sh $D 2>&1  1.97s user 1.03s system 104% cpu 2.863 total
+tail -8  0.00s user 0.00s system 0% cpu 2.863 total
+
+--- with upstream test_patch applied temporarily (the two FAIL_TO_PASS tests):
+    ✔ should call ref cleanup on unmount
+    ✔ should call ref cleanup when ref changes
+SUMMARY:
+✔ 26 tests completed
+./test.sh $D 2>&1  1.80s user 0.71s system 206% cpu 1.215 total
+
+--- full karma suite with the repo's default glob, WIP tree: ./test.sh $D '{debug,devtools,hooks,compat,test-utils,jsx-runtime,}/test/{browser,shared}/**/*.test.js'
+    ~4.0s, exit 0: 1145 passed, 11 skipped. 5 test/shared files fail to bundle ("Could not resolve ../../" = needs `npm run build` for dist/);
+    the trajectory (which ran `npm run build` earlier in the image) reports 1173 passed. Not needed for this fixture.
+--- Environment facts: node v24.18.1, npm ci (--ignore-scripts) ~6s, Chrome = /Applications/Google Chrome.app (karma launcher ChromeNoSandboxHeadless), jsdom@24.1.3 installed --no-save for probe.mjs only.
+--- probe on other states (same probe.mjs, temporary git apply on the built dest, then reverted):
+    base commit          -> {"path":"neither", all 4 false}
+    WIP (model46 final)  -> {"path":"A", stable_ref_rerender_then_unmount:false, others true}
+    upstream gold        -> {"path":"B", shared_ref_fn_two_elements:false, others true}
+    model45 final        -> {"path":"mixed(per-vnode+transfer)", all 4 true}
+--- replay validation: replaying every WRITE/OTHER step of the model46 trajectory (own harness s2/myreplay.py: /testbed->repo, /tmp->private dir, TEST/READ/npm skipped)
+    onto a fresh checkout of db0f4f2e -> `git diff` byte-identical (cmp) to info.submission (57 lines). Tree is unchanged from step 11 to submission (steps 14-27 are read/test only).

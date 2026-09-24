@@ -1,0 +1,57 @@
+diff --git a/src/diff/children.js b/src/diff/children.js
+index 1e44c5ca..7b769d87 100644
+--- a/src/diff/children.js
++++ b/src/diff/children.js
+@@ -99,7 +99,7 @@ export function diffChildren(
+ 		newDom = childVNode._dom;
+ 		if (childVNode.ref && oldVNode.ref != childVNode.ref) {
+ 			if (oldVNode.ref) {
+-				applyRef(oldVNode.ref, null, childVNode);
++				applyRef(oldVNode.ref, null, childVNode, oldVNode);
+ 			}
+ 			refQueue.push(
+ 				childVNode.ref,
+diff --git a/src/diff/index.js b/src/diff/index.js
+index 34d38028..32875c14 100644
+--- a/src/diff/index.js
++++ b/src/diff/index.js
+@@ -557,11 +557,27 @@ function diffElementNodes(
+  * @param {Ref<any>} ref
+  * @param {any} value
+  * @param {VNode} vnode
++ * @param {VNode} [ownerVNode]
+  */
+-export function applyRef(ref, value, vnode) {
++export function applyRef(ref, value, vnode, ownerVNode) {
+ 	try {
+-		if (typeof ref == 'function') ref(value);
+-		else ref.current = value;
++		if (typeof ref == 'function') {
++			let hasRefCleanup =
++				typeof (ownerVNode || vnode)._refCleanup == 'function';
++			if (hasRefCleanup) {
++				(ownerVNode || vnode)._refCleanup();
++				(ownerVNode || vnode)._refCleanup = undefined;
++			}
++
++			if (value != null || !hasRefCleanup) {
++				let cleanup = ref(value);
++				if (typeof cleanup == 'function') {
++					(ownerVNode || vnode)._refCleanup = cleanup;
++				}
++			}
++		} else {
++			ref.current = value;
++		}
+ 	} catch (e) {
+ 		options._catchError(e, vnode);
+ 	}
+@@ -580,7 +596,7 @@ export function unmount(vnode, parentVNode, skipRemove) {
+ 
+ 	if ((r = vnode.ref)) {
+ 		if (!r.current || r.current === vnode._dom) {
+-			applyRef(r, null, parentVNode);
++			applyRef(r, null, parentVNode, vnode);
+ 		}
+ 	}
+ 
