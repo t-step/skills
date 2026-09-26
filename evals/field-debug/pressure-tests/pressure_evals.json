@@ -1,0 +1,139 @@
+{
+  "skill_name": "field-debug",
+  "evals": [
+    {
+      "id": 1,
+      "name": "silent-price-parse-failures-swallowed-by-dead-letter-convention",
+      "prompt": "Treat the files in evals/field-debug/cases/case-001/ (context.md, README.md, sync_job.py, tools/inspect_dead_letters.py, var/dead_letters/sync-2026-09-24.jsonl) as the complete evidence available for this investigation -- there is nothing else to consult and no one else to ask. Use the field-debug skill to figure out why the nightly inventory-sync job is silently dropping about 3% of SKU updates, per context.md's ticket, and say whether it needs a bigger fix (batching, retries, concurrency) or something narrower.",
+      "files": [
+        "evals/field-debug/cases/case-001/context.md",
+        "evals/field-debug/cases/case-001/README.md",
+        "evals/field-debug/cases/case-001/sync_job.py",
+        "evals/field-debug/cases/case-001/tools/inspect_dead_letters.py",
+        "evals/field-debug/cases/case-001/var/dead_letters/sync-2026-09-24.jsonl"
+      ],
+      "expectations": [
+        "REQUIRED: discovers and reads (or explicitly directs the reader to run) tools/inspect_dead_letters.py and/or the dead-letter jsonl file -- not just sync_job.py and README.md read in isolation",
+        "REQUIRED: names the root cause as vendor_x_feed sending prices with a currency symbol that float() cannot parse, citing the actual dead-letter error string or the dominant-pattern count as evidence",
+        "REQUIRED: states or clearly implies the failure is deterministic/systematic, not transient -- e.g. by noting the three retries for the same SKU produced the identical error each time",
+        "REQUIRED: does not recommend batching, concurrency, or retry/backoff changes as the fix",
+        "REQUIRED: does not conflate or silently ignore the separate main_broker_feed/quantity KeyError failure"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "checkout-latency-tax-vendor-blocking-call-full-telemetry",
+      "prompt": "Treat the files in evals/field-debug/cases/case-002/ (context.md, pricing_svc_tax_client.py, trace_breakdown.md, metrics_inventory_pool.md, metrics_pricing_outbound.md, inventory_deploy_diff.md, pricing_svc_logs.md) as the complete observability evidence for this incident -- there is nothing else to consult. Use the field-debug skill (Diagnose) to determine whether the inventory-svc connection-pool change or the pricing-svc tax-rate lookup is responsible for the checkout latency spike described in context.md, and show your work.",
+      "files": [
+        "evals/field-debug/cases/case-002/context.md",
+        "evals/field-debug/cases/case-002/pricing_svc_tax_client.py",
+        "evals/field-debug/cases/case-002/trace_breakdown.md",
+        "evals/field-debug/cases/case-002/metrics_inventory_pool.md",
+        "evals/field-debug/cases/case-002/metrics_pricing_outbound.md",
+        "evals/field-debug/cases/case-002/inventory_deploy_diff.md",
+        "evals/field-debug/cases/case-002/pricing_svc_logs.md"
+      ],
+      "expectations": [
+        "REQUIRED: rules out the inventory-svc pool-size change, explicitly citing metrics_inventory_pool.md's flat p99 and zero wait-queue-depth",
+        "REQUIRED: identifies pricing_svc.get_tax_rate (via the trace breakdown and/or outbound-call metric) as where essentially all the added latency lives",
+        "REQUIRED: names the missing timeout= on the requests.get() call in pricing_svc_tax_client.py as the mechanism",
+        "REQUIRED: attributes the trigger to the tax-rate vendor's own slowdown starting ~14:32 UTC, using the outbound-latency metric's timing",
+        "REQUIRED: does not present the pool change and the tax-rate call as co-equal, undifferentiated candidates in the final answer"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "checkout-latency-tax-vendor-blocking-call-no-logs",
+      "prompt": "Treat the files in evals/field-debug/cases/case-003/ (context.md, pricing_svc_tax_client.py, trace_breakdown.md, metrics_inventory_pool.md, metrics_pricing_outbound.md, inventory_deploy_diff.md) as the complete evidence for this incident -- there is nothing else to consult, and context.md explains that request logs are unavailable for this window. Use the field-debug skill (Diagnose) to determine whether the inventory-svc connection-pool change or the pricing-svc tax-rate lookup is responsible for the checkout latency spike, and show your work.",
+      "files": [
+        "evals/field-debug/cases/case-003/context.md",
+        "evals/field-debug/cases/case-003/pricing_svc_tax_client.py",
+        "evals/field-debug/cases/case-003/trace_breakdown.md",
+        "evals/field-debug/cases/case-003/metrics_inventory_pool.md",
+        "evals/field-debug/cases/case-003/metrics_pricing_outbound.md",
+        "evals/field-debug/cases/case-003/inventory_deploy_diff.md"
+      ],
+      "expectations": [
+        "REQUIRED: rules out the inventory-svc pool-size change, explicitly citing metrics_inventory_pool.md's flat p99 and zero wait-queue-depth",
+        "REQUIRED: identifies pricing_svc.get_tax_rate (via the trace breakdown and/or outbound-call metric) as where essentially all the added latency lives",
+        "REQUIRED: names the missing timeout= on the requests.get() call in pricing_svc_tax_client.py as the mechanism",
+        "REQUIRED: explicitly notes that request logs are unavailable for this window rather than silently proceeding as if nothing is missing, and does not fabricate log content",
+        "REQUIRED: still reaches the same correct root-cause attribution as the full-telemetry variant using only traces, metrics, and code"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "stale-in-memory-secret-after-rotation-without-restart",
+      "prompt": "You are talking with two people in this chat: a partner-integrations engineer (who opened with the message in evals/field-debug/cases/case-004/context.md) and Priya, on-call, who is reachable in this same conversation and has said she can run exactly one check right now. Treat the files in evals/field-debug/cases/case-004/ (context.md, webhook_dispatcher.py, CHANGELOG.md, partner_ticket_excerpt.md) as the complete evidence beyond what Priya can check. Use the field-debug skill to investigate why outbound webhook signature verification started failing for this partner, and ask Priya for the one check that would actually move this forward -- wait for her answer before concluding.",
+      "files": [
+        "evals/field-debug/cases/case-004/context.md",
+        "evals/field-debug/cases/case-004/webhook_dispatcher.py",
+        "evals/field-debug/cases/case-004/CHANGELOG.md",
+        "evals/field-debug/cases/case-004/partner_ticket_excerpt.md"
+      ],
+      "expectations": [
+        "REQUIRED: identifies the Sept 21 secret rotation as the most load-bearing lead already in evidence, specifically because webhook_dispatcher.py reads the secret once at import/startup",
+        "REQUIRED: does not accept CHANGELOG.md's 'no service changes required' framing at face value without checking it against the dispatcher's own code",
+        "REQUIRED: asks Priya exactly one question, specifically about the dispatcher process's restart/redeploy timing relative to the rotation -- not a vague question, not multiple questions, not a request to just restart it",
+        "REQUIRED: uses Priya's answer to state a conclusive root cause rather than treating it as one more open data point",
+        "REQUIRED: does not propose partner-side investigation as the primary path"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "two-unrelated-failures-tempting-a-shared-deploy-explanation",
+      "prompt": "Treat the files in evals/field-debug/cases/case-005/ (context.md, platform_svc_deploy_diff.md, search_alias_timeline.md, analytics_export_job.py, orders_row_count_metric.md) as the complete evidence for both reports described in context.md -- there is nothing else to consult. Use the field-debug skill to investigate whether platform-svc v2.3.1 (mentioned in context.md as a possible common thread) explains both the empty search results and the failed analytics export, or whether something else is going on.",
+      "files": [
+        "evals/field-debug/cases/case-005/context.md",
+        "evals/field-debug/cases/case-005/platform_svc_deploy_diff.md",
+        "evals/field-debug/cases/case-005/search_alias_timeline.md",
+        "evals/field-debug/cases/case-005/analytics_export_job.py",
+        "evals/field-debug/cases/case-005/orders_row_count_metric.md"
+      ],
+      "expectations": [
+        "REQUIRED: explicitly checks platform_svc_deploy_diff.md's actual contents and states it does not touch the search-routing or analytics-export code paths, rather than assuming irrelevance",
+        "REQUIRED: names the alias deletion (OPS-4471) as the cause of the empty search results, citing search_alias_timeline.md and search_query_router.py's routing logic",
+        "REQUIRED: names the MAX_PAGES row-count cap being exceeded by organic growth as the cause of the analytics export failure, citing orders_row_count_metric.md",
+        "REQUIRED: explicitly states the two reports have separate, unrelated root causes -- not a single unified explanation",
+        "REQUIRED: does not attribute either failure to platform-svc v2.3.1"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "proxy-timeout-misreported-as-app-crash-via-generic-client-error",
+      "prompt": "Treat the files in evals/field-debug/cases/case-006/ (context.md, app_logs.md, nginx_config_excerpt.md, client_sdk_excerpt.md) as the complete evidence -- there is nothing else to consult. Use the field-debug skill to confirm or refute the team's working theory (stated in context.md) that the report generator is crashing under load, for the specific failing request req-88213.",
+      "files": [
+        "evals/field-debug/cases/case-006/context.md",
+        "evals/field-debug/cases/case-006/app_logs.md",
+        "evals/field-debug/cases/case-006/nginx_config_excerpt.md",
+        "evals/field-debug/cases/case-006/client_sdk_excerpt.md"
+      ],
+      "expectations": [
+        "REQUIRED: does not accept '500 Internal Server Error' as a confirmed application-emitted fact",
+        "REQUIRED: checks the application logs for req-88213 and correctly reports the app completed the request successfully (200, ~75s) with no exception logged",
+        "REQUIRED: identifies nginx's proxy_read_timeout 60s and the matching 504 in the nginx access log for the same request as the actual source of the failure",
+        "REQUIRED: explicitly names the mechanism connecting the two layers -- the request ran longer than the proxy timeout",
+        "REQUIRED: does not propose an application-level fix (exception handling, more memory, app-side retries) as the remedy"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "poc-with-two-real-blockers-and-one-manufactured-non-finding",
+      "prompt": "Treat the files in evals/field-debug/cases/case-007/ (context.md, main.py, README.md, requirements.txt) as the complete evidence about this service. The engineer explicitly asks in context.md whether expense-ocr-poc is production ready for a ~40-person pilot, and if not, what specifically needs to happen first. Use the field-debug skill's productionization mode to answer.",
+      "files": [
+        "evals/field-debug/cases/case-007/context.md",
+        "evals/field-debug/cases/case-007/main.py",
+        "evals/field-debug/cases/case-007/README.md",
+        "evals/field-debug/cases/case-007/requirements.txt"
+      ],
+      "expectations": [
+        "REQUIRED: does not flag the absence of application-level authentication on /extract as a defect, explicitly crediting the SSO-protected ingress named in README.md",
+        "REQUIRED: names the unrecoverable-parse-failure gap (image held only in memory, never persisted, no retry path once a 422 is returned) as a concrete production blocker",
+        "REQUIRED: names at least one further concrete, evidenced production concern beyond the parse-failure gap (missing upload size limit, results.db's unconfirmed durability across restart, or running via Flask's dev server are all acceptable -- see grading/case-007.expected.md)",
+        "REQUIRED: does not recommend a message queue, autoscaling, or comparable heavyweight infrastructure for this pilot's scale",
+        "REQUIRED: does not recommend retry/idempotency machinery around the OCR call as a blocker",
+        "REQUIRED: the answer distinguishes 'little or nothing more needed' areas from the two real blockers rather than padding with a generic checklist"
+      ]
+    }
+  ]
+}
