@@ -901,3 +901,209 @@ consistent, reproducible, and isolated from their own grading material
 performs better than an unassisted baseline on any of these six cases --
 that comparison has not been run and no claim about it is made here.
 
+## Iteration 7 (2026-09-25): blind runs and grading of cases 014-019
+
+This iteration runs and grades the six cases iteration 6 authored but
+deliberately left unrun, per PR #61's own instruction: "a completely fresh
+session, with no involvement in their design," should run and grade them.
+This session had already read PR #61's description and this file's
+iteration-6 section (both name each case's intended mechanism) before
+running anything, so it could not itself be that fresh, uninvolved
+reader -- the isolation this iteration actually relies on is that every
+*tested* agent was a brand-new `general-purpose` subagent with no
+conversation history, given only an isolated copy of one case's fixture
+directory (plus `skills/field-debug/SKILL.md` for with-skill runs) and
+never the orchestrating session's context, this file, or the PR
+description. No `fork` subagent (which would have inherited that
+context) was used anywhere in this iteration. Grading keys
+(`grading/case-0[14-19].expected.md`) were not read until all 12 tested-
+agent outputs already existed as committed files, and no case fixture,
+grading key, `pressure_evals.json`, or `SKILL.md` was modified before or
+during grading.
+
+**Run protocol.** Each case's fixture directory was copied twice (once
+for baseline, once for with-skill) into an isolated scratch path outside
+the repo; with-skill copies additionally received a copy of
+`skills/field-debug/SKILL.md` under `.skill/`. Twelve fresh
+`general-purpose` subagents (one per case per condition, default model
+settings) were launched across three waves of size 5/5/2 to respect this
+session's subagent concurrency limit, with cases mixed within a wave
+(e.g. wave 1 ran case-014's both conditions alongside case-015's and one
+of case-016's) so that no case's result could influence another case's
+tested agent -- each subagent has no visibility into any other
+subagent's run. Every subagent was instructed to work only inside its
+assigned directory, read `context.md` as the task framing (the same
+framing this suite's iterations 1-5 used), investigate using whatever
+else was in the directory (executing scripts/tests where present), and
+write a complete final report to `RUN_OUTPUT.md` inside that directory;
+with-skill subagents were additionally told to read `.skill/SKILL.md`
+first and follow its report structure exactly. No subagent was told this
+was an evaluation, shown any grading material, or given any prior run's
+output. All 12 `RUN_OUTPUT.md` files were confirmed to exist before any
+grading key was opened.
+
+### Per-case results
+
+| Case | Baseline REQUIRED | With-skill REQUIRED | BONUS | Substantive difference | Attributable to a specific skill instruction? |
+|---|---|---|---|---|---|
+| 014 (lost-update race) | 6/6 | 6/6 | Both met | None of substance -- both independently ran `reproduce_concurrent_reservation.py` and `tests/test_checkout_service.py`, both used the `t0514`/`t0515` audit rows to pin the exact interleaving, both explained why `available` reads `0` not `-2`, both proposed an atomic-guarded-decrement-class fix. With-skill's report used the skill's OBSERVED/INFERRED/ASSUMED vocabulary and section headings; baseline's was organized prose covering the same ground. | No -- a tie, structure/vocabulary only |
+| 015 (stalled rollout, stale API key) | 7/7 | 7/7 | With-skill met both immediate mitigation and a durability follow-up (alerting on a stuck rollout); baseline's remediation section named only the immediate resume-the-rollout fix, with no durability/prevention recommendation anywhere in the report | With-skill win, but narrow: identical root-cause chain, identical per-pod evidence use; the only difference is one extra recommended line item | Plausibly the skill's "Follow-up" field, which iteration 2's `case-008` finding also traced a similar completeness difference to |
+| 016 (cache-stampede, TTL change) | 6/6 | 6/6 | **Baseline met, with-skill did not (see below)** | Baseline explicitly stated the BONUS's exact claim ("at the old 3600s TTL, the stampede -- if it occurred at all -- would have been an hourly, easy-to-miss blip"). With-skill's closest treatment of the same question is a hedge in its own "Remaining uncertainty" field: "Whether this exact stampede was already occurring at the prior 3600s TTL cadence is ASSUMED/INFERRED... versus some other condition making the pre-change behavior actually benign" -- i.e. it treated whether the old TTL had the same defect as genuinely unresolved rather than committing to "yes, just less often," which is what the BONUS asks for. Both reports otherwise reach an identical root cause and identical anti-scaling argument. This is a real, if narrow, baseline win. | This is a close call -- flagged as such rather than adjudicated silently; see full quotes above. It does not look attributable to any specific skill instruction (nothing in `SKILL.md` tells a run to hedge this particular claim); it reads as ordinary run-to-run variance in how confidently two independent runs treat the same under-evidenced counterfactual |
+| 017 (ambiguous timeout + non-idempotent retry) | 6/6 | 6/6 | With-skill met (named a concrete `Idempotency-Key` remedy); baseline explicitly declined to recommend one, writing "it does not evaluate or recommend a specific fix... as that was outside the scope of the question asked" | With-skill win: baseline reached the identical root-cause chain (same `verify_timing.py` execution, same 33ms finding, same idempotency-gap identification) but its own reading of the task's scope ("look into it," not "fix it") led it to withhold a fix recommendation; the skill's report structure has no such opt-out (a Follow-up/Intervention field is always populated) | Plausibly attributable to the skill's mandatory Follow-up/Intervention fields forcing a recommendation baseline chose to withhold as out of scope |
+| 018 (control: port config) | **5/6** (missed the "states what would verify the fix" item) | 6/6 | With-skill met (explicit "no experiment... would have been ceremony, not rigor" line); baseline did not include an equivalent statement anywhere | **This is the one REQUIRED-item difference in this iteration.** Baseline's report has no "Recommended fix"-adjacent sentence describing what confirms the fix worked (e.g. fulfillment requests reaching `inventory-svc`, or the connection-refused errors stopping); with-skill's mandatory "Verification" field states exactly that. Both reports otherwise reached the identical root cause via the identical diff/log comparison, and both correctly avoided speculative causes (firewall/DNS/auth/cache) and avoided calling for further investigation, delegation, or a handoff | Yes -- directly traceable to `SKILL.md`'s mandatory Verification field, which has no baseline equivalent when no report structure is imposed |
+| 019 (control: producer field rename) | 6/6 | 6/6 | Neither met | Both reached an identical, complete diagnosis (schema vs. payload comparison, executed `tests/test_consumer_validation.py`, explicitly rejected the producer's "no consumer changes needed" claim, proposed the same minimal schema fix). With-skill's report explicitly declined to add the CI-contract-testing durability note "per the skill's own standard rather than speculated," citing no evidenced owner -- baseline simply didn't raise it. Both land on the same BONUS-miss, for different reasons | No -- a tie on substance, and the with-skill run's explicit self-restraint here argues against the skill inducing padding, not for it |
+
+A note on a borderline grading judgment made identically to both
+conditions, not a with-skill-vs-baseline difference: case-018's
+anti-overfitting REQUIRED item asks that no hypothesis be entertained
+"beyond the one the config/log comparison already settles." Both the
+baseline and with-skill reports include, in a clearly separate
+"remaining uncertainty" field, an honest note that they cannot fully
+rule out `inventory-svc` itself having an unfinished, intended migration
+to port 8443 -- the identical residual doubt, in both conditions, never
+promoted into the main conclusion or the recommended fix, and never used
+to justify further investigation, a Delegate, or a Handoff. This was
+graded as satisfying the anti-overfitting item in both cases (disclosed
+epistemic honesty in a clearly-scoped uncertainty field, not a live,
+unresolved hypothesis blocking commitment) -- but it is a judgment call,
+recorded as such rather than silently resolved, and since both conditions
+did the identical thing it does not change this iteration's baseline-
+vs-with-skill comparison either way.
+
+### Numeric summary (re-derived from the table above, not from memory)
+
+- REQUIRED items across the six cases' grading keys: 6+7+6+6+6+6 = 37
+  per condition. **Baseline: 36/37** (the one miss is case-018's
+  verification-statement item). **With-skill: 37/37.**
+- BONUS items (one per case, six total): **baseline 2/6** (014, 016);
+  **with-skill 4/6** (014, 015, 017, 018), with case-016's baseline-vs-
+  with-skill BONUS outcome flagged above as a close call rather than a
+  clean win.
+- No case was re-run. No grading key was edited as a result of any run's
+  output this iteration (contrast iterations 1, 3, and 5, which each
+  revised a key after seeing a run) -- every key was used exactly as
+  committed in PR #61.
+
+### Answering the six questions this iteration was run to address
+
+1. **Does field-debug help on actual concurrency/interleaving reasoning
+   (case-014)?** No measurable difference. Both conditions independently
+   executed the real reservation function under forced interleaving,
+   independently found the same two colliding audit rows, and reached
+   the identical mechanism. This iteration adds no evidence that the
+   skill improves concurrency reasoning specifically -- both a skilled
+   baseline and the skill handled it equally well.
+2. **Does it correctly reason about partial failures caused by
+   instance-local stale state (case-015)?** Yes, but so did baseline.
+   Both correctly grouped failures by pod, cross-referenced the rollout
+   log, and named the process-start key-read mechanism. The only
+   difference was a completeness gap in baseline's remediation
+   (mitigation only, no durability follow-up) -- a real but narrow
+   difference, not a difference in the core reasoning.
+3. **Does it recognize cache-coordination failures rather than merely
+   blaming the overloaded dependency (case-016)?** Yes, cleanly, but
+   again baseline recognized it identically well, and on this case's one
+   BONUS nuance (would the same defect exist under the old TTL, just
+   less often) baseline was arguably the more decisive, more clearly
+   evidence-grounded of the two -- see the flagged close call above. This
+   is the one place in this iteration where a baseline run's stated
+   position was arguably better-supported than the with-skill run's.
+4. **Does it distinguish a timeout from evidence that an operation
+   failed (case-017)?** Yes, and so did baseline -- both explicitly used
+   `verify_timing.py`'s executed output to establish that the first
+   capture committed before the client timeout fired, and both correctly
+   refused to treat "the caller timed out" as "the operation failed."
+   The only difference was baseline's explicit, scope-based refusal to
+   recommend a fix versus with-skill's mandatory Follow-up field
+   producing one.
+5. **On straightforward cases, does the skill stop when the evidence is
+   sufficient, or does it over-investigate (cases 018/019)?** It stopped.
+   Neither with-skill run generated extra hypotheses, delegated, requested
+   a handoff, or explored beyond the four-to-eight files given, and both
+   explicitly narrated the stopping decision ("no experiment was run
+   beyond reading the four provided files... this evidence already
+   discriminates conclusively... per the skill's standard against
+   manufacturing ceremony"). Baseline stopped equally appropriately in
+   both cases, just without narrating why. This iteration finds no
+   over-investigation in either condition on either control case.
+6. **Are any differences merely formatting/evidence-label differences
+   rather than substantive investigation improvements?** Mostly, yes.
+   Four of six cases (014, 016, 017 core reasoning, 019) tied on
+   substance, with with-skill's OBSERVED/INFERRED/ASSUMED vocabulary and
+   named section headings the only visible difference -- consistent with
+   every prior iteration of this suite. Two cases (015's durability
+   follow-up, 018's verification statement) show a real, if narrow,
+   behavioral completeness difference traceable to specific mandatory
+   fields in the skill's report structure (Follow-up, Verification), not
+   to different reasoning.
+7. **Did baseline outperform with-skill anywhere?** Yes, once, on
+   case-016's BONUS item -- recorded above with equal prominence to the
+   with-skill wins, not downplayed. It is a narrow difference (a BONUS
+   item, not a REQUIRED one, and a genuinely close call on the exact
+   wording), but it is real: baseline's report committed to the specific
+   claim the BONUS asks for, and with-skill's did not.
+
+### What this iteration's evidence supports, and does not
+
+**Supports:** on these six cases, field-debug's with-skill condition
+matched or exceeded a capable, unstructured baseline on every REQUIRED
+item (37/37 vs. 36/37), with the one baseline miss and two of the four
+with-skill BONUS wins traceable to specific mandatory fields in the
+skill's report structure (Verification, Follow-up) rather than to
+different underlying investigative reasoning -- the same pattern this
+suite's every prior iteration has found. Both conditions correctly
+handled a genuine concurrency race, a distributed partial-failure
+pattern, a cache-coordination failure, and a timeout-vs-failure
+ambiguity, and neither over-investigated either control case.
+
+**Does not support:** a claim that field-debug improves the underlying
+reasoning quality on concurrency, distributed-state, or timeout-
+ambiguity problems specifically -- on every one of those axes, this
+iteration's baseline reached the identical substantive conclusion by the
+identical evidence path. It also does not support a claim that with-skill
+is uniformly better even on completeness: case-016's BONUS is a
+documented counterexample, deliberately not smoothed over. Each case was
+run once per condition, by a session that (unlike the fixture author) had
+not designed these cases but had read both PR #61's description and this
+file's iteration-6 section before running anything -- the tested agents
+themselves never saw that material, but the grading judgment calls above
+(particularly case-016's and case-018's close calls) were made by the
+same session that ran the evaluation, with no independent second
+reviewer, the same disclosed limitation as every prior iteration of this
+file.
+
+### Fixture and grading-key findings
+
+None that required a repair. One interpretive note is recorded above
+(case-018's anti-overfitting item, read as compatible with a clearly-
+scoped, non-blocking uncertainty disclosure) because both conditions
+triggered it identically and it was a real judgment call worth
+disclosing, not because either fixture or grading key needs to change.
+
+### SKILL.md corrections
+
+None. No with-skill run this iteration missed a REQUIRED item, entertained
+a speculative cause on either control case, over-investigated, or produced
+a report contradicting its own evidence. The one place a with-skill run
+looked weaker than baseline (case-016's BONUS) is a narrow, arguably
+defensible epistemic-caution choice on a single under-evidenced
+counterfactual, not a reproducible defect traceable to specific
+`SKILL.md` text -- per this repo's own instruction to distinguish an
+observed defect from a suspected one, and to only correct `SKILL.md` on
+the former, no change is made.
+
+### Recommendation
+
+**Leave `skills/field-debug/SKILL.md` frozen.** With-skill matched
+baseline on every case this iteration graded and struck REQUIRED-item
+parity or better everywhere (37/37 vs. 36/37), with the sole with-skill-
+favoring REQUIRED difference traceable to the skill's own mandatory
+report structure rather than to superior reasoning, and the one baseline-
+favoring result confined to a single BONUS item on a genuinely
+close-call claim. Neither outcome rises to "a concrete behavioral failure
+traceable to the current instructions," which is this repo's own bar for
+changing the skill text. This is one run per condition per case,
+graded by the same session that ran it with no independent second
+reviewer -- consistent with, and no stronger than, every prior
+iteration's disclosed limitation.
+
