@@ -15,13 +15,14 @@ The plugin directory is a release artifact, not an independent implementation �
 
 ## Published plugin
 
-**`software-engineering`** (v0.2.3) — a plugin with three published skills:
+**`software-engineering`** (v0.3.0) — a plugin with four published skills:
 
 - **`repo-orientation`** — builds a concise, evidence-backed operating map of a repository before consequential work begins: purpose, governing instructions, major execution paths, architectural seams, and honest unknowns.
 - **`change-review`** — reviews one bounded implementation change (a diff, PR, or "done" claim) against its stated goal, repo instructions, the actual diff, and verification evidence, producing one of four verdicts.
 - **`task-composition`** — takes an already-decomposed spec or plan and composes its tasks into coherent, agent-sized execution groupings: vertical by default, a horizontal enabler only when it unlocks real parallel work, convergence points made explicit, and just enough dependency checking to catch cycles or misleading task order — never a priority call, a scheduler, or a durable task graph.
+- **`field-debug`** — an interactive investigation protocol for customer-owned and enterprise/legacy environments (production incidents, POC-to-production readiness checks, hidden-behavior systems): inspects reachable evidence and prefers the customer's own tools before asking, and discriminates between live hypotheses rather than declaring a root cause from the first plausible cause found.
 
-All three `SKILL.md` files use only `name` and `description` frontmatter (the portable Agent Skills subset), so they need no per-harness rewriting — the same three files are installed verbatim by either client.
+All four `SKILL.md` files use only `name` and `description` frontmatter (the portable Agent Skills subset), so they need no per-harness rewriting — the same four files are installed verbatim by either client.
 
 ## Claude Code
 
@@ -112,7 +113,7 @@ codex plugin marketplace remove t-step-skills
 
 This is a first release, published to learn the distribution mechanics rather than to promise a stable surface:
 
-- Only three skills are published. Others exist as canonical source under `skills/` and are promoted deliberately, one at a time, not automatically, into the shared `plugins/software-engineering/skills/` directory that both `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` read from.
+- Only four skills are published. Others exist as canonical source under `skills/` and are promoted deliberately, one at a time, not automatically, into the shared `plugins/software-engineering/skills/` directory that both `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` read from.
 - Versioning and releases are manual — see [`.github/workflows/`](.github/workflows/) for what's automated (Claude plugin/marketplace manifest validation and a version-bump check on pull requests, tagging and GitHub Releases on merge to `main`) and what isn't (choosing a version, writing release notes). CI does not currently validate the Codex manifests; run `codex plugin marketplace add`/`plugin add` locally (as above) before relying on a change.
 - `plugins/software-engineering/.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` are versioned together by convention — bump both to the same value when either changes.
 - Breaking changes to a skill's behavior are possible before `1.0.0`.

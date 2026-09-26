@@ -1,0 +1,14 @@
+{"order_id": "ORD-88000", "sku": "SKU-6305", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '12.0'"}
+{"order_id": "ORD-88001", "sku": "SKU-3471", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '6.0'"}
+{"order_id": "ORD-88002", "sku": "SKU-7468", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '12.0'"}
+{"order_id": "ORD-88003", "sku": "SKU-1791", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '6.0'"}
+{"order_id": "ORD-88004", "sku": "SKU-2186", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '12.0'"}
+{"order_id": "ORD-88005", "sku": "SKU-9779", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '6.0'"}
+{"order_id": "ORD-88006", "sku": "SKU-2542", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '12.0'"}
+{"order_id": "ORD-88007", "sku": "SKU-6991", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '6.0'"}
+{"order_id": "ORD-88008", "sku": "SKU-1950", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '12.0'"}
+{"order_id": "ORD-88009", "sku": "SKU-9313", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '6.0'"}
+{"order_id": "ORD-88010", "sku": "SKU-4517", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '12.0'"}
+{"order_id": "ORD-88011", "sku": "SKU-1614", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '6.0'"}
+{"order_id": "ORD-88012", "sku": "SKU-2408", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '12.0'"}
+{"order_id": "ORD-88013", "sku": "SKU-8104", "vendor_feed": "vendor_y", "error": "ValueError: invalid literal for int() with base 10: '6.0'"}
