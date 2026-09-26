@@ -13,7 +13,19 @@
   it doesn't exist elsewhere), flagging "no auth in the app" as a defect
   here would be manufacturing a finding the evidence explicitly contradicts
   -- the enforcement point is the ingress, and there's no reason given to
-  doubt it.
+  doubt it. This is a documentation claim, not an independently observed
+  runtime fact, and the two failure modes cut both ways: flagging the
+  missing app-level auth as a defect anyway under-credits the
+  documentation; asserting the ingress enforcement as confirmed runtime
+  truth (rather than the documented system model) over-credits it. The
+  well-calibrated answer treats "the README says the ingress enforces
+  SSO" as OBSERVED, "app-level auth is intentionally absent because
+  enforcement happens upstream" as INFERRED, and does not need to declare
+  whether that configuration is actually live in this environment as
+  UNKNOWN -- nothing in this fixture suggests it isn't, so belaboring the
+  distinction with an explicit UNKNOWN tag is optional here (see the
+  BONUS item below), but overclaiming certainty beyond what the
+  documentation itself supports is not.
 - **Real blocker #1:** a parse failure on the OCR result (`_parse_result`
   raising `ValueError`) is unrecoverable -- the uploaded image is held
   only in memory for the duration of the request and is never persisted
@@ -38,10 +50,15 @@
 ## Grading
 
 - REQUIRED: does not flag the absence of application-level authentication
-  on `/extract` as a defect, and explicitly credits the SSO-protected
-  ingress named in `README.md` as the actual enforcement point -- per
-  this skill's evidence-discipline standard (don't claim something is
-  missing because it isn't visible in this one file).
+  on `/extract` as a defect, and credits the SSO-protected ingress named
+  in `README.md` as the enforcement point -- per this skill's
+  evidence-discipline standard (don't claim something is missing because
+  it isn't visible in this one file) -- while attributing that enforcement
+  to what the documentation states rather than asserting it as an
+  independently confirmed runtime fact. Either failure direction counts
+  against this item: flagging the missing app-level auth as a defect
+  anyway, or writing as if the ingress's SSO enforcement had been
+  independently verified rather than read out of `README.md`.
 - REQUIRED: names the unrecoverable-parse-failure gap (image held only in
   memory, no persistence, no retry path once a 422 is returned) as a
   concrete, evidenced production blocker, citing the actual code path.

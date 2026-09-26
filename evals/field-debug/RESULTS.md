@@ -21,7 +21,12 @@ This is iteration 1: the skill's first eval suite, authored and run in the
 same session as the skill's own design, on a corpus sized to pressure the
 skill's central behaviors, not the full ~32-case target the design dossier
 proposed. See "What this proves / what this does not prove" before
-treating any of this as strong validation.
+treating any of this as strong validation. See "Iteration 2" near the end
+of this file for a follow-up round that tightened the skill's identity
+around portable field investigation, generalized Handoff into a
+mid-investigation Delegate behavior, added a lightweight checkpoint/resume
+mechanism, sharpened two epistemic-discipline details, and added one new
+case (`case-008`) to pressure the delegation/checkpoint behavior.
 
 ## Numeric summary
 
@@ -315,3 +320,208 @@ execution rather than a static evidence set; (5) the remaining named
 differentiators not yet covered (stale documentation, migration/change-
 safety, a dedicated enterprise-integration-boundary case) once the above
 four are in place.
+
+## Iteration 2 (2026-09-25)
+
+**What changed in `SKILL.md`, and why.** This round tightened the skill's
+identity around its primary intended use: a portable investigation
+protocol for debugging inside customer-owned environments (enterprise/
+brownfield integration, legacy/hidden-behavior systems, and POC-to-
+production judgment calls), not a general autonomous-agent framework.
+Concretely:
+
+- Rewrote the frontmatter description and added an intro paragraph
+  naming the customer-owned-environment framing and the "use the
+  customer's native machinery; preserve enough state to survive leaving
+  it" principle.
+- Generalized the previously terminal Handoff mode into a new **Delegate**
+  behavior nested inside Diagnose (`investigate -> identify a bounded
+  uncertainty -> delegate -> receive evidence -> assimilate -> continue`),
+  with a QUESTION/WHY/KNOWN/REQUEST/CONSTRAINTS/RETURN template and an
+  explicit instruction to separate a delegate's observation from their
+  interpretation (an `OBSERVED` / `INFERRED BY TOOL` / `UNKNOWN` worked
+  example). Handoff itself now explicitly means "no delegate can cross
+  this either," not just "I personally can't."
+- Added a lightweight **Checkpoint and resume** section (Objective,
+  current system model, observations, active/ruled-out hypotheses,
+  assumptions, unknowns, constraints, last-known-good/first-known-bad,
+  next discriminating move, and a named "time-sensitive evidence to
+  revalidate" field) with a `load -> re-ground -> identify deltas ->
+  continue` resume discipline, distinguishing stable facts from
+  runtime-perishable ones.
+- Reworded the confirmatory-evidence claim in the root-cause standard:
+  previously "an experiment that would only confirm the current favorite
+  is not evidence, it's decoration"; now confirmatory evidence can still
+  be real evidence, and the actual failure mode named is treating a
+  non-discriminating result as if it had settled the question.
+- Added a documentation-vs-runtime-truth distinction to the enterprise/
+  legacy terrain section, with an `OBSERVED`/`INFERRED`/`UNKNOWN` worked
+  example (a README's SSO-ingress claim).
+- Folded in a short, explicitly non-formal action-selection consideration
+  (access, observability, blast radius, time, human help, query cost) and
+  a one-line note that mitigation may proceed before root cause is fully
+  known.
+- Updated the composition, refusals, and anti-patterns lists to name the
+  three new failure modes (laundering a delegate's conclusion into an
+  observation, laundering documentation into confirmed runtime fact,
+  reusing a stale checkpointed fact without revalidating it).
+
+No case-harvesting infrastructure, cost optimizer, or continuity
+benchmark suite was added, per this iteration's explicit scope -- these
+were deliberate omissions, not oversights.
+
+**Grading-key language sharpened, not loosened.** `grading/case-007.
+expected.md`'s auth-related REQUIRED item was reworded to fail an answer
+in *either* direction: flagging the missing app-level auth as a defect
+(as before), or writing as if the README's SSO-ingress claim were an
+independently confirmed runtime fact rather than the documented system
+model. This is a wording tightening prompted directly by this iteration's
+documentation-vs-runtime-truth distinction, not a response to any run
+result -- no case-007 run was repeated against the reworded key this
+iteration, so it has not been re-verified against fresh output. That is a
+named gap, not a step skipped silently.
+
+**New case: `case-008` (checkpoint / delegation / assimilation).** A
+static fixture (no interactive harness needed, unlike `case-004`):
+`checkpoint.md` is a structured checkpoint a fictional colleague ("Marco")
+wrote before going off-shift mid-investigation, including a Delegate
+request he sent to NetOps; `delegation_response.md` is NetOps' reply
+(a real observation -- a packet capture showing SYNs sent but never
+ACKed -- plus NetOps' own admittedly-unverified guess, "probably a
+firewall rule," alongside two attachments they call "probably
+unrelated": `deploy_log.md` and `security_group_config.md`). Those two
+attachments actually pin the mechanism down precisely: a routine
+cert-rotation redeploy moved the calling service's gateway pods to a new
+CIDR block the destination's security group was never updated to allow,
+so the redeploy's own traffic falls through to a `deny all` rule -- a
+firewall/CIDR staleness bug, not a generic "networking issue." The task
+is to resume the investigation from these four files with no further
+access to Marco or NetOps and reach a conclusion.
+
+Run once per condition, fresh `general-purpose` subagents, same harness
+convention as iteration 1 (with-skill additionally received and was told
+to follow `skills/field-debug/SKILL.md`; baseline received the same case
+files and one-line task framing, no imposed structure).
+
+| Case | Scenario | With-skill | Baseline (no skill) |
+|---|---|---|---|
+| 008 | A colleague's checkpoint plus a delegated NetOps reply that offers an unverified guess and two attachments that actually pin the mechanism down | 6/6 | 5/6 -- missed the "flag a checkpointed time-sensitive fact as needing revalidation" item |
+
+**Both runs correctly did the substantive work.** Both independently:
+built on Marco's checkpoint rather than restarting the investigation from
+scratch; correctly separated NetOps' actual observation (SYNs sent, never
+ACKed, no response from the destination) from NetOps' own conclusion
+("probably a firewall rule," which NetOps itself flagged as an unchecked
+guess) instead of accepting the guess as the root cause; used
+`deploy_log.md` and `security_group_config.md` to reach the specific
+CIDR-staleness mechanism, explicitly correcting NetOps' own "unrelated"
+characterization of the redeploy; correctly retired the pool-exhaustion
+and destination-side-slowness hypotheses using the packet-capture
+evidence; and did not fabricate access beyond what NetOps actually
+provided. The with-skill run additionally used the skill's own Delegate
+vocabulary verbatim ("NetOps' own conclusion ... was their unverified
+guess (INFERRED BY TOOL), not something they had confirmed"). Both runs
+also surfaced the same real, evidence-based residual doubt on their own
+initiative -- an unexplained ~4-minute gap between the redeploy's
+completion and the first observed failure, and tension between that gap
+and the failure's sharp (non-ramping) onset -- rather than papering over
+it, which both this suite's convention and the skill's "remaining
+uncertainty is mandatory" requirement call for.
+
+**Where the two runs actually diverged.** Marco's checkpoint explicitly
+named the ~8% failure rate and ~30% pool-utilization reading as
+"time-sensitive evidence that should be revalidated on resume." The
+with-skill run picked this up directly, flagging in its own "remaining
+uncertainty" section that the 8% figure is "a single ~14:10 UTC snapshot
+that hasn't been re-measured since -- trend data doesn't exist here." The
+baseline run reused the same 8% figure throughout its otherwise
+equally-rigorous report without ever flagging it as a stale,
+un-reconfirmed snapshot -- it named other genuine unknowns (unverified
+payments-svc telemetry, an unconfirmed assumption about the new pod
+range being exhaustive) but not this one. This is the first case in this
+suite where a specific, checkable REQUIRED item's outcome differs between
+conditions, and it lines up with a piece of the skill's text added this
+iteration for exactly this purpose (the checkpoint's named
+"time-sensitive evidence" field) rather than with anything already
+present in iteration 1.
+
+**What this one case does and does not show.** It is one run per
+condition on one synthetic, single-author fixture -- not evidence that
+baseline "always" misses a stale-data flag, and not evidence that the
+skill's checkpoint field reliably produces this behavior across
+different scenarios. It is evidence that, on this fixture, the skill's
+explicit "revalidate before relying on it further" instruction produced
+a concrete, checkable behavior (naming a specific figure as unconfirmed)
+that a comparably careful baseline run, working from the same evidence
+and reaching the same root cause, did not spontaneously produce. That is
+consistent with iteration 1's overall finding (the skill's value showing
+up in structure and discipline rather than in reaching a different
+conclusion), but sharper than iteration 1's evidence because it is tied
+to one concrete field-level omission rather than a general "baseline
+reports checked the same ground in prose." This case was not designed to,
+and does not, exercise: a scenario where the tested agent must *author* a
+Delegate request itself (this case only requires assimilating one already
+written into the checkpoint); Handoff proper (an uncrossable wall with no
+delegate available at all -- still completely untested in this suite);
+or routing to a sibling skill under real pressure (also still untested).
+
+**No `SKILL.md` corrections this iteration.** Neither run exposed a
+defect, gap, or ambiguity in the new Delegate or Checkpoint-and-resume
+text; both applied it (or, for baseline, arrived at equivalent judgment
+without it) cleanly on the first attempt.
+
+## Cumulative numeric summary (recomputed at write-up time, both iterations)
+
+- 8 cases total (7 from iteration 1, plus `case-008`). With-skill:
+  **42/42 REQUIRED expectations met** across all 8 cases' `pressure_
+  evals.json` entries (5 each for cases 1-6, 6 for case 7 post-revision,
+  6 for case 8) -- the case-007 count reflects the widened key from
+  iteration 1, not a re-run against the further-reworded auth wording
+  from this iteration (see above; not yet re-verified).
+- Baseline was graded pass/fail against `pressure_evals.json`'s REQUIRED
+  items only for `case-008`, matching the point this iteration introduced
+  a case where the two conditions' answers could differ on a specific,
+  named item; it scored 5/6, missing only the stale-data-revalidation
+  item. Baseline for cases 1-7 remains ungraded against those items by
+  design (contrast only, per this skill family's convention) and is not
+  retroactively scored here.
+
+## Remaining weaknesses and recommended next eval expansion (updated)
+
+Iteration 1's list mostly still holds. Updates from this iteration:
+
+- **Continuity/checkpoint/delegation-assimilation is now covered by one
+  case** (`case-008`), where it previously had zero. This item is
+  downgraded from "entirely untested" to "one case, one run per
+  condition, single fixture design" -- still the highest-value next
+  addition if a second, differently-shaped continuity case is wanted,
+  but no longer a complete gap.
+- **Still fully untested:** Handoff proper (an uncrossable wall with no
+  delegate reachable at all -- `case-008` tests Delegate succeeding, not
+  Handoff triggering); a case where the tested agent must originate a
+  Delegate request itself rather than assimilate one already written;
+  genuine non-convergence; sibling-skill routing under real pressure;
+  live tool execution; enterprise/legacy terrain as a dedicated case
+  (still only present as flavor); stale architecture documentation as
+  its own case (the closest existing material is `case-007`'s auth
+  trap, which is a *correct*-documentation case, not a stale one); and
+  migration/change-safety.
+- Per this iteration's explicit scope, no further case expansion, no
+  external benchmark import, and no continuity benchmark suite were
+  attempted -- these remain deliberately deferred, not forgotten.
+
+## What this proves / what this does not prove (iteration 2 addendum)
+
+Iteration 1's statement of what this suite proves and does not prove
+still applies in full; this iteration adds one narrower, more concrete
+data point on top of it: on one fixture, the skill's newly-added
+checkpoint "time-sensitive evidence" field produced a specific, checkable
+behavioral difference from baseline (flagging a stale metric baseline
+reused uncritically) that iteration 1's evidence did not contain. This
+does not establish a rate, does not generalize past this one fixture, and
+was authored, run, and graded by the same person who wrote the skill
+text it's evaluating, with no independent second-reviewer check this
+iteration (the same disclosed limitation as iteration 1's case-007
+revision). It should be read as "the mechanism can work, once, on a
+fixture built to exercise it" -- not as confirmation that it reliably
+will.

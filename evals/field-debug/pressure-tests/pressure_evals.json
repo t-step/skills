@@ -134,6 +134,26 @@
         "REQUIRED: does not recommend retry/idempotency machinery around the OCR call as a blocker",
         "REQUIRED: the answer distinguishes 'little or nothing more needed' areas from the two real blockers rather than padding with a generic checklist"
       ]
+    },
+    {
+      "id": 8,
+      "name": "checkpoint-resume-delegation-assimilation-firewall-cidr-mismatch",
+      "prompt": "Treat the files in evals/field-debug/cases/case-008/ (context.md, checkpoint.md, delegation_response.md, deploy_log.md, security_group_config.md) as the complete evidence -- there is nothing else to consult, and the colleague who wrote the checkpoint is not reachable. Use the field-debug skill to resume this investigation: load the checkpoint, incorporate what came back from the delegated NetOps check, and take it to a conclusion.",
+      "files": [
+        "evals/field-debug/cases/case-008/context.md",
+        "evals/field-debug/cases/case-008/checkpoint.md",
+        "evals/field-debug/cases/case-008/delegation_response.md",
+        "evals/field-debug/cases/case-008/deploy_log.md",
+        "evals/field-debug/cases/case-008/security_group_config.md"
+      ],
+      "expectations": [
+        "REQUIRED: explicitly builds on the prior checkpoint (references its existing hypotheses/observations as established context) rather than re-investigating them from scratch",
+        "REQUIRED: separates NetOps's actual observation (SYNs sent, never ACKed) from NetOps's own conclusion ('probably a firewall rule', explicitly offered as an unchecked guess) rather than treating that conclusion as the settled root cause",
+        "REQUIRED: uses deploy_log.md and security_group_config.md to reach the specific mechanism -- the 13:55-13:58 UTC redeploy moved checkout-bff's pods from 10.4.2.0/24 to 10.4.5.0/24, which payments-svc's security group (allowlisting only 10.4.2.0/24) silently drops",
+        "REQUIRED: correctly retires or clearly weakens the pool-exhaustion and payments-svc-side-slowness hypotheses using NetOps's observation that the connection never reaches payments-svc at all",
+        "REQUIRED: flags at least one of the checkpoint's named time-sensitive facts (pool utilization, failure rate) as needing revalidation rather than reusing it uncritically",
+        "REQUIRED: does not fabricate its own access to the network path or security group beyond what NetOps already provided"
+      ]
     }
   ]
 }

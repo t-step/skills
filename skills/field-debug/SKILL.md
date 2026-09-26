@@ -1,22 +1,22 @@
 ---
 name: field-debug
 description: >-
-  Interactive debugging partner for systems bigger than the codebase:
-  distributed systems, enterprise/legacy integrations, unfamiliar repos,
-  incomplete observability, POCs moving toward production, or a
-  colleague as the only sensor. Loop: inspect -> ask -> model ->
-  discriminate -> observe -> revise -> act -- inspects reachable
-  evidence (repos, tools, MCPs, logs, metrics, config, CI history)
-  before asking, and asks only a discriminating question the
-  environment itself can't answer. Modes: Recon (map terrain only),
-  Diagnose (hold competing hypotheses, run the smallest discriminating
-  experiment, revise, converge or hand off; also runs a
-  production-readiness check when explicitly asked), Handoff (name
-  what's ruled out and blocked at an access/ownership wall). Tags claims
-  OBSERVED/INFERRED/ASSUMED/UNKNOWN. Refuses root cause without
-  discriminating evidence, fabricated access, or redoing verdicts owned
-  by identity-authority-audit, state-ownership-audit, repo-orientation,
-  or change-review -- routes to those instead.
+  Portable investigation protocol for customer-owned environments --
+  enterprise/brownfield integration, legacy and hidden-behavior systems,
+  and POC-to-production calls. Loop: inspect -> ask -> model ->
+  discriminate -> observe -> revise -> act -- inspects reachable evidence
+  before asking, uses the best local capability available, and asks only
+  a discriminating question the environment can't answer. Modes: Recon
+  (map terrain), Diagnose (delegate a bounded question to a
+  better-positioned actor, checkpoint/resume across a pause, converge or
+  hand off; runs a production-readiness check when asked), Handoff (name
+  what's blocked at an uncrossable wall). Tags OBSERVED/INFERRED/
+  ASSUMED/UNKNOWN, separating a delegate's observation from their
+  interpretation and documentation from runtime fact. Refuses root cause
+  without discriminating evidence, fabricated access, stale checkpoints
+  treated as current, or redoing verdicts owned by
+  identity-authority-audit, state-ownership-audit, repo-orientation, or
+  change-review.
 ---
 
 # Field Debug
@@ -35,6 +35,19 @@ the investigation end to end: recon, hypothesis formation, experiment
 choice, belief revision, and exit. It reaches for sibling skills to go deep
 on a sub-question (identity, state ownership, a repo's shape, a diff's
 merge-readiness) without handing the whole investigation to them.
+
+This is field-debug's native setting: an environment the customer owns,
+not you. They may own the network, the identity provider, the ticketing
+queue, the observability stack, the on-call engineer's judgment, and every
+tool best positioned to answer a given question -- and the platform you
+showed up with is often the smallest part of what's actually executable
+there. **Use the customer's native machinery whenever it's better than
+reproducing it. Preserve enough investigation state to survive leaving
+it.** Never recreate visibility or capability the environment already
+provides better -- reach for the customer's own dashboard, runbook,
+specialist, or agent before building a parallel one. This does not mean
+overstating platform independence or standing up infrastructure to
+manufacture it; it means noticing what's already there and using it.
 
 ## The loop
 
@@ -85,9 +98,20 @@ evidence sometimes already discriminates conclusively -- in that case, act;
 manufacturing an experiment anyway is ceremony, not rigor. When existing
 evidence does *not* discriminate between the hypotheses still alive, prefer
 the smallest, lowest-risk experiment that would. A useful experiment is one
-where competing hypotheses predict *different* outcomes -- an experiment
-that would only confirm the current favorite is not evidence, it's
-decoration.
+where competing hypotheses predict *different* outcomes. Evidence every
+live hypothesis predicts equally doesn't discriminate between them --
+but confirmatory evidence can still be real evidence; the failure mode is
+treating a non-discriminating result as if it had settled the question,
+not the result itself being worthless. When genuine uncertainty remains,
+prefer the action that would meaningfully change the hypothesis set.
+
+When choosing that action, weigh access, observability, production
+risk/blast radius, time, available human help, and the cost or scarcity of
+a given query or action -- prefer whichever reachable move has the best
+discriminating value within those constraints, without turning this into a
+formal cost model. Mitigation may proceed before root cause is fully known
+when production impact or safety warrants it; mitigating and diagnosing
+can run on separate tracks.
 
 ## Terrain is bigger than the repo
 
@@ -115,6 +139,23 @@ stale, contradictory, or aspirational documentation is common enough to
 expect, not a surprising edge case. Grade yourself on finding and reasoning
 across these hidden boundaries, not on trivia about the specific vendor or
 protocol involved.
+
+**Documentation is evidence, not automatically runtime truth.** A README
+stating "SSO ingress protects this service" is OBSERVED as a claim the
+documentation makes; treat what it implies as INFERRED, and whether the
+documented configuration is actually active in the environment under
+investigation as UNKNOWN unless runtime evidence confirms it. Don't
+manufacture a defect an evidenced design already accounts for, and don't
+launder a documentation claim into a confirmed runtime fact either --
+both are evidence-discipline failures, in opposite directions:
+
+```
+OBSERVED: the repository documentation states the ingress enforces SSO
+INFERRED: application-level auth may intentionally be absent because
+enforcement occurs upstream
+UNKNOWN: whether the documented ingress configuration is actually active
+in the environment being investigated
+```
 
 ## Investigation behavior
 
@@ -169,14 +210,53 @@ On resolution, emit the session report below. If evidence runs out before
 resolution, say so plainly, hand off (see Handoff), and never fill the gap
 with an unearned root cause.
 
+### Delegate
+
+A move *within* Diagnose, not a separate exit: **investigate -> identify a
+bounded uncertainty -> delegate to the better-positioned actor or tool ->
+receive evidence -> assimilate -> continue.** Use it the moment someone or
+something else can resolve a specific sub-question faster or more reliably
+than you can from here -- a customer engineer, SRE/on-call, a specialized
+MCP, an internal CLI, an observability platform (Splunk, Datadog, and
+similar), a customer-native diagnostic agent, or another specialized skill
+or agent. field-debug still owns the overall investigation and resumes it
+once the answer comes back -- this is not Handoff, which ends the
+investigation at a wall you can't cross at all.
+
+Use this template when the delegation is meaningful enough to warrant it,
+not mechanically for every question routed outward:
+
+```
+QUESTION: <the specific uncertainty to resolve>
+WHY: <which live hypotheses this discriminates between>
+KNOWN: <only the established evidence relevant to this ask>
+REQUEST: <the concrete observation or action needed>
+CONSTRAINTS: <what must not be touched or changed>
+RETURN: <the evidence field-debug needs back>
+```
+
+**Assimilating what comes back is the part that fails silently if skipped.**
+A delegate's answer usually arrives as an interpretation, not raw evidence
+-- a tool's "likely networking," a colleague's "looks like a cert issue."
+Separate what they actually observed from what they concluded before
+updating the hypothesis set; their conclusion is one more hypothesis to
+weigh, not automatically ground truth:
+
+```
+OBSERVED: connection attempts time out before service B receives them
+INFERRED BY TOOL: networking fault
+UNKNOWN: gateway exhaustion vs routing vs firewall vs B availability
+```
+
 ### Handoff
 
 Use when an access, ownership, or authorization wall stops the
-investigation and you cannot cross it yourself -- a system you have no
-credentials for, a team's boundary, an environment you can't reach. Produce
-what's been ruled out, exactly what the next person or system needs to
-check, and why it's blocked. A fabricated best guess is worse than an
-honest handoff.
+investigation and *you* cannot cross it yourself, and no delegate can
+either -- a system nobody reachable has credentials for, a team's boundary
+with no one available on the other side, an environment truly out of
+reach right now. Produce what's been ruled out, exactly what the next
+person or system needs to check, and why it's blocked. A fabricated best
+guess is worse than an honest handoff.
 
 ```
 ## field-debug handoff: <target>
@@ -206,6 +286,36 @@ evidenced risk calls for it, named the same way a Diagnose finding would be
 ("no idempotency key on the payment-capture call, and the caller already
 retries on timeout" -- not "add retry/idempotency infrastructure" as a
 reflex).
+
+## Checkpoint and resume
+
+Not persistence infrastructure -- a compact snapshot for the moments an
+investigation must pause, change hands, or get picked back up later.
+Write one when that's about to happen:
+
+```
+## field-debug checkpoint: <target>
+**Objective**:
+**Current system model**:
+**Observations**:
+**Active hypotheses**:
+**Ruled-out hypotheses**:
+**Assumptions**:
+**Unknowns**:
+**Constraints**:
+**Last known-good / first known-bad boundary**:
+**Next discriminating move**:
+**Time-sensitive evidence that should be revalidated on resume**:
+```
+
+On resume: **load -> re-ground -> identify deltas -> continue.** Don't
+treat every checkpointed fact as still current. Distinguish what's
+relatively stable (protocol, ownership, code structure) from what's
+runtime-perishable (deploy/version, feature-flag state, pod/process state,
+current error rate, traffic, credentials/config, incident impact) and
+revalidate the perishable ones before relying on them further. A changed
+world is not the same thing as a previously wrong model -- don't discard a
+sound prior model just because one fact moved.
 
 ## Structured solved-session output
 
@@ -286,13 +396,17 @@ reason about their territory just because they exist:
   remediation work, that skill slices it.
 
 Route to a sibling for its depth; keep the investigation's thread and exit
-here.
+here. Routing to a sibling skill is a special case of Delegate above --
+the better-positioned actor happens to be another skill instead of a
+person or external tool; assimilate its verdict the same way, as a
+conclusion to weigh alongside its cited evidence, not a black box.
 
 ## What this skill refuses to do
 
 - Ask the engineer something the environment can already answer directly.
-- Declare a root cause without discriminating evidence, or run an
-  "experiment" that could only confirm the current favorite hypothesis.
+- Declare a root cause without discriminating evidence, or treat an
+  experiment whose outcome every live hypothesis already predicts as if
+  it had discriminated between them.
 - Treat the checked-out repository as the whole system, or the absence of
   something in it as proof it doesn't exist elsewhere.
 - Fabricate access, tools, or observability the environment doesn't
@@ -309,6 +423,12 @@ here.
 - Write a solved-session report that hides how plausible the wrong turns
   looked at the time, or that overclaims certainty its own evidence chain
   doesn't support.
+- Accept a delegate's interpretation as ground truth without separating
+  it from what they actually observed.
+- Treat documentation as either a confirmed runtime fact or worthless --
+  it's evidence of the documented model, no more and no less.
+- Treat a checkpointed runtime-perishable fact as still current without
+  revalidating it on resume.
 
 ## Anti-patterns actively watched for
 
@@ -318,4 +438,6 @@ trespassing an ownership boundary instead of routing or handing off;
 declaring victory at the first plausible cause while a live alternative
 remains unruled-out; a hindsight-laundered report; postmortem bloat;
 overengineered interventions; wandering -- tool calls or questions that
-don't discriminate between anything still live.
+don't discriminate between anything still live; laundering a delegate's
+conclusion into an observation; laundering documentation into a confirmed
+runtime fact; reusing a stale checkpointed fact as if it were still true.
