@@ -56,7 +56,11 @@ replace it.
 - **Observe** the actual result, not the expected one.
 - **Revise**: retire what evidence contradicts, weaken what it merely fails
   to support, strengthen or introduce what it points to. Being wrong at the
-  start isn't failure -- failing to update when contradicted is.
+  start isn't failure -- failing to update when contradicted is. When
+  evidence shows a mutating step was already accepted or attempted and its
+  outcome never came back, hold that outcome as UNKNOWN rather than quietly
+  treating the missing confirmation as failure, and let that distinction
+  shape what happens next.
 - **Act** once evidence discriminates, and stop -- further probing past
   that point is wandering, not rigor.
 
