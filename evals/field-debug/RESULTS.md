@@ -1107,3 +1107,204 @@ graded by the same session that ran it with no independent second
 reviewer -- consistent with, and no stronger than, every prior
 iteration's disclosed limitation.
 
+## Iteration 8 (2026-09-25): four staged, multi-phase cases authored and frozen, not yet run
+
+This iteration is eval-authoring only -- **no baseline or with-skill agent
+was run against any of the four cases below, no model-assisted grading
+was performed, and no grading key was adjusted based on model output.**
+`skills/field-debug/SKILL.md` was not modified. The cases and their
+grading keys are frozen as committed; a future session, with no
+involvement in their design, is expected to run and grade them, exactly
+as PR #61/#62's iteration-6-to-7 handoff did for `case-014` through
+`case-019`.
+
+Iterations 1-7 pressure-test terrain-mapping, delegation, checkpoint/
+resume against a single continuous incident, scoped single-witness
+testimony, and temporal/concurrent/distributed-state reasoning within one
+investigation session -- but none test what happens *across* a session
+boundary when the world keeps moving without the investigator, what a
+*good* checkpoint handoff looks like when nothing needs to change, what
+happens when the people who hold the evidence are split across vantage
+points and one of them leaves mid-investigation, or a genuinely
+multi-stage incident where fixing one real problem reveals a second, and
+then a third, real problem. Four new cases (`case-020` through `case-023`)
+target that gap.
+
+### External design sources (mechanics donors, not scenario material)
+
+Per the task that requested this expansion, four external systems were
+used as sources of *mechanics* to borrow, not scenarios or datasets to
+copy or add as dependencies. No URL was fetched this session; each is
+cited by the title/description given in the task, and the specific idea
+borrowed into a case is named so the citation is checkable against that
+case rather than taken on faith:
+
+- **SentinelBench** (Microsoft Research, described as a benchmark for
+  long-running monitoring agents): the mechanic borrowed is "the
+  environment changes independently of agent actions, and a resumed
+  agent must revalidate perishable facts rather than replay everything or
+  trust everything" -- this is `case-020`'s and `case-021`'s central
+  mechanic (a canary rollout that auto-promotes on its own timer,
+  independent of any agent's request to pause it).
+- **AWS DevOps Agent** (autonomous incident response): the mechanic
+  borrowed is "prior context persists but must be reconciled with new
+  information delivered between reasoning steps, and investigation
+  resumes rather than restarts" -- shaped `case-020`/`case-021`'s
+  checkpoint-then-resume structure (the checkpoint is handed forward, the
+  original investigator's raw process is not).
+- **Gemini Cloud Assist investigations** (Google Cloud): the mechanic
+  borrowed is "explicit Observations/Hypotheses/Findings that stay
+  inspectable across a revision, rather than being silently overwritten
+  when new evidence arrives" -- this is why both `case-020`'s and
+  `case-023`'s grading keys explicitly require *not* discarding or
+  retroactively rewriting an earlier, still-valid finding just because a
+  later one arrived.
+- **Google SRE incident management / handoff**: the mechanic borrowed is
+  "a living incident-state document lets an incoming responder continue
+  from current state instead of reconstructing the incident from
+  scratch" -- this is the core design constraint behind `case-020` and
+  `case-021`'s checkpoint files, and behind `case-022`'s replacement-
+  responder (Chris covering for Dana) receiving pointers to existing
+  evidence rather than starting cold.
+- **Cloud-OpsBench**: the mechanic borrowed is "process-level evaluation:
+  a correct final answer without the supporting evidence chain is not
+  equivalent to a good investigation" -- this is why every new case's
+  grading key includes REQUIRED items about *how* the conclusion was
+  reached (actually running the reproduction at each stage, citing which
+  vantage point said what and how it was checked), not just what the
+  final conclusion says.
+
+None of these four systems' code, datasets, or benchmark harnesses were
+added as a dependency; nothing here imports or reuses their material
+beyond the mechanics named above.
+
+### The four cases
+
+| Case | Mechanic under test | Scenario |
+|---|---|---|
+| `case-020` | Changed-world resume | A colleague's checkpoint on an `orders-svc` -> `partner-erp-gateway` incident correctly implicates a v3.15 retry-logic change while a canary hold request is still pending. Between the checkpoint and resume, the canary auto-promotes to 100% on its own default policy -- independently of the investigation -- and the fleet-wide failure rate rises from a diluted ~9% to 34%. The resumed investigation must revalidate the now-stale canary/failure-rate snapshot, recognize the world changed rather than concluding the prior model was wrong, and still do real further work (connecting the retry code to the partner's documented rate-limit/burst behavior) to reach the actual root cause. |
+| `case-021` | Unchanged-world resume (control) | A structurally identical checkpoint/resume handoff on an unrelated nightly customer-export job, but nothing material changes between the checkpoint and resume -- same code, same library version, same affected accounts, essentially the same drop rate one more night running. The one open question the checkpoint already scoped (a `recordsdb-client` keyset-cursor caveat) is answered by new documentation. This case exists to catch the opposite failure from `case-020`: needless replay, re-litigating already-ruled-out hypotheses, or general distrust of a checkpoint that was actually sound. |
+| `case-022` | Changing people / scoped witnesses | Three vantage points on a customer-CRM sync complaint -- Northwind's Ops admin (webhook-receipt dashboard), our own platform SRE (send-side job log), and Northwind's CRM admin (the only one who can see CRM-side ingestion) -- each report a true observation from their own layer, two of which superficially conflict ("Delivered" vs. "nothing new has shown up") without either being wrong. The Ops admin goes unavailable (a scheduled system migration) partway through, handing off to a less-experienced replacement responder, forcing the investigation to delegate one bounded, concretely-targeted request rather than either stalling or asking everyone everything. |
+| `case-023` | Sequential genuine failures | The hardest case in the suite. A vendor integration fails three real, sequential, unrelated-cause boundaries in order: an auth-scheme cutover (401), then, once fixed, a payload-contract mismatch the vendor's own migration notice said wouldn't happen (422), then, once that's fixed too, an unbounded-concurrency burst tripping the vendor's documented rate limit (429 on 5/25 orders). All three are real; none is a red herring; a benign, unrelated `DeprecationWarning` fires identically at every stage as an anti-overcorrection trap. Fully mechanized: `run_sync.py`/`pytest` against real, runnable code reproduces each stage deterministically as the agent applies each real fix. |
+
+### Staging approach: no invented orchestration where the existing conventions already cover it
+
+Deliberately, none of these four cases add new orchestration
+infrastructure. Each reuses whichever existing convention in this suite
+already fits its mechanic, rather than building something new:
+
+- **`case-020`/`case-021`** follow `case-008`'s existing checkpoint-handoff
+  convention exactly: Phase 1 is an authored, frozen checkpoint (nothing
+  a live agent produced this session, consistent with this iteration
+  running no agents at all), and the tested agent only ever sees Phase 2
+  -- the checkpoint plus "current state" files gathered fresh for the
+  handoff. There is no phase-1 raw transcript file in either case
+  directory (mechanically checked -- see below).
+- **`case-022`** follows `case-004`'s existing scripted-live-interaction
+  convention exactly: the grading key holds Chris's, Dana's, and Priya's
+  scripted responses, to be played by whichever future session actually
+  runs this case, keyed on whether the tested agent's question is
+  well-targeted -- the same mechanism iteration 1 already established and
+  iterations 3-7 never needed to change.
+- **`case-023`** needed no live orchestration at all: the three sequential
+  failures are produced by actually running real, deterministic Python
+  against a local sandbox harness that mirrors the vendor's documented
+  contract (auth check, then schema validation, then a concurrency cap),
+  in that order, so a stage's failure is only ever observable by fixing
+  the stage before it and re-running. This was verified to reproduce
+  deterministically five times in a row during authoring before being
+  frozen (see below) -- not asserted from the code alone.
+
+The task's suggested "sealed harness returning phase-appropriate tool
+output" was considered and deliberately not built as new infrastructure:
+`case-023`'s real code already provides that property for free (a stage's
+error text does not exist anywhere until the code that produces it is
+actually executed), and `case-020`/`case-021`/`case-022` are each
+adequately served by an existing, already-battle-tested convention in
+this suite. Match the size of the mechanism to the size of the case.
+
+### Fixture/harness validation actually run this session
+
+Two standalone verification scripts were written under
+`evals/field-debug/scripts/` (deliberately outside `cases/`, so they are
+never copied into a tested agent's sandbox under this suite's own run
+protocol, and so they can safely reference grading-relevant specifics
+without being an isolation violation):
+
+- **`verify_case_023_progression.py`** -- copies `case-023`'s real code to
+  a scratch directory and mechanically applies exactly the three fixes a
+  correct investigation would apply, one at a time, re-running the real
+  `run_sync.py` after each. Confirmed, this session: unmodified code
+  produces 25/25 `401` and no `422`/`429` anywhere in the output; the auth
+  fix alone produces 25/25 `422` and no `401`/`429`; the auth+schema fix
+  produces exactly 20/25 accepted and 5/25 `429` (also independently
+  re-run five additional times outside this script during authoring, with
+  an identical 20/5 split every time -- the concurrency window is
+  deterministic, not flaky); all three fixes together produce 25/25
+  accepted. The same script also greps `case-023`'s static agent-visible
+  files (`context.md`, `partner_migration_notice.md`,
+  `sync_log_so_far.md`) and confirms none mentions the stage-2 or stage-3
+  failure signatures ahead of time.
+- **`verify_checkpoint_resume_isolation.py`** -- confirms, for both
+  `case-020` and `case-021`, that (a) the case directory contains no file
+  shaped like a raw prior-investigator transcript (only the distilled
+  checkpoint plus current-state files), and (b) `checkpoint.md` -- the
+  only Phase-1-authored artifact in either case -- contains none of that
+  case's Phase-2-only facts (the specific rollout percentages/failure
+  rates only gathered fresh for `case-020`'s handoff, and the specific
+  drop percentage only gathered fresh for `case-021`'s).
+
+Both scripts were run this session and both passed
+(`verify_case_023_progression: PASS`,
+`verify_checkpoint_resume_isolation: PASS`). `bash scripts/check.sh` also
+passes against the full tree, including the four new cases, their
+`grading/*.expected.md` files, and their `pressure_evals.json` entries
+(206 case directories total, no leakage flagged).
+
+**What is mechanically verified vs. represented as a frozen scripted
+interaction, stated plainly:** `case-023`'s three-stage sequence is fully
+mechanically verified -- it is real, executable code, not a narrated
+outcome. `case-020`/`case-021`'s checkpoint/current-state split and
+`case-022`'s three-vantage-point testimony are internally consistent,
+isolation-checked, static fixtures -- not executable, and not run against
+a live agent this session. `case-022`'s Chris/Dana/Priya interaction is,
+like `case-004`'s Priya before it, a **scripted role to be played live by
+whichever future session actually runs this case** -- its correctness as
+written is a matter of narrative/grading-key consistency (checked by
+hand, adversarially re-read for leakage and chronology this session), not
+something a script can execute and assert on.
+
+### What this adds, and does not add
+
+This is fixture and grading-key authoring evidence: it demonstrates the
+four scenarios are internally consistent, isolated from their own grading
+material, and (for `case-023`) reproducible. It says nothing about
+whether `SKILL.md` performs better than an unassisted baseline on any of
+these four cases -- that comparison has not been run and no claim about
+it is made here. It also does not itself demonstrate that `case-022`'s
+scripted human responses will be played correctly or consistently by
+whatever session eventually runs it live -- that session should re-read
+`grading/case-022.expected.md`'s scripted-response section before playing
+any of the three roles.
+
+### Limitations the future blind-run session should know
+
+- `case-022` requires a human-role-playing orchestrator exactly as
+  `case-004` did -- budget for that when planning the run wave, and route
+  its Chris/Dana/Priya turns through the grading key's scripted responses
+  rather than improvising.
+- `case-023`'s red-herring `DeprecationWarning` fires on every call and
+  will appear in `pytest`'s captured-warnings output by default; this is
+  intentional (see the grading key's anti-overcorrection item) and is not
+  a fixture defect to "clean up" before running.
+- `case-020` and `case-021` intentionally share a mechanic (checkpoint/
+  resume) but not a scenario, domain, or checkpoint author -- they are a
+  matched pair for the changed-world/unchanged-world contrast, not the
+  same incident at two points in time.
+- As with iteration 6, every REQUIRED grading item was checked against
+  actually-discoverable fixture content, not fixture prose that merely
+  asserts a conclusion -- but this session authored the cases and cannot
+  itself be the "fresh, uninvolved reader" iteration 7 called for; that
+  property still depends on the next session being a genuinely fresh one,
+  as instructed.
+

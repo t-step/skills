@@ -383,6 +383,95 @@
         "REQUIRED: proposes the direct, minimal fix -- updating the consumer's schema/model to accept the new field name (and/or having the producer alias/emit the old field name) -- not a broader systemic change",
         "REQUIRED (anti-overfitting): commits to the contract mismatch as sufficient and complete once the schema, rejection log, and payload line up, without inventing a secondary cause (message-queue delivery, ordering, encoding, infra) the evidence doesn't call for"
       ]
+    },
+    {
+      "id": 20,
+      "name": "changed-world-resume-canary-auto-promoted-retry-burst-trips-rate-limit",
+      "prompt": "Treat the files in evals/field-debug/cases/case-020/ (context.md, checkpoint.md, CHANGELOG.md, outbound_gateway_client.py, current_rollout_status.md, current_gateway_metrics.md, partner_gateway_docs.md) as the complete evidence -- there is nothing else to consult, and the colleague (Jordan) who wrote the checkpoint is not reachable. Use the field-debug skill to resume this investigation: load Jordan's checkpoint, ground yourself in the current state of things, and take it to a conclusion.",
+      "files": [
+        "evals/field-debug/cases/case-020/context.md",
+        "evals/field-debug/cases/case-020/checkpoint.md",
+        "evals/field-debug/cases/case-020/CHANGELOG.md",
+        "evals/field-debug/cases/case-020/outbound_gateway_client.py",
+        "evals/field-debug/cases/case-020/current_rollout_status.md",
+        "evals/field-debug/cases/case-020/current_gateway_metrics.md",
+        "evals/field-debug/cases/case-020/partner_gateway_docs.md"
+      ],
+      "expectations": [
+        "REQUIRED: explicitly builds on Jordan's checkpoint (the per-version failure-rate split, the v3.15 retry-logic finding) rather than re-deriving it from scratch",
+        "REQUIRED: checks current_rollout_status.md and identifies that the canary auto-promoted to 100% independently of the investigation, via the deployment tool's own default policy -- not a manual action and not an error in Jordan's checkpoint",
+        "REQUIRED: flags the checkpoint's canary-percentage and per-version failure-rate facts as time-sensitive and revalidates them against the current-state files rather than reusing them as still-current",
+        "REQUIRED: does not conclude Jordan's retry-logic hypothesis was wrong merely because current state differs -- treats the current 34% fleet-wide rate as consistent with and supportive of that hypothesis now that 100% of traffic runs the implicated code",
+        "REQUIRED: uses partner_gateway_docs.md to reach the specific mechanism (5 req/s per-credential limit, 502/504-instead-of-429 quirk, fixed-interval/no-jitter retries synchronizing into bursts) rather than stopping at 'the rollout finished'",
+        "REQUIRED: retires or clearly weakens the partner-side-incident hypothesis using the status-page evidence and the positive mechanism found in the docs",
+        "REQUIRED: proposes a concrete fix aimed at the actual mechanism (backoff/jitter on the retry interval and/or a client-side rate limiter) rather than a generic resilience recommendation"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "unchanged-world-resume-control-keyset-cursor-confirmed",
+      "prompt": "Treat the files in evals/field-debug/cases/case-021/ (context.md, checkpoint.md, export_job_excerpt.md, last_night_run_summary.md, db_client_library_docs_excerpt.md) as the complete evidence -- there is nothing else to consult, and the colleague (Reese) who wrote the checkpoint is not reachable. Use the field-debug skill to resume this investigation: load Reese's checkpoint, ground yourself in the current state of things, and take it to a conclusion as efficiently as the evidence allows.",
+      "files": [
+        "evals/field-debug/cases/case-021/context.md",
+        "evals/field-debug/cases/case-021/checkpoint.md",
+        "evals/field-debug/cases/case-021/export_job_excerpt.md",
+        "evals/field-debug/cases/case-021/last_night_run_summary.md",
+        "evals/field-debug/cases/case-021/db_client_library_docs_excerpt.md"
+      ],
+      "expectations": [
+        "REQUIRED: performs a proportionate re-grounding check using last_night_run_summary.md (confirms the job/library are unchanged and the pattern still holds) rather than skipping it or re-verifying the entire investigation from zero",
+        "REQUIRED: uses db_client_library_docs_excerpt.md to confirm the keyset-cursor-under-concurrent-write hypothesis, citing the specific documented mechanism",
+        "REQUIRED (anti-overcorrection): does not re-derive the large-accounts-only or concurrent-activity-only correlations as if newly discovered, and does not re-litigate hypotheses Reese already ruled out without new reason",
+        "REQUIRED: explicitly builds on and cites Reese's checkpoint as established prior context",
+        "REQUIRED: reaches the conclusion efficiently -- reads as completing one open step, not as a second full investigation",
+        "REQUIRED: proposes a concrete fix grounded in the confirmed mechanism (snapshot/consistent-read isolation, or independent row-count reconciliation)"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "scoped-witnesses-webhook-ack-vs-crm-ingestion-validation",
+      "prompt": "You are talking with Chris Alvarez (Northwind's CRM admin, covering for Dana Whitfield who is unavailable until tomorrow) in this chat -- see evals/field-debug/cases/case-022/context.md for the full framing, including Dana's and Priya's already-given evidence, which is final and not revisable. Treat crm_sync_job_log.md, middleware_dashboard_export.md, and crm_payload_mapping.md as the complete evidence beyond what Chris can check. Use the field-debug skill to investigate why Northwind says no new records have shown up in their CRM in 3 days, and ask Chris for the one check that would actually move this forward -- wait for his answer before concluding.",
+      "files": [
+        "evals/field-debug/cases/case-022/context.md",
+        "evals/field-debug/cases/case-022/crm_sync_job_log.md",
+        "evals/field-debug/cases/case-022/middleware_dashboard_export.md",
+        "evals/field-debug/cases/case-022/crm_payload_mapping.md"
+      ],
+      "expectations": [
+        "REQUIRED: correctly attributes each vantage point to its actual layer -- Dana's 'Delivered' to webhook-receipt acknowledgment, Priya's evidence to our own send-side log -- and does not treat either as confirmation of CRM-side ingestion",
+        "REQUIRED: does not flatten Dana's and Priya's reports into 'the sync is working' or dismiss the complaint",
+        "REQUIRED: does not characterize Dana's report as mistaken or wrong",
+        "REQUIRED: respects Dana's stated unavailability and does not attempt to reach her further",
+        "REQUIRED: delegates a single, bounded, concretely-targeted request to Chris asking him to check for a rejection/error view on the CRM admin side, not a vague question",
+        "REQUIRED: on Chris's answer, separates his actual observation from interpretation and identifies the real mechanism (ack-before-ingestion, silent validation rejection for a missing field)",
+        "REQUIRED: uses crm_payload_mapping.md to propose a concrete, minimal fix mapping existing internal data into the outbound payload",
+        "REQUIRED: does not propose resending/replaying previously-sent records before the rejection reason is known",
+        "REQUIRED: continues to a concrete conclusion despite partial access rather than issuing a full Handoff"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "sequential-genuine-failures-auth-then-contract-then-capacity",
+      "prompt": "The fulfillment platform on-call engineer reports (see evals/field-debug/cases/case-023/context.md) that warehouse-svc's sync to Fulfillco has failed 100% of orders with 401 Unauthorized since Monday's batch, coinciding with Fulfillco's published auth-migration cutover. Use the field-debug skill to investigate using warehouse-svc's working directory at evals/field-debug/cases/case-023/, running and editing the provided scripts as your investigation requires, and get the sync working again.",
+      "files": [
+        "evals/field-debug/cases/case-023/context.md",
+        "evals/field-debug/cases/case-023/fulfillco_client.py",
+        "evals/field-debug/cases/case-023/fulfillco_sandbox.py",
+        "evals/field-debug/cases/case-023/run_sync.py",
+        "evals/field-debug/cases/case-023/partner_migration_notice.md",
+        "evals/field-debug/cases/case-023/sync_log_so_far.md",
+        "evals/field-debug/cases/case-023/tests/test_fulfillco_client.py"
+      ],
+      "expectations": [
+        "REQUIRED: runs run_sync.py or the test before proposing a fix, and cites the actual observed 401 result",
+        "REQUIRED: diagnoses and fixes the auth boundary (legacy Bearer-token header vs. required HMAC-SHA256 request signing)",
+        "REQUIRED: after the auth fix, re-runs the batch and treats the resulting 422 as evidence of a different boundary, without walking back the auth fix",
+        "REQUIRED: diagnoses and fixes the contract boundary (line_items sent, items required)",
+        "REQUIRED: after the schema fix, re-runs the batch and treats the resulting partial failure (20 succeed, 5 rate-limited) as evidence of a third, distinct boundary",
+        "REQUIRED: diagnoses and fixes the capacity boundary (unbounded concurrent sends vs. Fulfillco's ~20-in-flight cap) with a concurrency-bounding fix, not a bare retry wrapper",
+        "REQUIRED (anti-overcorrection): does not treat the recurring benign DeprecationWarning as a contributing cause",
+        "REQUIRED: final report names all three boundaries as separate, sequential, genuine failures rather than forcing one root cause or erasing earlier fixes"
+      ]
     }
   ]
 }
