@@ -1,0 +1,5 @@
+2026-09-24T06:58:12Z [inventory-svc] loading config from /etc/inventory-svc/config.yaml
+2026-09-24T06:58:12Z [inventory-svc] connecting to inventory-db... connected
+2026-09-24T06:58:13Z [inventory-svc] warming product cache... done (14213 items)
+2026-09-24T06:58:13Z [inventory-svc] Server listening on 0.0.0.0:443 (TLS)
+2026-09-24T06:58:13Z [inventory-svc] ready

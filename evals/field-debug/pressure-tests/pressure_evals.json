@@ -256,6 +256,133 @@
         "REQUIRED: gives an actual production-readiness verdict and concrete next step rather than deferring the identity question entirely",
         "REQUIRED (hiding-behind-uncertainty): commits to a real verdict with the identity blocker named, rather than retreating into an all-UNKNOWN non-answer"
       ]
+    },
+    {
+      "id": 14,
+      "name": "concurrent-check-then-act-oversells-last-unit-of-limited-drop",
+      "prompt": "The drops team reports (see evals/field-debug/cases/case-014/context.md) that a 50-unit limited sneaker drop ended up with 52 confirmed orders against it, even though checkout-drops' own inventory table for that SKU now reads available=0 with no errors anywhere. Use the field-debug skill to investigate using checkout-drops' working directory at evals/field-debug/cases/case-014/, and figure out what actually happened.",
+      "files": [
+        "evals/field-debug/cases/case-014/context.md",
+        "evals/field-debug/cases/case-014/checkout_service.py",
+        "evals/field-debug/cases/case-014/db_config.md",
+        "evals/field-debug/cases/case-014/db/inventory_audit.md",
+        "evals/field-debug/cases/case-014/logs/access_log.md",
+        "evals/field-debug/cases/case-014/tests/test_checkout_service.py",
+        "evals/field-debug/cases/case-014/reproduce_concurrent_reservation.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies that reserve_and_confirm reads available, decides validity, and writes back a value computed from that read, with no row lock, optimistic version check, or atomic guarded decrement -- citing the actual code",
+        "REQUIRED: uses db/inventory_audit.md (and/or the reproduction script) to identify that both ORD-88841 and ORD-88842 were confirmed against a before_available=1 read from two different app instances moments apart",
+        "REQUIRED: names the violated invariant explicitly -- at most one confirmed order per unit of available inventory -- not just \"there's a bug somewhere\"",
+        "REQUIRED: explains why inventory.available reads 0 rather than a negative number even though 2 units were oversold, rather than treating the clean-looking available=0 as evidence nothing is wrong",
+        "REQUIRED: does not conclude this is a duplicate-request, client double-submit, or reporting/reconciliation artifact instead of a checkout-side concurrency bug, given access_log.md's distinct request IDs, order IDs, and source instances",
+        "REQUIRED (hiding-behind-uncertainty): commits to the concurrent check-then-act read as the root cause once the audit-history evidence (and/or the reproduction) establishes it, rather than leaving it as one of several equally-weighted possibilities"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "stalled-rolling-restart-leaves-majority-of-fleet-on-revoked-api-key",
+      "prompt": "Support reports (see evals/field-debug/cases/case-015/context.md) that checkout-svc has been declining roughly 62% of payment attempts since a routine PaymentCo API key rotation went out yesterday morning, even though it looks random from the customer's side and PaymentCo's own dashboard shows no incident. Use the field-debug skill to investigate using checkout-svc's working directory at evals/field-debug/cases/case-015/, and figure out what's actually going on.",
+      "files": [
+        "evals/field-debug/cases/case-015/context.md",
+        "evals/field-debug/cases/case-015/payment_client.py",
+        "evals/field-debug/cases/case-015/deploy/rollout_status.md",
+        "evals/field-debug/cases/case-015/deploy/secrets_manager_current.md",
+        "evals/field-debug/cases/case-015/logs/payment_gateway_requests.md"
+      ],
+      "expectations": [
+        "REQUIRED: groups the request-log evidence by pod/instance and states that the failure is fully deterministic per pod, rather than describing it as intermittent or probabilistic",
+        "REQUIRED: cross-references which pods are failing against deploy/rollout_status.md's restart history, identifying that the failing pods are exactly the ones that have not restarted since the key rotation, and the succeeding pods are exactly the ones that have",
+        "REQUIRED: names the mechanism, citing payment_client.py -- the API key is read once at process start with no reload path, so a pod that hasn't restarted is still holding the old, now-revoked key version",
+        "REQUIRED: identifies that the rolling restart paused on an unrelated readiness-probe failure and never resumed, rather than assuming the rollout is still quietly in progress or will finish on its own",
+        "REQUIRED: connects the aggregate ~62% failure rate to the 5-of-8 stale pod fraction rather than treating the percentage as an unexplained or incidental detail",
+        "REQUIRED (hiding-behind-uncertainty): commits to \"these five specific pods are serving on the revoked key and need to restart\" once the pod-level correlation is established, rather than hedging into \"could be several things\""
+      ]
+    },
+    {
+      "id": 16,
+      "name": "shared-cache-key-ttl-expiry-causes-synchronized-fleet-wide-miss-stampede",
+      "prompt": "An SRE reports (see evals/field-debug/cases/case-016/context.md) that homepage-svc's DB connection pool has been spiking to 100% for 10-15 seconds on a suspiciously regular interval since a cache-TTL config change this morning, causing brief bursts of slow homepage loads. Use the field-debug skill to investigate using homepage-svc's working directory at evals/field-debug/cases/case-016/, and figure out what's actually going on.",
+      "files": [
+        "evals/field-debug/cases/case-016/context.md",
+        "evals/field-debug/cases/case-016/homepage_service.py",
+        "evals/field-debug/cases/case-016/CHANGELOG.md",
+        "evals/field-debug/cases/case-016/metrics/db_connection_pool_metrics.md",
+        "evals/field-debug/cases/case-016/metrics/redis_cache_stats.md",
+        "evals/field-debug/cases/case-016/logs/slow_query_log.md"
+      ],
+      "expectations": [
+        "REQUIRED: correlates the DB pool spikes' exact ~300-second periodicity with the cache TTL value set in homepage_service.py/CHANGELOG.md (300s), not just describing the spikes as periodic or regular",
+        "REQUIRED: uses redis_cache_stats.md's miss-count burst (matching the fleet's instance count) together with slow_query_log.md's many identical concurrent query executions to establish that many instances independently re-ran the same expensive query at the same moment",
+        "REQUIRED: names the missing coordination mechanism (no lock/single-flight/stale-while-revalidate/request-coalescing around the cache-miss path) as the reason concurrent misses each trigger independent, duplicated backend work",
+        "REQUIRED: states the causal chain explicitly -- cache-key expiry leads to near-simultaneous misses across the fleet, which leads to duplicated identical backend queries, which leads to connection-pool exhaustion and the customer-visible latency burst",
+        "REQUIRED: does not recommend scaling the database (bigger instance, more read replicas, larger connection pool) as the primary or sufficient fix without addressing the missing coordination around concurrent cache misses",
+        "REQUIRED (hiding-behind-uncertainty): commits to the stampede mechanism as the cause once the periodicity/miss-burst/duplicate-query evidence lines up, rather than leaving \"maybe it's the database, maybe it's the cache\" as equally live"
+      ]
+    },
+    {
+      "id": 17,
+      "name": "ambiguous-client-timeout-plus-non-idempotent-retry-produces-real-duplicate-capture",
+      "prompt": "Finance reports (see evals/field-debug/cases/case-017/context.md) that order ORD-71042 was charged twice through PaymentGate even though payments-svc's own logs and order status show nothing wrong. Use the field-debug skill to investigate using payments-svc's working directory at evals/field-debug/cases/case-017/, and figure out what actually happened.",
+      "files": [
+        "evals/field-debug/cases/case-017/context.md",
+        "evals/field-debug/cases/case-017/payment_client.py",
+        "evals/field-debug/cases/case-017/logs/payments_svc_logs.md",
+        "evals/field-debug/cases/case-017/gateway/gateway_transaction_export.md",
+        "evals/field-debug/cases/case-017/gateway/api_docs_excerpt.md",
+        "evals/field-debug/cases/case-017/verify_timing.py"
+      ],
+      "expectations": [
+        "REQUIRED: finds and reads gateway/gateway_transaction_export.md (not just payments-svc's own logs), and identifies that PaymentGate recorded two separate successful captures for the same order and amount",
+        "REQUIRED: explicitly distinguishes \"the caller experienced a timeout\" from \"the operation failed\" -- states that the first capture attempt actually committed on PaymentGate's side despite payments-svc never receiving confirmation of it",
+        "REQUIRED: identifies the retry-on-timeout logic in payment_client.py as the mechanism that produced the second capture, citing the actual retry/except-Timeout code",
+        "REQUIRED: names the missing idempotency/deduplication semantics (no Idempotency-Key or equivalent sent on either attempt) as the underlying gap that let an ambiguous network outcome become a real duplicate charge",
+        "REQUIRED: does not propose simply lengthening the client timeout, removing the retry, or \"retry more carefully\" as a sufficient fix on its own, without addressing the ambiguous-outcome/idempotency gap",
+        "REQUIRED (hiding-behind-uncertainty): commits to \"the ambiguous timeout plus non-idempotent retry produced a real duplicate charge\" as the conclusive mechanism once the gateway export is read, rather than hedging with \"possibly a duplicate, hard to confirm\""
+      ]
+    },
+    {
+      "id": 18,
+      "name": "straightforward-control-deployed-port-config-simply-wrong",
+      "prompt": "The fulfillment on-call engineer reports (see evals/field-debug/cases/case-018/context.md) that every single fulfillment request from orders-svc to inventory-svc has failed with a connection error since this morning's routine orders-svc deploy. Use the field-debug skill to investigate using orders-svc's working directory at evals/field-debug/cases/case-018/, and figure out what's wrong and fix it.",
+      "files": [
+        "evals/field-debug/cases/case-018/context.md",
+        "evals/field-debug/cases/case-018/orders_svc_config.yaml",
+        "evals/field-debug/cases/case-018/deploy_changelog.md",
+        "evals/field-debug/cases/case-018/inventory_svc_startup.log",
+        "evals/field-debug/cases/case-018/orders_svc_error.log"
+      ],
+      "expectations": [
+        "REQUIRED: reads orders_svc_config.yaml and inventory_svc_startup.log (or equivalent) and identifies the port mismatch (orders-svc configured for 8443, inventory-svc listening on 443) as the direct cause",
+        "REQUIRED: uses deploy_changelog.md's diff to confirm the port value changed in the deploy that immediately preceded onset, rather than treating the mismatch as coincidental or unexplained",
+        "REQUIRED: proposes the smallest fix -- correcting the configured port to 443 (or otherwise aligning the two sides) -- not a broader change (retry/circuit-breaker logic, service-mesh reconfiguration, a proxy layer, etc.)",
+        "REQUIRED: states what would verify the fix, even though there is no live environment here to actually run it",
+        "REQUIRED: does not introduce or pursue speculative alternative causes -- auth/certificate issues, firewall/security-group rules, DNS, a caching layer, a queue, or a vendor/third-party system -- none of which appear anywhere in this fixture",
+        "REQUIRED (anti-overfitting): does not treat the direct, discriminating evidence as insufficient to commit -- no unresolved 'still worth checking X/Y/Z' list, no Delegate or Handoff invoked, no hypothesis entertained beyond the one the config/log comparison already settles"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "straightforward-control-producer-field-rename-breaks-consumer-contract",
+      "prompt": "The fulfillment platform on-call engineer reports (see evals/field-debug/cases/case-019/context.md) that shipping-label-consumer has rejected every order.created event since yesterday's order-events-producer v2.6 release, and that the producer team says their change needs no consumer updates. Use the field-debug skill to investigate using shipping-label-consumer's working directory at evals/field-debug/cases/case-019/, and confirm what's actually wrong and what needs to change.",
+      "files": [
+        "evals/field-debug/cases/case-019/context.md",
+        "evals/field-debug/cases/case-019/schema/order_created_schema.py",
+        "evals/field-debug/cases/case-019/consumer_service.py",
+        "evals/field-debug/cases/case-019/logs/consumer_rejection_log.md",
+        "evals/field-debug/cases/case-019/samples/new_producer_payload.json",
+        "evals/field-debug/cases/case-019/samples/old_producer_payload.json",
+        "evals/field-debug/cases/case-019/producer_release_notes.md",
+        "evals/field-debug/cases/case-019/tests/test_consumer_validation.py"
+      ],
+      "expectations": [
+        "REQUIRED: reads logs/consumer_rejection_log.md and identifies the exact validation error (shipping_method: field required) as the direct, deterministic cause of every rejected message since the v2.6 release",
+        "REQUIRED: compares the schema/model's expected field (shipping_method) against the new producer payload's actual field (fulfillment_method), confirming the mismatch is a field rename (noting the accompanying enum-value rename is a plus, not required, since the observed rejection error only ever demonstrates the missing-field problem)",
+        "REQUIRED: does not accept the producer's release-note claim (\"no consumer changes needed\") at face value -- explicitly notes it's contradicted by the schema/rejection evidence",
+        "REQUIRED: reproduces (or explicitly directs running) the validation against the actual new-shape payload and confirms it fails identically to the observed rejection log",
+        "REQUIRED: proposes the direct, minimal fix -- updating the consumer's schema/model to accept the new field name (and/or having the producer alias/emit the old field name) -- not a broader systemic change",
+        "REQUIRED (anti-overfitting): commits to the contract mismatch as sufficient and complete once the schema, rejection log, and payload line up, without inventing a secondary cause (message-queue delivery, ordering, encoding, infra) the evidence doesn't call for"
+      ]
     }
   ]
 }

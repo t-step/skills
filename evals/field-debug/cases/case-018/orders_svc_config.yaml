@@ -1,0 +1,10 @@
+# orders-svc deployed configuration (current, v4.2.0)
+
+inventory_service:
+  host: inventory-svc.internal
+  port: 8443
+  timeout_seconds: 5
+
+fulfillment:
+  max_retries: 3
+  retry_backoff_seconds: 2
