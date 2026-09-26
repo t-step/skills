@@ -1593,3 +1593,161 @@ AGENTS.md's own guidance ("a suspected weakness should usually become
 eval pressure before a skill rewrite"), not a `SKILL.md` edit made on the
 strength of this single run.
 
+## Iteration 10 (2026-09-25): three handoff-interface cases authored and frozen, not yet run
+
+This iteration is eval-authoring only -- **no baseline or with-skill
+agent was run against any of the three cases below, no model-assisted
+grading was performed, and no grading key was adjusted based on model
+output.** `skills/field-debug/SKILL.md` was not modified. The cases and
+their grading keys are frozen as committed; a future session, with no
+involvement in their design, is expected to run and grade them.
+
+Iterations 1-9 pressure-test terrain-mapping, delegation, checkpoint/
+resume against a continuous incident, and resuming a checkpoint across a
+changed or unchanged world -- but none isolate the Handoff interface
+itself as the object under test. `case-020`/`case-021` (iteration 8)
+already cover "good checkpoint + unchanged world," "good checkpoint +
+changed world," and, via `case-022`, "one operator replaced by another."
+None of the existing suite asks: if field-debug must stop at a genuine
+wall, does it leave a *useful* packet behind (production)? If it
+inherits an *imperfect* packet from someone else, can it recover the
+useful frontier without either trusting garbage or restarting everything
+(consumption)? And does a packet survive the trip from one agent to a
+completely fresh one, with no shared transcript (round trip)? Three new
+cases (`case-024` through `case-026`) target that gap. This suite is
+explicitly framed, per the task that requested it, around producing an
+*expectation profile* for users of the `Handoff` mode, not an aggregate
+score -- the grading keys are built to support failure-shape
+classification (see each case's grading key), not just a REQUIRED/BONUS
+tally.
+
+### The three cases
+
+| Case | Capability tested | Scenario |
+|---|---|---|
+| `case-024` | Handoff production, at a genuine wall | Five orders submitted to a vendor's (Meridian's) fulfillment gateway are acknowledged synchronously (`202 Accepted`, correlation IDs captured) but never receive the vendor's asynchronous completion webhook. Every hypothesis reachable from the customer's own side is eliminated with named evidence (malformed payload, systemic vendor outage, receiver-side drop, network/ACL block, an expired-cert red herring from an old runbook) -- what remains is genuinely unknowable without visibility into the vendor's internal processing or outbound webhook delivery log, which nobody reachable in this session has. The case is built so there is no local file hiding a root cause: a good result is a precise Handoff, not an RCA. Grading also checks the agent doesn't misclassify this as a Checkpoint (e.g. framing it as personally resumable once NetOps or the already-exhausted support ticket responds). |
+| `case-025` | Handoff consumption, from a lossy inherited note | A colleague's rushed, realistic Slack handoff ("seems network-related... auth checked out... firewall maybe... ask NetOps... might be that stale-DNS thing again") mixes one genuinely useful lead (a correct deploy-timing anchor), one claim that's true and cheaply revalidated (auth), one unsupported guess that's cheaply falsified (firewall), and one specific but inapplicable anecdote from a real prior incident (stale DNS). Reachable deploy logs, app error logs, auth logs, an unchanged security-group config, and a DNS check let a good investigation reach the real mechanism (a dependency bump silently shrinking an HTTP client's connection-pool defaults, causing client-side pool-exhaustion timeouts) while correctly triaging each inherited claim instead of either blindly trusting or wholesale discarding the note. |
+| `case-026` | Round trip: producer -> consumer | A two-phase fixture. Phase A gives one agent an SSO-login-failure investigation (a vendor certificate rotation stranding five statically-pinned tenant connections) with enough evidence to establish the correlation, rule out two competing hypotheses (clock skew, rate limiting) with named evidence, and reach a genuine Handoff naming a bounded next-party request (vendor confirmation + new certificate fingerprint). Phase B gives a *completely separate, fresh* agent only the artifact Phase A actually produced plus a new vendor response answering exactly what was asked -- never Phase A's raw evidence files or transcript. Grading is built to distinguish, per the task's requested taxonomy, a production loss (the artifact omitted something Agent A actually knew) from a consumption failure (B mishandled something the artifact preserved correctly) -- not to score a single aggregate pass/fail. |
+
+### Staging approach: no invented orchestration where the existing conventions already cover it
+
+`case-024` and `case-025` are single-phase, single-agent cases and need
+no new machinery -- they follow the existing convention of a `context.md`
+plus a flat set of evidence files exactly as `case-008`/`case-020`/
+`case-021` already do. `case-026` is the one genuinely new shape in this
+suite: a two-agent producer/consumer split where the artifact one agent
+produces becomes the literal input to a second, uninvolved agent. This
+could not reuse `case-020`/`case-021`'s checkpoint-handoff convention
+as-is, because in that convention *this session* authors both Phase 1 and
+Phase 2 as frozen fixtures -- here, Phase A's output does not exist until
+a live agent produces it, and the entire point of the case is to capture
+that real output, not simulate it. The fixture is instead split into
+`phase_a/` and `phase_b/` subdirectories with a `context.md` at the case
+root spelling out the run procedure (run Phase A, capture only the
+produced handoff block into `phase_b/handoff_artifact.md`, run the
+isolation script, then run Phase B as a fresh agent), and a
+`phase_b/handoff_artifact.md` placeholder marking exactly where that
+real output goes. This is the smallest addition that makes the round
+trip mechanically real rather than narrated -- no orchestration harness,
+scripted-persona convention, or new manifest format was introduced
+beyond that split.
+
+### Fixture/harness validation actually run this session
+
+One new script was written, under `evals/field-debug/scripts/` (same
+placement rationale as the iteration-8 scripts -- outside `cases/`, so
+never copied into a tested agent's sandbox):
+
+- **`verify_case_026_round_trip_isolation.py`** -- a structural,
+  pre-run-and-post-capture check, not a semantic one. It asserts (a)
+  `phase_b/` contains only the fixed file set
+  (`context.md`, `handoff_artifact.md`, `vendor_response.md`) plus no
+  transcript-shaped filename, and (b) no file in `phase_b/` other than
+  `handoff_artifact.md` contains a line of 40+ characters copied
+  verbatim from any file in `phase_a/`. Once `handoff_artifact.md` is
+  replaced with Agent A's real output, it additionally asserts that file
+  isn't byte-identical to any `phase_a/` file (a check against the
+  degenerate failure of pasting raw evidence in place of an actual
+  handoff). Run this session against the current, still-placeholder
+  fixture state: **PASS** (`phase_b/` contains only the three intended
+  files, no leakage detected). The verbatim-copy check against a real
+  artifact could not be exercised this session, since no agent has
+  produced one yet -- this is stated plainly rather than implied as
+  tested.
+
+`bash scripts/check.sh` passes against the full tree, including the
+three new cases, their `grading/*.expected.md` files, and their
+`pressure_evals.json` entries (209 case directories total across all
+skills, no leakage flagged). The two pre-existing iteration-8 scripts
+(`verify_checkpoint_resume_isolation.py`, `verify_case_023_progression.py`)
+were also re-run this session as a regression check on the unrelated
+cases they cover and both still pass -- unaffected by this iteration's
+additions, as expected.
+
+**What is mechanically verified vs. represented as authored-but-unrun,
+stated plainly:** `case-026`'s directory-level isolation boundary (no
+`phase_a/` content leaking into `phase_b/`) is mechanically checked, this
+session, against the fixture's current state. Whether the *actual*
+round trip preserves the right information once a real agent produces
+`handoff_artifact.md` is exactly what running this case tests -- it is
+authored to make that question askable and answerable, not answered
+here. `case-024` and `case-025` are internally consistent, isolation-
+checked (via `scripts/check-eval-isolation.py`), static fixtures, not
+executable and not run against a live agent this session -- consistent
+with every prior authoring-only iteration in this file.
+
+### What this adds, and does not add
+
+This is fixture and grading-key authoring evidence: it demonstrates the
+three scenarios are internally consistent, isolated from their own
+grading material, and (for `case-026`) structurally isolated at the
+phase boundary. It says nothing about whether `SKILL.md` performs better
+than an unassisted baseline on any of these three cases, nor about what
+field-debug's actual Handoff production/consumption behavior looks like
+-- that comparison has not been run and no claim about it is made here.
+An adversarial self-review was performed against each of the case
+questions the requesting task posed (can the forced handoff in
+`case-024` actually be solved despite being framed as blocked; does
+`case-025`'s grading key accidentally reward discarding the inherited
+note wholesale, or blindly trusting it, either of which would defeat the
+case; does `case-026`'s Phase B fixture leak Phase A content outside the
+intended artifact; is any REQUIRED grading item grounded only in the
+grading key and not in agent-visible fixture content; does grading test
+prose/format instead of semantic continuity) -- and two defects found
+during that review were fixed before freezing: `case-024`'s grading key
+originally penalized a reasoned, explicitly-hedged preference between
+its two remaining live hypotheses as if it were an overclaim, and
+`case-026`'s grading key originally required the cert-pinning hypothesis
+be framed as strictly unconfirmed, which would have wrongly penalized an
+equally-valid, more-confident-but-still-hedged framing of the same
+evidence (see that case's grading key's "deliberate design tension"
+note).
+
+### Limitations the future blind-run session should know
+
+- `case-026` requires live orchestration beyond what any prior case in
+  this suite has needed: a human or orchestrating session must actually
+  run Phase A, extract the produced handoff block, drop it into
+  `phase_b/handoff_artifact.md` in place of the placeholder, re-run
+  `verify_case_026_round_trip_isolation.py`, and only then start a
+  completely separate, context-free agent for Phase B. Budget for this
+  when planning the run wave -- it is not a single-prompt case like the
+  other two.
+- `case-026`'s grading key deliberately allows two different, equally
+  acceptable framings of Phase A's confidence level (see its "deliberate
+  design tension" section) -- whoever grades it should read that section
+  before marking either framing down relative to the other.
+- All three cases were authored by this session and cannot themselves be
+  the "fresh, uninvolved reader" that a fair run requires -- that
+  property still depends on the future run being genuinely uninvolved in
+  this design, as every prior authoring-only iteration in this file has
+  also noted.
+- Per the requesting task's own instruction, this iteration deliberately
+  does not report an aggregate pass/fail expectation. The intended
+  output of the eventual run is a qualitative expectation profile (clean
+  continuation, changed/stale-state revalidation, lossy-handoff recovery,
+  uncrossable-boundary handoff quality, and the round-trip's specific
+  information-survival findings) plus a classification of any failures
+  found into the taxonomy each grading key defines -- not a REQUIRED/
+  BONUS tally treated as the headline result.
+

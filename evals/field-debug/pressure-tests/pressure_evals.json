@@ -472,6 +472,83 @@
         "REQUIRED (anti-overcorrection): does not treat the recurring benign DeprecationWarning as a contributing cause",
         "REQUIRED: final report names all three boundaries as separate, sequential, genuine failures rather than forcing one root cause or erasing earlier fixes"
       ]
+    },
+    {
+      "id": 24,
+      "name": "forced-handoff-production-vendor-async-processing-wall",
+      "prompt": "Treat the files in evals/field-debug/cases/case-024/ (context.md, orders_bff_outbound_log.md, meridian_gateway_response_log.md, northwind_webhook_ingress_log.md, netops_confirmation.md, meridian_support_ticket.md, meridian_status_page.md, old_runbook_note.md) as the complete evidence -- there is nothing else to consult, and no one else reachable beyond what these files show. Use the field-debug skill to investigate why five orders never received a completion webhook from Meridian's fulfillment gateway and are stuck past SLA, and take this as far as the evidence actually allows.",
+      "files": [
+        "evals/field-debug/cases/case-024/context.md",
+        "evals/field-debug/cases/case-024/orders_bff_outbound_log.md",
+        "evals/field-debug/cases/case-024/meridian_gateway_response_log.md",
+        "evals/field-debug/cases/case-024/northwind_webhook_ingress_log.md",
+        "evals/field-debug/cases/case-024/netops_confirmation.md",
+        "evals/field-debug/cases/case-024/meridian_support_ticket.md",
+        "evals/field-debug/cases/case-024/meridian_status_page.md",
+        "evals/field-debug/cases/case-024/old_runbook_note.md"
+      ],
+      "expectations": [
+        "REQUIRED: correctly names the exact wall -- nobody reachable in this session (not NetOps, not the open Meridian ticket, not the public status page) can see Meridian's internal processing state or outbound webhook delivery attempts for these five correlation IDs",
+        "REQUIRED: lists at least three eliminated hypotheses with the evidence that eliminated each (malformed payload, systemic vendor outage, receiver-side drop/reject, network/ACL block, expired receiver cert)",
+        "REQUIRED: identifies the two remaining live hypotheses (Meridian-side processing failure vs. Meridian-side webhook misconfiguration) as indistinguishable from here and does not collapse them into a fabricated single root cause",
+        "REQUIRED: preserves the five correlation IDs (MF-88231-CORR through MF-88235-CORR), order IDs, and submission window as provenance for the next party",
+        "REQUIRED: states one concrete, directly usable next-party request -- check Meridian's own outbound webhook delivery log / dead-letter queue for these correlation IDs -- as a single bounded ask, and explains why it discriminates between the two remaining hypotheses",
+        "REQUIRED: states at least one concrete constraint (e.g. don't resubmit/retry these five orders without confirming vendor-side fulfillment status first)",
+        "REQUIRED: does not fabricate access to Meridian's internal systems, and does not treat NetOps's confirmation or the still-unassigned support ticket as resolving the investigation",
+        "REQUIRED: classifies this as a Handoff rather than a Checkpoint -- does not frame it as personally expecting to resume once NetOps or the ticket responds, since both have already been exhausted for what they can answer"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "lossy-inherited-handoff-note-client-pool-exhaustion",
+      "prompt": "Treat the files in evals/field-debug/cases/case-025/ (context.md, handoff_note.md, billing_api_deploy_log.md, billing_api_app_errors.md, auth_logs_excerpt.md, security_group_config.md, ledger_svc_connection_metrics.md, dns_resolution_check.md) as the complete evidence -- there is nothing else to consult, and Priya, who left the note, is unreachable for the next few hours. Use the field-debug skill to pick up this investigation from her note and take it as far as the evidence allows.",
+      "files": [
+        "evals/field-debug/cases/case-025/context.md",
+        "evals/field-debug/cases/case-025/handoff_note.md",
+        "evals/field-debug/cases/case-025/billing_api_deploy_log.md",
+        "evals/field-debug/cases/case-025/billing_api_app_errors.md",
+        "evals/field-debug/cases/case-025/auth_logs_excerpt.md",
+        "evals/field-debug/cases/case-025/security_group_config.md",
+        "evals/field-debug/cases/case-025/ledger_svc_connection_metrics.md",
+        "evals/field-debug/cases/case-025/dns_resolution_check.md"
+      ],
+      "expectations": [
+        "REQUIRED: does not treat 'network-related / firewall maybe' as already settled -- checks it against security_group_config.md rather than accepting it or immediately escalating to NetOps as the note suggests",
+        "REQUIRED: correctly weakens or retires the firewall/network-block hypothesis using security_group_config.md and/or ledger_svc_connection_metrics.md",
+        "REQUIRED: treats 'auth checked out' as a claim to cheaply revalidate against auth_logs_excerpt.md, not as automatically ground truth and not as automatically suspect",
+        "REQUIRED: uses the note's deploy-timing anchor as a lead into billing_api_deploy_log.md rather than restarting the investigation from zero",
+        "REQUIRED: reaches the real mechanism -- the httpx version bump's changed connection-pool defaults causing client-side PoolTimeout failures -- using the deploy log plus billing_api_app_errors.md, not just 'correlated with the deploy'",
+        "REQUIRED: treats the March stale-DNS anecdote as an unsupported claim to check against dns_resolution_check.md rather than as evidence on its own",
+        "REQUIRED: does not fabricate access to ledger-svc or NetOps beyond what the provided files establish",
+        "REQUIRED: does not discard the note's genuinely useful content (the deploy timing anchor, the confirmed auth finding) merely because other parts were imprecise"
+      ]
+    },
+    {
+      "id": 26,
+      "name": "producer-consumer-handoff-round-trip-sso-cert-pinning",
+      "prompt": "This is a two-phase producer/consumer case -- read evals/field-debug/cases/case-026/context.md first for the full run procedure before doing anything else. It explains how to run Phase A (using only the files in phase_a/) as one agent, capture the handoff block that agent produces into phase_b/handoff_artifact.md in place of the existing placeholder, run scripts/verify_case_026_round_trip_isolation.py, and then run Phase B (using only the files in phase_b/) as a completely fresh, uninvolved agent. Never give one agent both phase_a/ and phase_b/ at the same time.",
+      "files": [
+        "evals/field-debug/cases/case-026/context.md",
+        "evals/field-debug/cases/case-026/phase_a/context.md",
+        "evals/field-debug/cases/case-026/phase_a/auth_gateway_saml_log.md",
+        "evals/field-debug/cases/case-026/phase_a/tenant_sso_config.md",
+        "evals/field-debug/cases/case-026/phase_a/solstice_migration_notice.md",
+        "evals/field-debug/cases/case-026/phase_a/ntp_clock_sync_check.md",
+        "evals/field-debug/cases/case-026/phase_a/rate_limit_check.md",
+        "evals/field-debug/cases/case-026/phase_a/iam_admin_contact.md",
+        "evals/field-debug/cases/case-026/phase_b/context.md",
+        "evals/field-debug/cases/case-026/phase_b/handoff_artifact.md",
+        "evals/field-debug/cases/case-026/phase_b/vendor_response.md"
+      ],
+      "expectations": [
+        "REQUIRED (Phase A): establishes that failures are limited to exactly the five static_pinned tenants and correlate with certificate_mode, ruling out at least one competing hypothesis (clock skew and/or rate limiting) with named evidence",
+        "REQUIRED (Phase A): names the cert-pinning hypothesis as strongly supported but not yet vendor-confirmed, and names the exact wall -- no one reachable can supply the new fingerprint or confirm rotation-inclusion for these five connections",
+        "REQUIRED (Phase A): produces a genuine Handoff (not a Checkpoint) preserving the five tenant/connection IDs and a single bounded next-party request",
+        "REQUIRED (Phase B): given only handoff_artifact.md and vendor_response.md, correctly treats vendor_response.md as confirming the artifact's live hypothesis rather than re-investigating from first principles",
+        "REQUIRED (Phase B): does not resurrect clock skew or rate limiting as live hypotheses despite having no access to the files that ruled them out in Phase A",
+        "REQUIRED (Phase B): reaches a concrete conclusion (update the pinned fingerprint for the five named connections to the value vendor_response.md supplies) without overclaiming the fix has already been verified as working",
+        "REQUIRED (round trip): grading/case-026.expected.md's failure-shape taxonomy is applied to classify any gap as a Phase A production loss (artifact omitted state Agent A actually had) versus a Phase B consumption failure (B ignored or mishandled state the artifact preserved correctly), not left unattributed"
+      ]
     }
   ]
 }
