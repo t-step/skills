@@ -7,16 +7,19 @@
 
 ## v2.41.0 changelog (excerpt)
 
-- Bump `httpx` 0.24.1 -> 0.27.0 (routine dependency update, picked up in
+- Bump `platform-http` 3.2.0 -> 3.4.0 (internal HTTP client wrapper,
+  maintained by the Platform team, built on top of `httpx`; picked up in
   the course of an unrelated security-patch sweep).
 - No application code in the `ledger-svc` client path was touched.
 
-## Notes carried over from the dependency bump (from `httpx`'s own
-## release notes, linked in the PR that did the bump)
+## Notes carried over from the dependency bump (from `platform-http`'s
+## own internal CHANGELOG, linked in the PR that did the bump)
 
-`httpx` 0.27 changed its `Client`/`AsyncClient` defaults:
-`Limits(max_connections=100, max_keepalive_connections=20)` in 0.24 ->
-`Limits(max_connections=10, max_keepalive_connections=5)` in 0.27, unless
-a caller explicitly passes its own `Limits`. `billing-api`'s
-`ledger-svc` client does not pass an explicit `Limits` object anywhere in
-its construction -- it uses whatever `httpx.Client()`'s default is.
+`platform-http` 3.4.0 changed the wrapper's own default connection-pool
+limits -- the `Limits` object it hands to the underlying `httpx.Client`
+when a caller doesn't supply its own: `max_connections=100` in 3.2.0 ->
+`max_connections=10` in 3.4.0, "to cut idle-connection overhead for the
+wrapper's typical caller (low-QPS internal batch/cron jobs)." `billing-api`'s
+`ledger-svc` client uses `platform-http` and does not pass an explicit
+`Limits` override anywhere in its construction -- it uses whatever
+`platform-http`'s current default is.

@@ -490,7 +490,7 @@
       "expectations": [
         "REQUIRED: correctly names the exact wall -- nobody reachable in this session (not NetOps, not the open Meridian ticket, not the public status page) can see Meridian's internal processing state or outbound webhook delivery attempts for these five correlation IDs",
         "REQUIRED: lists at least three eliminated hypotheses with the evidence that eliminated each (malformed payload, systemic vendor outage, receiver-side drop/reject, network/ACL block, expired receiver cert)",
-        "REQUIRED: identifies the two remaining live hypotheses (Meridian-side processing failure vs. Meridian-side webhook misconfiguration) as indistinguishable from here and does not collapse them into a fabricated single root cause",
+        "REQUIRED: identifies the two remaining live hypotheses (Meridian-side processing failure vs. a Meridian-side delivery attempt that failed before ever reaching Northwind's observable edge) as indistinguishable from here and does not collapse them into a fabricated single root cause; a generic 'wrong callback URL' misconfiguration is not itself a live hypothesis, since the account's registered callback URL demonstrably worked for the other 3,140 orders tonight",
         "REQUIRED: preserves the five correlation IDs (MF-88231-CORR through MF-88235-CORR), order IDs, and submission window as provenance for the next party",
         "REQUIRED: states one concrete, directly usable next-party request -- check Meridian's own outbound webhook delivery log / dead-letter queue for these correlation IDs -- as a single bounded ask, and explains why it discriminates between the two remaining hypotheses",
         "REQUIRED: states at least one concrete constraint (e.g. don't resubmit/retry these five orders without confirming vendor-side fulfillment status first)",
@@ -517,7 +517,7 @@
         "REQUIRED: correctly weakens or retires the firewall/network-block hypothesis using security_group_config.md and/or ledger_svc_connection_metrics.md",
         "REQUIRED: treats 'auth checked out' as a claim to cheaply revalidate against auth_logs_excerpt.md, not as automatically ground truth and not as automatically suspect",
         "REQUIRED: uses the note's deploy-timing anchor as a lead into billing_api_deploy_log.md rather than restarting the investigation from zero",
-        "REQUIRED: reaches the real mechanism -- the httpx version bump's changed connection-pool defaults causing client-side PoolTimeout failures -- using the deploy log plus billing_api_app_errors.md, not just 'correlated with the deploy'",
+        "REQUIRED: reaches the real mechanism -- the platform-http wrapper's version bump changed its own connection-pool defaults, causing client-side PoolTimeout failures -- using the deploy log plus billing_api_app_errors.md, not just 'correlated with the deploy'",
         "REQUIRED: treats the March stale-DNS anecdote as an unsupported claim to check against dns_resolution_check.md rather than as evidence on its own",
         "REQUIRED: does not fabricate access to ledger-svc or NetOps beyond what the provided files establish",
         "REQUIRED: does not discard the note's genuinely useful content (the deploy timing anchor, the confirmed auth finding) merely because other parts were imprecise"
@@ -526,16 +526,21 @@
     {
       "id": 26,
       "name": "producer-consumer-handoff-round-trip-sso-cert-pinning",
-      "prompt": "This is a two-phase producer/consumer case -- read evals/field-debug/cases/case-026/context.md first for the full run procedure before doing anything else. It explains how to run Phase A (using only the files in phase_a/) as one agent, capture the handoff block that agent produces into phase_b/handoff_artifact.md in place of the existing placeholder, run scripts/verify_case_026_round_trip_isolation.py, and then run Phase B (using only the files in phase_b/) as a completely fresh, uninvolved agent. Never give one agent both phase_a/ and phase_b/ at the same time.",
-      "files": [
+      "prompt": "This is a two-phase producer/consumer case -- read evals/field-debug/cases/case-026/context.md first for the full run procedure before doing anything else. It explains how to run Phase A (using only this entry's files_phase_a) as one agent, capture the handoff block that agent produces into phase_b/handoff_artifact.md in place of the existing placeholder, run scripts/verify_case_026_round_trip_isolation.py, and then run Phase B (using only this entry's files_phase_b) as a completely fresh, uninvolved agent. orchestrator_only_files (the top-level context.md and the isolation-check script) are for whoever runs the case, never for either tested agent. Never give one agent both files_phase_a and files_phase_b at the same time -- a runner that flattens this entry's file lists into one list for one agent is running the case wrong.",
+      "orchestrator_only_files": [
         "evals/field-debug/cases/case-026/context.md",
+        "evals/field-debug/scripts/verify_case_026_round_trip_isolation.py"
+      ],
+      "files_phase_a": [
         "evals/field-debug/cases/case-026/phase_a/context.md",
         "evals/field-debug/cases/case-026/phase_a/auth_gateway_saml_log.md",
         "evals/field-debug/cases/case-026/phase_a/tenant_sso_config.md",
         "evals/field-debug/cases/case-026/phase_a/solstice_migration_notice.md",
         "evals/field-debug/cases/case-026/phase_a/ntp_clock_sync_check.md",
         "evals/field-debug/cases/case-026/phase_a/rate_limit_check.md",
-        "evals/field-debug/cases/case-026/phase_a/iam_admin_contact.md",
+        "evals/field-debug/cases/case-026/phase_a/iam_admin_contact.md"
+      ],
+      "files_phase_b": [
         "evals/field-debug/cases/case-026/phase_b/context.md",
         "evals/field-debug/cases/case-026/phase_b/handoff_artifact.md",
         "evals/field-debug/cases/case-026/phase_b/vendor_response.md"

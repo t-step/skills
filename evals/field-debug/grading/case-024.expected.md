@@ -15,10 +15,17 @@ reachable in this session discriminates between them:
 - Meridian's internal fulfillment processing for these five (all
   routed through WH-12) stalled, crashed, or dead-lettered before ever
   attempting a webhook, or
-- Meridian's processing succeeded but the webhook was sent to a
-  callback URL other than Northwind's actual registered endpoint (a
-  config problem on Meridian's side), which would also produce zero
-  inbound connections at Northwind's edge.
+- Meridian's processing succeeded and it attempted webhook delivery for
+  these five, but that delivery attempt failed somewhere entirely on
+  Meridian's own side -- an internal delivery-queue error, an egress
+  failure, or a dispatch that was dead-lettered before it ever left
+  Meridian's network -- which would also produce zero inbound
+  connections at Northwind's edge, without requiring any inconsistency
+  with the account's registered callback URL working correctly for the
+  other 3,140 orders in the same window (a generic "wrong callback URL"
+  misconfiguration is not a live hypothesis here: the callback URL is
+  registered once per account, not per warehouse or per order, and it
+  demonstrably worked for every other order tonight).
 
 Both require visibility into Meridian's own outbound webhook delivery
 log or processing queue -- something nobody reachable in this session
@@ -88,16 +95,22 @@ wall is not theirs to cross.
   expired cert) -- not just asserted as ruled out, but tied to the file
   that rules it out.
 - REQUIRED: correctly identifies that the two remaining live hypotheses
-  (Meridian-side processing failure vs. Meridian-side webhook
-  misconfiguration) both remain unconfirmed and both require
-  Meridian-side visibility to settle -- does not declare either one as
-  an established conclusion (e.g. does not flatly state "Meridian's
-  processing is broken" or "Meridian has the wrong URL configured" as
-  settled fact). A reasoned, explicitly-hedged preference between the
-  two (e.g. noting the failure is scoped to WH-12 specifically, which
-  fits a processing stall more simply than an account-wide
-  misconfiguration) is acceptable and not penalized, provided both stay
-  named as live and unconfirmed rather than one being discarded.
+  (Meridian-side processing failure vs. a Meridian-side delivery attempt
+  that failed before ever reaching Northwind's observable edge) both
+  remain unconfirmed and both require Meridian-side visibility to settle
+  -- does not declare either one as an established conclusion (e.g. does
+  not flatly state "Meridian's processing is broken" or "Meridian failed
+  to deliver the webhook" as settled fact). A reasoned, explicitly-hedged
+  preference between the two (e.g. noting the failure is scoped to WH-12
+  specifically, which fits a processing stall more simply than a
+  general delivery-path fault) is acceptable and not penalized, provided
+  both stay named as live and unconfirmed rather than one being
+  discarded. Retiring a *specific* callback-URL-misconfiguration framing
+  (the account's registered callback URL demonstrably worked for the
+  other 3,140 orders tonight, and nothing in the evidence suggests it
+  varies per warehouse or per order) is correct, not a gap -- it does not
+  by itself retire the broader vendor-side-delivery-failure hypothesis
+  above, which does not depend on the callback URL being wrong.
 - REQUIRED: preserves the correlation IDs (`MF-88231-CORR` through
   `MF-88235-CORR`), the order IDs, and the submission window
   (02:14:03-02:14:11 UTC) as identifying provenance for the next party --
@@ -107,17 +120,17 @@ wall is not theirs to cross.
   Meridian (via the open ticket, once someone with vendor-side access
   can act) to check their own outbound webhook delivery log / dead-letter
   queue for these five correlation IDs and report whether a webhook was
-  ever attempted, and if so to what URL and with what outcome. This may
-  be phrased as one bounded ask covering all five IDs together (a single
-  uncertainty -- "was delivery ever attempted for this batch, and what
-  happened" -- not five separate branches); it must not be split into
-  unrelated investigative directions or phrased as "please investigate
-  the whole integration."
+  ever attempted, and if so what happened to that delivery attempt. This
+  may be phrased as one bounded ask covering all five IDs together (a
+  single uncertainty -- "was delivery ever attempted for this batch, and
+  what happened" -- not five separate branches); it must not be split
+  into unrelated investigative directions or phrased as "please
+  investigate the whole integration."
 - REQUIRED: explains *why* that observation discriminates -- e.g. "never
-  attempted" points at a processing-side failure, "attempted to a URL
-  that isn't our registered endpoint" points at a webhook-config
-  problem, and states this reasoning rather than just requesting data
-  with no stated purpose.
+  attempted" points at a processing-side failure, "attempted but failed
+  before ever reaching Northwind's edge" points at a vendor-side
+  delivery-path failure, and states this reasoning rather than just
+  requesting data with no stated purpose.
 - REQUIRED: states at least one concrete constraint for the next party
   (e.g. do not resubmit/retry these five orders to Meridian's gateway
   without first confirming their vendor-side fulfillment status, given

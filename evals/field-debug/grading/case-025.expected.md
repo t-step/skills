@@ -5,13 +5,15 @@
 **Hidden ground truth:**
 
 The real cause is client-side: `billing-api`'s 09:02-09:04 UTC deploy
-(v2.41.0) bumped `httpx` 0.24.1 -> 0.27.0, which silently shrank the
-default connection-pool limits from `max_connections=100` to
-`max_connections=10` (`billing-api`'s `ledger-svc` client never set an
-explicit `Limits`, so it inherited the new, much smaller default).
-Under the same request volume as before, the pool now exhausts, and
-~40% of calls fail with a client-side `httpx.PoolTimeout` before a
-connection to `ledger-svc` is ever attempted (`billing_api_app_errors.md`).
+(v2.41.0) bumped `platform-http` (the internal HTTP client wrapper it
+uses, built on top of `httpx`) 3.2.0 -> 3.4.0, which silently shrank the
+wrapper's own default connection-pool limits from `max_connections=100`
+to `max_connections=10` (`billing-api`'s `ledger-svc` client never
+passed an explicit `Limits` override, so it inherited the wrapper's new,
+much smaller default). Under the same request volume as before, the
+pool now exhausts, and ~40% of calls fail with a client-side
+`httpx.PoolTimeout` before a connection to `ledger-svc` is ever
+attempted (`billing_api_app_errors.md`).
 This is corroborated by `ledger_svc_connection_metrics.md`: from
 `ledger-svc`'s own side, nothing is unusual at all, because the failing
 requests never reach it.
@@ -81,12 +83,13 @@ it came with a specific prior-incident reference.
   service relationship as if the note hadn't already given it).
 - REQUIRED: reaches the real mechanism, or gets to within one
   discriminating step of it, using `billing_api_deploy_log.md` +
-  `billing_api_app_errors.md`: the `httpx` version bump's changed
-  connection-pool defaults causing client-side `PoolTimeout` failures --
-  not merely "the deploy is correlated in time," and not stopping at "a
-  networking issue," since the evidence in hand (the actual
-  `PoolTimeout` exceptions, occurring before any connection attempt) is
-  sufficient to name the mechanism, not just the correlation.
+  `billing_api_app_errors.md`: the `platform-http` wrapper's version bump
+  changed its own default connection-pool limits, causing client-side
+  `PoolTimeout` failures -- not merely "the deploy is correlated in
+  time," and not stopping at "a networking issue," since the evidence in
+  hand (the actual `PoolTimeout` exceptions, occurring before any
+  connection attempt) is sufficient to name the mechanism, not just the
+  correlation.
 - REQUIRED: treats the March stale-DNS anecdote as an unsupported,
   specific claim to check rather than as evidence on its own -- either
   checks it against `dns_resolution_check.md` and correctly retires it,
@@ -107,8 +110,9 @@ it came with a specific prior-incident reference.
   treating her note as a single undifferentiated block of fact.
 - BONUS: notes that "network-related" is ambiguous on its own, and
   states more precisely that the fault is at the client's own
-  connection-handling layer (pool exhaustion from a library default
-  change), not an infrastructure-level network/firewall block.
+  connection-handling layer (pool exhaustion from the HTTP wrapper's
+  default configuration change), not an infrastructure-level
+  network/firewall block.
 - BONUS: notes explicitly that the cheap, already-reachable evidence
   (security-group config) answered the firewall question directly,
   making it unnecessary to actually escalate to NetOps as the note

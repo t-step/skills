@@ -121,12 +121,26 @@ def check_manifest_entries(skill_dir: pathlib.Path, labels: set[str], phrases: l
             prompt_file = entry.get("prompt_file", "")
             if prompt_file and not (REPO / prompt_file).is_file():
                 failures.append(f"prompt_file does not exist: {prompt_file} ({origin})")
-            for f in entry.get("files", []):
-                target = REPO / f.rstrip("/")
-                if not target.exists():
-                    failures.append(f"referenced files entry does not exist: {f} ({origin})")
-                if re.search(r"expected|grading", f, re.IGNORECASE):
-                    failures.append(f"agent-visible files entry points at grading material: {f} ({origin})")
+            # A plain "files" list is one agent's complete evidence. A
+            # multi-phase case (e.g. a producer/consumer round trip) instead
+            # splits that across "files_phase_a"/"files_phase_b"-style keys
+            # so no single flat list can be handed to one agent by mistake;
+            # "orchestrator_only_files" names material for whoever runs the
+            # case, never for a tested agent. All of these still get the
+            # same existence/leakage checks, just gathered generically
+            # rather than hardcoded to one key or one case.
+            file_list_keys = [
+                key
+                for key, value in entry.items()
+                if key != "prompt_file" and "file" in key.lower() and isinstance(value, list)
+            ]
+            for key in file_list_keys:
+                for f in entry.get(key, []):
+                    target = REPO / f.rstrip("/")
+                    if not target.exists():
+                        failures.append(f"referenced {key} entry does not exist: {f} ({origin})")
+                    if re.search(r"expected|grading", f, re.IGNORECASE):
+                        failures.append(f"agent-visible {key} entry points at grading material: {f} ({origin})")
 
 
 def main() -> int:

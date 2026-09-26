@@ -1751,3 +1751,127 @@ note).
   found into the taxonomy each grading key defines -- not a REQUIRED/
   BONUS tally treated as the headline result.
 
+## Iteration 11a (2026-09-26): pre-run defect repairs to cases 024-026 (PR #64)
+
+Before any tested-agent run, this session inspected `case-024`,
+`case-025`, and `case-026` (fixtures, grading keys, and the
+`pressure_evals.json` manifest) and found two fixture/grading-key
+defects and one manifest/orchestration-boundary risk that iteration 11's
+own authoring review had not caught. All three are repaired here, before
+the first tested-agent run against these cases. `skills/field-debug/SKILL.md`
+was not touched.
+
+### 1. `case-025`: false claim about `httpx`
+
+The fixture (`billing_api_deploy_log.md`) and grading key attributed the
+incident to `httpx` changing its `Client`/`AsyncClient` default
+connection-pool limits from `max_connections=100` to `max_connections=10`
+between versions 0.24.1 and 0.27.0. This was checked against primary
+source and found to be false:
+
+- `raw.githubusercontent.com/encode/httpx/0.24.1/httpx/_config.py` and
+  the same path at tag `0.27.0` both define
+  `DEFAULT_LIMITS = Limits(max_connections=100, max_keepalive_connections=20)`
+  -- identical in both versions.
+- `httpx`'s own `CHANGELOG.md` (fetched at `master`) shows only naming
+  changes to the pool-limit parameters (`soft_limit`/`hard_limit` ->
+  `max_keepalive`/`max_connections` in 0.13.0; `PoolLimits` ->
+  `Limits` in 0.14.0) across its full history -- no version ever changed
+  the numeric defaults.
+
+**Repair:** replaced the real-library claim with a fictional internal
+wrapper, `platform-http` (built on top of the real, unmodified `httpx`),
+whose own version bump (3.2.0 -> 3.4.0, in the same security-patch
+sweep) changed *its own* default `Limits` object -- the one it hands to
+`httpx.Client()` when a caller doesn't override it -- from
+`max_connections=100` to `max_connections=10`. `billing-api`'s
+`ledger-svc` client uses `platform-http` without an override, so it
+inherits the wrapper's new default. This preserves every element the
+capability under test needs: the timing anchor (the 9am deploy), the
+cheaply-revalidatable true claim (auth checked out), the plausible wrong
+guess (firewall/network), the stale prior-incident anecdote (March DNS),
+and a dependency/configuration change that produces client-side
+resource exhaustion (`httpx.PoolTimeout`, still a real exception from
+the real, unmodified `httpx` underneath the wrapper) before any
+connection to `ledger-svc` is attempted -- discoverable from
+`billing_api_deploy_log.md` + `billing_api_app_errors.md` exactly as
+before, without any false claim about a real open-source library. Only
+`billing_api_deploy_log.md`, `grading/case-025.expected.md`, and
+`pressure_evals.json`'s case-025 entry changed; the other six case-025
+files, none of which asserted the false claim, are untouched.
+
+### 2. `case-024`: under-grounded second live hypothesis
+
+The grading key required both "Meridian's internal processing stalled"
+and "Meridian sent the webhook to the wrong callback URL" to survive as
+live, unconfirmed hypotheses. The agent-visible fixture does not support
+the second one as stated: `meridian_gateway_response_log.md` documents
+the callback URL as registered once per Northwind *account*, not per
+warehouse or per order, and `orders_bff_outbound_log.md` shows 3,140
+other orders in the identical batch and window had their webhooks
+delivered successfully. Nothing in the fixture suggests the callback URL
+varies by route, so a callback-URL-specific misconfiguration confined to
+the five WH-12 orders is not actually well-supported by the evidence a
+competent investigator has -- retiring that specific framing is a
+correct reading of the evidence, not a gap, and the grading key was
+wrong to require it stay alive.
+
+**Repair (grading-key only -- the fixture itself never asserted this
+hypothesis, so no case file changed):** replaced the callback-URL-
+misconfiguration hypothesis with a broader, evidence-consistent one --
+"Meridian attempted webhook delivery for these five, but the attempt
+failed entirely on Meridian's own side (an internal delivery-queue
+error, an egress failure, or a dead-lettered dispatch) before it ever
+reached Northwind's observable edge." This requires no new or
+strengthened evidence to stay live (nothing in the fixture contradicts
+it), remains indistinguishable from the processing-stall hypothesis
+using only what's reachable, and still requires the same Meridian-side
+visibility to settle -- so the case's central point (a genuine wall,
+handed off rather than resolved by fabrication) is unchanged. The
+grading key now also explicitly credits retiring the narrower
+callback-URL framing as correct reasoning, so an investigator who
+notices the account-level-registration/3,140-successes evidence isn't
+penalized for using it. Changed: `grading/case-024.expected.md` and
+`pressure_evals.json`'s case-024 entry only.
+
+### 3. `case-026`: manifest/orchestration boundary
+
+`pressure_evals.json`'s case-026 entry listed a single flat `"files"`
+array containing the orchestrator-only top-level `context.md` (which
+states outright that this is a two-phase round-trip test -- the exact
+thing neither tested agent should see) together with every `phase_a/`
+and every `phase_b/` file. The case's own `context.md` and prompt text
+already instruct a human/agent orchestrator never to give one agent both
+phases, but the manifest's own machine-readable shape did not enforce
+that: a different, more mechanical consumer of this JSON than the case's
+own prose instructions -- one that just reads `entry.files` and hands it
+to one agent -- would silently violate the phase boundary and leak the
+test design.
+
+**Repair:** split the entry's `"files"` into `orchestrator_only_files`
+(the top-level `context.md` and
+`scripts/verify_case_026_round_trip_isolation.py` -- for whoever runs
+the case, never a tested agent), `files_phase_a`, and `files_phase_b`,
+and reworded the `prompt` field to name the new keys explicitly and
+state that flattening them for one agent is running the case wrong.
+Generalized `scripts/check-eval-isolation.py`'s manifest-entry check
+(previously hardcoded to a `"files"` key) to scan any list-valued key
+whose name contains `file`, so this case and any future multi-phase case
+still get the same existence and grading-material-leakage checks. No
+change to `case-026`'s own fixtures, `context.md` files, or
+`grading/case-026.expected.md` -- the defect was in the manifest shape
+only.
+
+### Verification
+
+`bash scripts/check.sh` after all three repairs:
+`check-skill-frontmatter: OK (11 skill file(s), strict YAML clean)`;
+`check-eval-isolation: OK (209 case dirs across 15 skill(s), no
+leakage)`; `check-skill-deps: OK (11 skill file(s), 0 local dependency
+edge(s))`. `python3 -m json.tool` confirms `pressure_evals.json` is
+still valid JSON after the manual edits.
+
+These repairs are frozen as of this commit. No tested-agent run against
+`case-024`, `case-025`, or `case-026` had happened before this commit;
+the run reported in the next section is the first.
+
