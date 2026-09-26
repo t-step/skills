@@ -1875,3 +1875,316 @@ These repairs are frozen as of this commit. No tested-agent run against
 `case-024`, `case-025`, or `case-026` had happened before this commit;
 the run reported in the next section is the first.
 
+## Iteration 11b (2026-09-26): first blind evaluation of the repaired cases 024-026
+
+This is a minimal discovery run against the fixtures repaired in
+Iteration 11a, not a stability campaign: one baseline and one
+field-debug run per condition for `case-024` and `case-025`, and one
+baseline round trip plus one field-debug round trip for `case-026` (8
+subagents total). No result was repeated because it was inconvenient,
+and no larger wave was run -- per the requesting task's own instruction,
+repetition is reserved for a result ambiguous enough to need it, not
+used by default. This session authored the repairs above but did not
+author the original three cases (confirmed against `git log` -- they
+were authored and frozen in the prior commit this branch already
+carried, per PR #64).
+
+### Run protocol
+
+Eight fresh `general-purpose` subagents (never `fork`, so none carried
+this orchestrating session's own context, including its knowledge of
+the grading keys) were launched in three waves (5, 2, 1) to respect this
+session's five-concurrent-subagent limit and `case-026`'s producer ->
+consumer dependency. Each subagent was told its exact working directory
+and the precise list of files it was permitted to read (by path, not
+pasted inline -- following this suite's iteration-1 convention of "read
+only the target case's own directory"), and was explicitly instructed
+never to open `evals/field-debug/grading/`, `evals/field-debug/
+pressure-tests/`, `evals/field-debug/RESULTS.md`, any other case
+directory, or (for baseline runs) `skills/field-debug/SKILL.md`.
+Baseline runs were explicitly told to treat the field-debug skill as
+uninstalled/unavailable for that run, despite each case's own `context.md`
+instructing them to use it -- a deliberate experimental control, matching
+this file's established baseline-condition convention. Field-debug runs
+were told to load `skills/field-debug/SKILL.md` and follow it throughout.
+Each subagent ended with a self-contained write-up between literal
+`===BEGIN/END ARTIFACT===` markers; everything outside those markers was
+discarded before grading.
+
+For `case-026`: the baseline producer's and (separately, after grading)
+the field-debug producer's literal Handoff block was saved verbatim into
+the tracked `phase_b/handoff_artifact.md`, `scripts/
+verify_case_026_round_trip_isolation.py` was run and reported `OK` (no
+`phase_a/` leakage, correct file set) before each of the two Phase B
+runs, and the placeholder was restored via `git checkout --` once both
+round trips were captured -- `git status` shows a clean `case-026/`
+tree as of this write-up.
+
+**Disclosed limitation, same shape as prior iterations:** each subagent
+was *instructed* not to read forbidden material; for a `general-purpose`
+agent with full tool access this is instruction-following, not a
+sandboxed guarantee. Every returned artifact's self-report named only
+the permitted files, and none showed narration suggesting it looked
+elsewhere, but this is not independently, mechanically verified.
+
+### Case-024: forced Handoff at a genuine vendor wall
+
+Both conditions reached the case's central point cleanly: neither
+fabricated a root cause past the wall, both named the wall precisely
+(Meridian's internal processing/webhook-delivery state, unobservable
+from anything reachable), both listed all five ruled-out hypotheses with
+the evidence that eliminated each, and both kept two live,
+un-collapsed hypotheses rather than picking a winner outright. Baseline
+did lean on one ("something WH-12-specific stalled Meridian's
+pipeline") as its named leading hypothesis while still explicitly
+declining to fully retire the delivery-failure alternative ("cannot
+fully rule out in-transit loss... doesn't eliminate it") -- an
+acceptable hedged preference under the repaired grading key's own
+allowance, not a violation of it. Field-debug's `Still live` section
+named both hypotheses with almost the exact wording the repair
+introduced (a processing stall vs. "webhook attempted delivery... failed
+before reaching Northwind's edge"), which is independent evidence the
+repaired framing is one a careful investigator actually reaches from
+this evidence, not an artificial fix imposed on the case.
+
+Two concrete misses, both on the field-debug side, against the repaired
+grading key's REQUIRED items:
+
+- **Dropped the exact submission window.** Field-debug's Handoff never
+  restates `02:14:03-02:14:11 UTC` anywhere (it does preserve all five
+  correlation IDs). Baseline's free-form write-up states the window
+  explicitly. This is a real provenance-completeness miss under the
+  grading key's own REQUIRED item, observed once (n=1) -- worth
+  recording, not yet a pattern.
+- **No stated constraint for the next party.** Neither field-debug's
+  Handoff output states anything like "don't resubmit/retry these
+  orders." Baseline's write-up does, explicitly and with reasoning
+  ("risk of duplicate fulfillment given inventory was already
+  reserved"). This is a clean, reproducible REQUIRED-item miss (see
+  `case-026` below for a second, independent instance in this same
+  run).
+
+Both conditions cleared both BONUS items (status page tagged as a claim
+not proof of internal health; WH-12 correlation flagged as a lead, not
+overclaimed as the mechanism) -- field-debug's hedging on the WH-12 lead
+was slightly more explicit (tags it ASSUMED and cites the
+41-orders-two-nights-ago counter-evidence) than baseline's, which is
+otherwise a comparable near-tie.
+
+**Net for this case: baseline and field-debug both cleared the case's
+central point (genuine wall, no fabricated verdict); baseline was
+strictly more complete on two specific REQUIRED provenance/constraint
+items this run.**
+
+### Case-025: consuming a lossy, rushed handoff note
+
+Both conditions reached the exact mechanism -- not merely "correlated
+with the deploy" -- via the same evidence chain: the deploy log's
+`platform-http` 3.2.0 -> 3.4.0 changelog entry cross-referenced against
+the app-error log's `httpx.PoolTimeout (max_connections=10)` errors,
+occurring before any connection attempt. Both correctly triaged every
+strand of Priya's note rather than accepting or discarding it wholesale:
+both revalidated "auth checked out" against `auth_logs_excerpt.md`
+instead of carrying it forward unexamined, both retired the
+firewall/"network-related" guess against `security_group_config.md` (and
+noted `ledger_svc_connection_metrics.md` corroborates it) without
+escalating to NetOps as the note suggested, both retired the March
+stale-DNS anecdote against `dns_resolution_check.md`, and both used the
+note's one genuinely useful lead (the 9am deploy timing anchor) to go
+straight to the deploy log rather than re-deriving the topology or the
+40% rate from zero. Neither fabricated access beyond the eight files.
+This is a clean tie on every REQUIRED item (8/8 both conditions).
+
+The measurable difference is entirely in the BONUS tier, and it
+favors field-debug on every item this run:
+
+- Field-debug explicitly separated what Priya *observed* from what she
+  *concluded* using the skill's own vocabulary ("Her raw observation...
+  is corroborated... Her conclusions... were treated as unverified
+  hypotheses"). Baseline reached the same practical triage, item by
+  item, but without that explicit observed/concluded framing as a named
+  distinction -- graded as not clearly meeting this specific BONUS item.
+- Field-debug explicitly attributed skipping the NetOps escalation to
+  the skill's own "inspect before asking" rule. Baseline reached the
+  identical practical decision ("the NetOps ask can be stood down")
+  without citing a named rule for it -- both met the substance, but only
+  field-debug tied it to an explicit principle.
+- Both conditions correctly named the fault as a client-side
+  connection-handling issue rather than a vague "networking problem"
+  (both met this BONUS item).
+
+This is the same qualitative pattern (correctness tie, BONUS-tier
+legibility win for field-debug) this suite's earlier, now-discarded
+pre-repair run of this case also found -- worth noting as a
+cross-run-reproduced signal on the *shape* of the difference, even
+though the specific fixture content changed under repair.
+
+### Case-026: producer/consumer round trip (2 conditions: baseline->baseline, field-debug->field-debug)
+
+**Phase A (production).** Both producers established the exact
+`static_pinned`/`certificate_mode` correlation citing both
+`tenant_sso_config.md` and `auth_gateway_saml_log.md` together, ruled
+out clock skew and rate limiting with reasoning (not just citation), and
+hedged the cert-pinning hypothesis appropriately (strongly supported,
+not yet vendor-confirmed) -- one of the two acceptable framings the
+grading key's own design-tension note allows, and both producers landed
+on it independently. Neither fabricated a fingerprint or vendor
+confirmation. Both named the exact access/vendor-relationship wall.
+
+Both producers share one gap: neither reproduces a representative
+failing *session ID* (e.g. `sess-77a1`) alongside the error text, though
+both quote the exact error string and both preserve every tenant ID,
+the rotation time, and the ticket reference. Since this is common to
+both conditions, it reads as a fixture/grading-key strictness question
+(is a session ID actually necessary provenance when the tenant IDs
+already uniquely identify the affected connections?) rather than a
+condition-differentiating finding.
+
+**The constraint gap recurs, now independently, a second time in this
+run.** Neither producer states a concrete constraint for the next party
+(e.g. "don't switch these connections to `dynamic_metadata` without the
+IAM lead's approval"). Baseline's producer goes further in the wrong
+direction: its final recommendation list explicitly raises "temporarily
+switching those 5 connections to `dynamic_metadata` mode as a stopgap"
+as an idea "worth a separate, fast look," without a stated
+approval/authorization caveat -- the specific pattern the grading key's
+BONUS item warns against suggesting casually. Field-debug's producer
+does not raise this idea at all, so it does not make baseline's specific
+misstep, but it also does not state the protective constraint the
+REQUIRED item asks for. Net: this REQUIRED item is a miss for both
+conditions in this case, with baseline's miss carrying a real,
+if mild, additional risk (an uncaveated suggestion) that field-debug's
+miss (silence) does not.
+
+**Phase B (consumption).** Both consumers cleared every REQUIRED item:
+both correctly treated `vendor_response.md` as confirming the artifact's
+already-stated hypothesis rather than a new fact needing
+re-investigation, neither resurrected clock skew or rate limiting
+(neither needed to -- nothing challenged them), neither re-derived
+established state from zero, both reached the identical concrete
+conclusion (apply the supplied fingerprint to the five named
+connections), and -- notably, on both conditions independently and
+explicitly -- neither overclaimed the fix as applied or verified.
+Baseline's consumer is in fact the single clearest instance of this
+distinction anywhere in this run: it dedicates an entire section to
+separating "diagnosis and fix are fully known" from "the access blocker
+is still unresolved," explicitly refusing to treat the ~7 hours elapsed
+between handoff and vendor response as evidence the IAM lead has become
+reachable.
+
+The BONUS split favors field-debug: its consumer explicitly separated
+what it was taking on trust (the vendor's self-report, tagged OBSERVED,
+"treated as reliable... notwithstanding that it is a vendor self-report
+rather than a fingerprint comparison Fenwick performed itself") from
+what the artifact independently established, using the skill's own
+vocabulary. Baseline's consumer reached the same practical trust
+posture without naming it explicitly. The second BONUS item (respecting
+a preserved constraint) was not testable in either round trip this run,
+since neither Phase A producer preserved a constraint to respect.
+
+**Failure-shape taxonomy (Part 3), both round trips:** `round-trip-clean`
+for both baseline->baseline and field-debug->field-debug. In both, Phase
+B correctly identified the objective and boundary from the artifact
+alone, did not resurrect either ruled-out hypothesis, did not re-derive
+settled state, reached the correct concrete conclusion, and did not
+overclaim the fix as verified. Field-debug's round trip additionally
+re-serialized *why* clock skew and rate limiting were ruled out (not
+just that they were) with the same OBSERVED/INFERRED tags the producer
+used -- a slightly more complete pass-through of substance, though it
+did not change either round trip's outcome, since nothing in either run
+challenged those hypotheses. Per this suite's standing instruction not
+to force a failure label onto a gap that did not bite: neither
+producer's missing next-party constraint, nor the shared missing-
+session-ID provenance gap, caused any observed Phase B problem in the
+round trip it fed, so neither is labeled `production-omitted-state`
+here.
+
+### What to expect from field-debug Handoff (this run's evidence)
+
+- **Expect field-debug to correctly recognize a genuine wall and hand
+  off rather than fabricate a verdict**, as reliably as a careful
+  unassisted baseline -- this run found no case where either condition
+  invented a root cause past the evidence boundary, treated an
+  already-exhausted delegate (NetOps, a stale support ticket) as if it
+  could still resolve things, or continued speculative diagnosis past
+  the wall.
+- **Do not expect field-debug's Handoff output to reliably state a
+  constraint for the next party.** This run found zero of two
+  field-debug Handoff-shaped outputs stating one, against one of two
+  baseline outputs stating one clearly (the other baseline output
+  instead floated an uncaveated risky workaround). This is now observed
+  independently in two different cases in one valid run -- more than a
+  single-occurrence anomaly, though still a small sample (n=2 per
+  condition). It lines up with a structural fact in `skills/field-debug/
+  SKILL.md`: the `Checkpoint` template has an explicit `**Constraints**`
+  field; the `Handoff` template does not.
+- **Expect field-debug to reliably preserve tagged uncertainty
+  (OBSERVED/INFERRED/ASSUMED/UNKNOWN) and predecessor-observed-vs-
+  concluded separation more explicitly and auditably than free-form
+  prose reaching the same conclusions** -- this was the most consistent,
+  cross-case difference this run actually found (case-025's BONUS tier,
+  case-026 Phase B's BONUS tier), and it is a real value-add even though
+  it did not change any REQUIRED-item outcome this run.
+- **Do not assume field-debug's Handoff production is strictly more
+  complete than a careful unassisted baseline's.** In this run,
+  baseline was strictly more complete on submission-window provenance
+  (case-024) and on stating the next-party constraint (case-024), and
+  matched field-debug on every REQUIRED item elsewhere.
+- **Expect a field-debug-produced Handoff artifact to survive a
+  complete producer disappearance and hand a fresh agent everything it
+  needs to continue**, whether or not that fresh agent also has the
+  skill -- this run's field-debug->field-debug round trip was
+  `round-trip-clean` on every Part 3 question, and so was the
+  baseline->baseline round trip on the same evidence set, so this
+  specific round trip's success in this run is not attributable to the
+  skill alone; a genuinely careless or adversarially-lossy producer was
+  not tested.
+
+### Candidate skill weakness, separated from any proposed fix
+
+- **Candidate weakness:** the `Handoff` template
+  (`skills/field-debug/SKILL.md`, "Handoff" section) has no field
+  prompting for a constraint on the next party, while the `Checkpoint`
+  template does. This run observed field-debug omit a next-party
+  constraint in both of its Handoff-shaped outputs (`case-024`,
+  `case-026` Phase A), while baseline stated one in one of its two
+  comparable outputs.
+- **What this evidence does and does not support:** two independent
+  observations in one run is more than a single occurrence, but it is
+  still a small sample from one model family, one session, no repeated
+  trials. It is suggestive that this is a template-shape gap rather than
+  a one-off reasoning lapse (both field-debug misses occurred despite
+  the model successfully producing a `Checkpoint`-template constraint
+  field's rough equivalent in past iterations of this suite, and despite
+  baseline prose managing it unprompted half the time this run) --
+  but it does not by itself prove the template is the cause, since a
+  larger or more varied sample could show the same gap in baseline too,
+  or show field-debug close it on a different case shape.
+- **No `SKILL.md` change was made this session**, per the requesting
+  task's explicit instruction to record evidence and defer any
+  intervention to a later, separate decision.
+- The submission-window provenance miss (`case-024`, field-debug) and
+  the shared session-ID provenance gap (`case-026` Phase A, both
+  conditions) are each observed exactly once this run and are recorded
+  as ordinary run variance / possible fixture-strictness questions, not
+  promoted to a candidate skill weakness on n=1 evidence.
+
+### Would more evals or repetition change confidence here?
+
+Per the requesting task's own instruction, this run deliberately did not
+repeat any result to chase stability, since none of this run's findings
+were ambiguous enough to need it -- every REQUIRED-item grading call
+above was a clean pass/fail against the frozen keys, not a borderline
+judgment call needing a tie-breaking rerun. The one place additional
+evidence would sharpen the picture, rather than merely confirm it, is
+the candidate Handoff-template constraint gap: two independent
+observations in one run are enough to flag it as worth a future,
+separate look (and worth watching for in ordinary future runs of this
+suite), but not enough to justify a `SKILL.md` change on this evidence
+alone. A repeated campaign aimed specifically at that one question (does
+field-debug's Handoff output state a next-party constraint across a
+larger, varied sample of Handoff-shaped cases) would be the highest-value
+next eval investment from this run -- not a general stability sweep
+across all three cases, which this run's clean-pass-or-fail results do
+not call for.
+
