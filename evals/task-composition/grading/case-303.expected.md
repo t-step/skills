@@ -85,15 +85,36 @@ thorough.
    window and shares the same "Blocker" priority label.
    *(dependencies.md, "Open questions," last bullet)*
 
-8. **Treats HUDI-2459 (async compaction) and HUDI-2460 (async cleaning)
-   as two distinct work items, not merged into one "async metadata table
-   ops" slice.** They're stated as separate concerns (compaction vs.
-   cleaning are different table services) even though both are filed the
-   same day and touch the same general area — this guards against
-   layer-batching two genuinely separate deliverables into one slice
-   merely because they sound similar.
-   *(source: HUDI-2459, 2460 descriptions in tasks.md — phrased as two
-   separate "we should relax this" asks)*
+8. **Does not conflate HUDI-2459 (async compaction) and HUDI-2460 (async
+   cleaning) into the same fix, or invent a unified concrete
+   implementation for both from thematic similarity alone.** They are
+   stated as two distinct concerns (compaction vs. cleaning are different
+   table services), and neither ticket states a dependency or shared
+   mechanism between them — 2459's stated connection is to HUDI-2458 (the
+   compaction-fencing constraint), not to 2460; 2460 states no link to
+   either. Grouping them into one slice or tracking step is acceptable,
+   and so is keeping them separate; both remain open-ended strategy
+   questions per REQUIRED #1, and neither was ever implemented, separately
+   or jointly, as of the most recent check (`provenance/case-303/
+   actual-prs.md`), so no historical topology precedent corroborates a
+   mandatory separation either. What's required is that a run not present
+   them as the same problem, and not silently invent a shared design
+   neither ticket supports, while naming whichever grouping choice it
+   makes rather than assuming it needs no comment.
+   *(source: HUDI-2459, 2460 descriptions in tasks.md; dependencies.md,
+   "Open questions," second bullet, which connects 2458↔2459 only; a task
+   count being two, filed the same day, is a task-identity fact, not by
+   itself a slice-identity fact — see the skill's own "distinct source
+   tasks are not automatically distinct delivery slices" framing)*
+   *(NOTE — corrected 2026-09-26: this item originally required these to
+   remain in two separate slices, treating separate-ticket-filing as
+   sufficient evidence of a mandatory slice boundary. That was a grading-
+   key defect found by adversarial review, not a response to either
+   run's score: the original wording mandated a topology the source
+   material doesn't establish, and was inconsistent with REQUIRED #10's
+   correct treatment of a comparable, better-evidenced situation
+   (naming a shared-area signal, not requiring a specific resolution of
+   it). See RESULTS.md for the corrected scoring this produced.)*
 
 9. **Does not treat the Jira "Blocker" priority label as a discriminating
    priority order.** 11 of the 19 tasks share the Blocker label; a run
@@ -194,11 +215,15 @@ task list with unambiguous file names and one stated priority:
 - **A horizontal-enabler trap with a named-but-singular consumer**
   (REQUIRED #5), similar in shape to case-014 but drawn from a real
   ticket's own wording rather than authored to be clean.
-- **Two ops-track tasks that could easily be layer-batched together**
+- **Two ops-track tasks that are easy to either conflate into one
+  invented fix, or to quietly merge under an unstated shared design**
   (REQUIRED #8) just because they're filed the same day and both concern
-  "async metadata table operations," which is the layer-batching failure
-  mode the skill explicitly warns against, from real material rather than
-  a constructed trap.
+  "async metadata table operations" — the trap here is fabricating a
+  connection or a unified implementation the tickets don't state, not
+  which side of the grouping question a run lands on; distinct source
+  tickets are not by themselves evidence that two delivery slices are
+  required, any more than they'd be evidence that one merged slice is
+  required.
 
 This case does not exercise, and should not be graded on, a numeric-order
 illusion (the real Jira IDs here roughly track real filing chronology, so
