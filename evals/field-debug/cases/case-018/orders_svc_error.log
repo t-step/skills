@@ -1,0 +1,10 @@
+2026-09-24T07:15:02Z ERROR [orders-svc] fulfillment request for ORD-90311 failed: ConnectionRefusedError: [Errno 111] Connection refused: inventory-svc.internal:8443
+2026-09-24T07:15:04Z ERROR [orders-svc] fulfillment request for ORD-90311 failed (retry 1/3): ConnectionRefusedError: [Errno 111] Connection refused: inventory-svc.internal:8443
+2026-09-24T07:15:08Z ERROR [orders-svc] fulfillment request for ORD-90311 failed (retry 2/3): ConnectionRefusedError: [Errno 111] Connection refused: inventory-svc.internal:8443
+2026-09-24T07:15:16Z ERROR [orders-svc] fulfillment request for ORD-90311 failed (retry 3/3): ConnectionRefusedError: [Errno 111] Connection refused: inventory-svc.internal:8443
+2026-09-24T07:15:16Z ERROR [orders-svc] fulfillment request for ORD-90311 permanently failed after 3 retries
+2026-09-24T07:22:41Z ERROR [orders-svc] fulfillment request for ORD-90312 failed: ConnectionRefusedError: [Errno 111] Connection refused: inventory-svc.internal:8443
+2026-09-24T07:22:43Z ERROR [orders-svc] fulfillment request for ORD-90312 failed (retry 1/3): ConnectionRefusedError: [Errno 111] Connection refused: inventory-svc.internal:8443
+2026-09-24T07:22:47Z ERROR [orders-svc] fulfillment request for ORD-90312 failed (retry 2/3): ConnectionRefusedError: [Errno 111] Connection refused: inventory-svc.internal:8443
+2026-09-24T07:22:55Z ERROR [orders-svc] fulfillment request for ORD-90312 failed (retry 3/3): ConnectionRefusedError: [Errno 111] Connection refused: inventory-svc.internal:8443
+2026-09-24T07:22:55Z ERROR [orders-svc] fulfillment request for ORD-90312 permanently failed after 3 retries

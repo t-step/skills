@@ -851,3 +851,53 @@ selectively adapted external benchmark cases remain the highest-value next
 steps, for the same reason iteration 3 gave -- this suite still cannot
 address the single-author-bias caveat repeated across all five iterations
 of this file now.
+
+## Iteration 6 (2026-09-25): six new cases authored, frozen, not yet run
+
+This iteration is eval-authoring only -- **no baseline or with-skill agent
+was run against any of the six cases below, and no grading key was
+adjusted based on model output.** `skills/field-debug/SKILL.md` was not
+modified. The cases and their grading keys are frozen as committed; a
+future session, with no involvement in their design, is expected to run
+and grade them.
+
+Prior iterations' cases pressure enterprise/legacy terrain, delegation,
+checkpoint/resume, and productionization restraint, but none test
+temporal/concurrent/distributed-state reasoning specifically, and none
+test whether the skill over-investigates when the evidence is already
+straightforward. Six new cases (`case-014` through `case-019`) target
+that gap:
+
+| Case | Scenario |
+|---|---|
+| 014 | A 50-unit limited drop ends up with 52 confirmed orders; the inventory table reads a clean `available = 0` with no errors anywhere. Root cause: a check-then-act read-modify-write with no lock/version guard lets two concurrent requests both read the last unit as available and both confirm. Includes a deterministic two-thread reproduction against the real reservation function (not a re-implementation), run and verified during authoring. |
+| 015 | ~62% of payment attempts fail after a routine API-key rotation, looking random from the customer's side. Root cause: a rolling restart across 8 pods paused on an unrelated readiness-probe failure and never resumed, leaving 5 of 8 pods still running the old, now-revoked key -- fully deterministic per pod once grouped, not intermittent. |
+| 016 | DB connection-pool utilization spikes to 100% for 10-15s on an exact ~300-second cadence after a cache-TTL config change. Root cause: the shared cache key's expiry is unguarded by any lock/single-flight, so the whole fleet misses and re-runs the same expensive query within the same second. |
+| 017 | A customer is charged twice for one order despite payments-svc's own logs and order status showing nothing wrong. Root cause: the first capture attempt actually committed on the payment gateway's side before the caller's client-side timeout fired; the caller's retry, sent with no idempotency key, created a second, independent, equally real charge. Includes a small script that mechanically verifies the gateway's completion timestamp precedes the client timeout. |
+| 018 | Straightforward control, no trap: a deploy accidentally changed a configured port from 443 to 8443; the target service is directly confirmed listening on 443. Tests whether the skill commits to the direct fix instead of inventing hidden causes. |
+| 019 | Straightforward control, no trap: a producer renamed a required event field; the consumer's own schema and rejection log directly confirm the mismatch, and the producer's "no consumer changes needed" claim is directly contradicted by that evidence. Tests the same stop-when-settled discipline from the opposite direction. |
+
+Each case was authored with an explicit design constraint: the prompt
+never names the mechanism (no "race condition," "stale cache," "timed
+out but may have succeeded," or "the obvious answer is correct" in any
+agent-visible file), and the two control cases carry an explicit
+anti-overfitting grading item requiring that unnecessary continued
+hypothesis generation, delegation, or terrain exploration be treated as
+a failure of investigation discipline once the evidence already
+discriminates conclusively. Every REQUIRED grading item was checked
+against actually-discoverable fixture content (not fixture prose that
+merely asserts a conclusion), and every case with a runtime-checkable
+mechanism (`case-014`, `case-017`, and the schema validation in
+`case-019`) has a script or test that was actually executed during
+authoring to confirm the hidden ground truth reproduces deterministically
+-- see each `grading/case-0NN.expected.md` for the specific run output
+that verification is based on.
+
+**What this adds, and does not add:** this is fixture and grading-key
+authoring evidence -- it demonstrates the scenarios are internally
+consistent, reproducible, and isolated from their own grading material
+(`bash scripts/check.sh` passes). It says nothing yet about whether
+`SKILL.md`, with or without the compression from iterations 4-5, actually
+performs better than an unassisted baseline on any of these six cases --
+that comparison has not been run and no claim about it is made here.
+
