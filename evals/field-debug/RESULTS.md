@@ -525,3 +525,204 @@ iteration (the same disclosed limitation as iteration 1's case-007
 revision). It should be read as "the mechanism can work, once, on a
 fixture built to exercise it" -- not as confirmation that it reliably
 will.
+
+## Iteration 3 (2026-09-25): adversarial review, SKILL.md corrections, 5 new cases
+
+This iteration followed an adversarial review of the skill and the first
+two iterations' evals, conducted by a fresh reviewer session with no
+access to this file's prior conclusions. That review is not reproduced
+here; only the concrete, repository-verified defects it identified, and
+what was actually done about them, are recorded below. Two categories of
+review claim were explicitly distinguished throughout: a defect the
+reviewer directly verified against files in this repository (acted on
+immediately) versus a suspected weakness inferred from reading rule text
+without running anything (turned into eval pressure -- a new case -- not
+acted on directly, per this repo's `AGENTS.md`).
+
+### SKILL.md corrections made before any new case was run
+
+These three were independently verified in-repo (not inferred) before
+being fixed:
+
+1. **Sibling-skill routing named an unavailable skill.** `SKILL.md`'s
+   frontmatter, composition section, and refusal list all named
+   `identity-authority-audit` as a skill to route identity/authority
+   questions to. Verified: no `skills/identity-authority-audit/` exists
+   on `main` or on this branch -- only an open, unmerged PR branch and an
+   untracked eval directory. An installation that has this skill but not
+   that one would follow a refusal instruction pointing at nothing.
+   Fixed: removed `identity-authority-audit` from the frontmatter
+   description; reworded the composition section to state explicitly that
+   routing assumes the named sibling is actually installed, and that
+   field-debug reasons about the sub-question directly (flagging the gap)
+   when it isn't; reworded the matching refusal-list entry the same way.
+2. **Testimony/vantage-point semantics.** The evidence vocabulary listed
+   "a person's direct answer" under OBSERVED without qualification, while
+   the Delegate section separately (and correctly) warned that a
+   delegate's answer usually arrives as interpretation, not raw
+   observation -- an unresolved tension between two parts of the same
+   document. Fixed: the OBSERVED bullet now states that a person's answer
+   is OBSERVED as *what they reported*, not automatically as what it
+   establishes, and that a check run from the wrong vantage point,
+   environment, or time window is a real observation of that check, not
+   evidence the underlying question is settled.
+3. **Two grading keys asserted certainty their own fixtures didn't
+   support.** `grading/case-004.expected.md` required a "conclusive" root
+   cause but never accounted for a ~2-day gap between the secret rotation/
+   partner handoff (Sept 21) and the reported failure onset (Sept 23).
+   `grading/case-008.expected.md`'s BONUS item credited a timing
+   correlation as "plausibly explained by connection-pool cycling" with no
+   fixture evidence for that specific mechanism. Both keys were reworded
+   to require the mechanism as conclusive while requiring the unexplained
+   timing gap to be named as an open gap, not resolved away -- not
+   loosened, tightened toward what the evidence actually supports. Neither
+   change was re-verified against a fresh run of cases 004/008 this
+   iteration (case-004 and case-008 were not re-run); that is a named gap,
+   not a step skipped silently.
+
+A fourth reviewer claim -- that case-004's "asks exactly one question"
+requirement mostly tests prompt-following rather than judgment, and that
+case-007's grading rewards restraint more than case-001/008's do -- was
+not acted on. Neither is a verified defect in the sense the three above
+are; they're framing observations about existing, already-shipped cases
+that no run this iteration contradicted. Left as-is.
+
+### Five new cases: P1/P3/P4/P5/P6 (enterprise, legacy-archaeology, and
+POC-to-production coverage)
+
+Per the reviewer's own priority ranking, five new cases were built,
+targeting three previously-named coverage gaps from iteration 2's
+"Remaining weaknesses" list: enterprise/brownfield terrain, legacy-system
+archaeology, and POC-to-production identity risk. Design constraints
+applied to all five, per instruction: no prompt claims the evidence given
+is complete; the load-bearing evidence is discoverable by exploring the
+given working directory, not announced by the prompt; each case's initial
+directory is a foothold into a larger system (an ops config layer, a
+warehouse-owned DB trigger, a partner's own acknowledgment channel, a
+queue-manager topology) rather than the whole system living in one
+obvious file.
+
+| Case | Scenario |
+|---|---|
+| 009 | Ticket blames the export code; the actual cause is a stale ops-owned config override shadowing a fix that already shipped to `main` three months earlier |
+| 010 | An MQ admin's earlier answer in the incident thread never states which of two identically-named queue managers it covered, or whether it covers the incident window at all |
+| 011 | A real, evidenced application bug explains 14 of a reported 1,186-order gap; the other ~1,172 live in a warehouse-owned DB trigger outside the service's own code |
+| 012 | A "cosmetic" encoding change silently breaks a fixed-width byte-length contract for accented names; the partner's own rejection reason sits unread on disk |
+| 013 | A ServiceNow ticket-creation POC authenticates as the individual builder's personal account against a dev-only tenant |
+
+Each case was run once per condition (baseline: same case files, one-line
+task framing, no skill file, no imposed structure; with-skill: same case
+files plus `skills/field-debug/SKILL.md`, told to follow it exactly),
+using fresh `general-purpose` subagents with file/shell access restricted
+to an isolated copy of that case's own directory (plus the skill file for
+with-skill runs), instructed not to explore anything else. Every run's
+full final report was read and graded by hand against that case's
+`pressure_evals.json`/`grading/*.expected.md` REQUIRED items -- including
+each key's new cross-cutting "hiding-behind-uncertainty" item (fails
+either overclaiming settled certainty the evidence doesn't support, or
+refusing to commit to a conclusion the evidence has actually settled).
+
+**A fixture defect surfaced by an actual run, fixed before grading
+continued.** Case-010's original grading key asserted, as hidden ground
+truth, that the incident-thread reply came from checking `QM_QA01`
+specifically -- but no agent-visible file in the fixture actually states
+which queue manager was checked; that fact existed only in the grading
+key, not in anything discoverable. Both the baseline and with-skill runs
+independently surfaced this by reasoning about the ambiguity correctly
+(neither guessed a queue manager the fixture didn't support) or, in
+baseline's case, by *demonstrating the failure the key was supposed to
+detect* in a form the key hadn't anticipated (see below). The key was
+rewritten to require identifying the ambiguity itself (queue manager
+genuinely unstated, not "stated as QA and missed") rather than a specific
+hidden answer the fixture never actually encoded -- fixed, not loosened:
+the corrected key is strictly harder to fake, since it no longer accepts
+naming either queue manager as the "confirmed" one.
+
+**A second grading-key defect surfaced by an actual run.** Case-013's
+original key blanket-forbade recommending "retry/idempotency
+infrastructure," modeled too closely on case-007's unrelated
+auth-scale-infra pattern without checking whether it actually applied
+here. The baseline run correctly, with direct code evidence (no dedup key
+anywhere on the webhook-to-ticket path), flagged that a redelivered
+alert-manager webhook would create a duplicate ServiceNow ticket -- a
+real, evidence-backed finding, not cargo-culting. The key was narrowed to
+forbid only heavyweight infrastructure investment (a message queue, an
+autoscaler) nothing in the fixture calls for, while explicitly crediting
+an evidenced dedup-key gap on the ticket-creation path itself as a
+legitimate finding. Both runs were re-graded against the corrected key
+(below); this key change was made after seeing the baseline run's
+specific finding, without a second re-check this iteration -- disclosed
+per this repo's own precedent for the same situation in iteration 1.
+
+### Per-case results (both conditions graded against the corrected keys)
+
+| Case | With-skill | Baseline | Notable difference |
+|---|---|---|---|
+| 009 | 6/6 REQUIRED + BONUS | 6/6 REQUIRED + BONUS | None -- both found the override via the startup log and overrides file, neither touched the code, both flagged the ~3-months-vs-~3-weeks timing gap as UNKNOWN rather than resolving it |
+| 010 | 6/6 REQUIRED + BONUS | **5/6 REQUIRED, BONUS missed** | Baseline's own re-scoped delegation request asserted, unsupported by the fixture, that Sam's prior check "already confirmed [QM_PROD01] clean" -- the same overclaim-a-vantage-point-as-settled failure this case exists to catch, just aimed at the opposite queue manager from what a shallow reading would guess. The with-skill run explicitly tagged the historical-`GL_MQ_ENV` claim ASSUMED rather than confirmed and never asserted which queue manager the prior check covered, satisfying every REQUIRED item and the BONUS |
+| 011 | 6/6 REQUIRED + BONUS | 6/6 REQUIRED + BONUS | None -- both explained the 14-record parse bug, explicitly compared it against the 1,186 reported gap, found the warehouse-owned dedupe trigger unprompted, and named it a 2015-era scale regression |
+| 012 | 7/7 REQUIRED (incl. hiding-behind-uncertainty) + BONUS | 7/7 REQUIRED + BONUS | None -- both independently executed `build_record` against the sample data to verify byte-length overflow, found the unread acknowledgment files, and rejected the passing ASCII-only test as proof of correctness |
+| 013 | 6/6 REQUIRED (corrected key) + partial BONUS | 6/6 REQUIRED (corrected key) + partial BONUS | Both named the personal-credential blocker, its consequences, and the dev-tenant-only evidence scope. The with-skill run additionally named, explicitly and by name, that `identity-authority-audit` was the sibling skill this question would ordinarily route to, that it was **not installed in this session**, and that it was therefore reasoned through directly rather than deferred or silently worked around -- a live, first-time demonstration of the sibling-routing-unavailable fallback this iteration's SKILL.md fix (see above) was written to produce, not merely asserted |
+
+**Numeric summary, this iteration's 5 cases:** with-skill 31/31 REQUIRED
+items met (6+6+6+7+6, using each case's post-correction key) plus 4 of 5
+BONUS items fully met (case-013's partially); baseline 30/31 REQUIRED
+(missing one item in case-010) plus 3 of 5 BONUS items fully met
+(case-010's BONUS missed entirely; case-013's partially, same as
+with-skill).
+
+### What this iteration's evidence shows, and does not show
+
+Four of five cases replicate this skill family's now-consistent pattern:
+a baseline run with no skill and no imposed structure reaches the same
+substantive conclusions a with-skill run does, on fixtures this size and
+this synthetic. Case-010 is the one case in three iterations of this
+suite where the with-skill and baseline runs' *substantive conclusions*
+differ in a way traceable to a specific instruction in `SKILL.md` (the
+documentation-vs-runtime-fact distinction, added in iteration 2 for an
+unrelated reason and never previously shown to matter) rather than to
+report structure or vocabulary alone. That is one data point, on one
+fixture, produced by one run per condition -- it demonstrates the
+mechanism can produce a real behavioral difference, not that it reliably
+will across other fixtures shaped like this one. Case-013's sibling-
+routing-unavailable behavior is similarly one data point: it shows the
+iteration's SKILL.md wording fix behaves as intended under actual
+pressure (this was explicitly listed as untested in iteration 2), not
+that it will hold up against a harder case built specifically to probe
+edges of that fallback (e.g., a question genuinely too specialized to
+reason through directly without the sibling's depth).
+
+**What this does not prove:** each of these 5 cases was run once per
+condition, by the same person who wrote the fixtures, the grading keys,
+and the skill text being evaluated, with no independent second-reviewer
+check of any grading judgment this iteration -- the same disclosed
+limitation as iterations 1 and 2. Two of the five grading keys were
+revised after seeing actual run output before being treated as final,
+which narrows the space of the "same author checking their own claims"
+concern but does not eliminate it. No case in this suite (this iteration
+or prior ones) yet tests: a genuinely uncrossable Handoff with no
+delegate reachable at all; a sibling-routing case hard enough that
+reasoning through it directly (rather than deferring) is actually the
+wrong call; live tool/script execution as opposed to static file reading
+(though two with-skill and two baseline runs this iteration chose, on
+their own initiative, to execute the fixture's own code locally to verify
+a byte-length claim -- a genuine, unprompted use of "debug by
+observation," not required by any prompt); or a real, messy production
+codebase rather than a small synthetic fixture.
+
+### Recommended next step
+
+Per this iteration's own scope instruction: since these five cases did
+not surface a further `SKILL.md` behavioral defect (only two grading-key
+corrections, both fixture-side), synthetic-case iteration on this skill
+should stop here rather than continue manufacturing cases against
+predicted weaknesses with no verified failure behind them. The two
+highest-value next steps, in order: (1) sanitized real field-debug
+incidents (per the skill's own CASE SEED mechanism, never yet exercised
+in this suite) would test claims this suite cannot -- whether the
+skill's structure holds up on a codebase too large and messy for one
+person to author both sides of; (2) selectively adapted external
+benchmark cases (SRE/incident-response corpora, not general coding
+benchmarks) would provide grading distance from the skill's own author,
+addressing the single-author-bias caveat repeated across all three
+iterations of this file.

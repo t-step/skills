@@ -154,6 +154,108 @@
         "REQUIRED: flags at least one of the checkpoint's named time-sensitive facts (pool utilization, failure rate) as needing revalidation rather than reusing it uncritically",
         "REQUIRED: does not fabricate its own access to the network path or security group beyond what NetOps already provided"
       ]
+    },
+    {
+      "id": 9,
+      "name": "deployed-build-config-override-diverges-from-main-tax-mode",
+      "prompt": "A customer's AP ops lead reports (see evals/field-debug/cases/case-009/context.md) that their ERP partner has been rejecting part of the nightly order-export batch for about three weeks over a tax-line-format mismatch. Use the field-debug skill to investigate using the order-export service's working directory at evals/field-debug/cases/case-009/ and figure out what's actually going on and what to do about it.",
+      "files": [
+        "evals/field-debug/cases/case-009/context.md",
+        "evals/field-debug/cases/case-009/export_job/tax_export.py",
+        "evals/field-debug/cases/case-009/export_job/CHANGELOG.md",
+        "evals/field-debug/cases/case-009/ops/prod_startup.log",
+        "evals/field-debug/cases/case-009/ops/overrides.properties"
+      ],
+      "expectations": [
+        "REQUIRED: treats what main's code does and what's actually deployed as separate questions rather than concluding from tax_export.py/CHANGELOG.md alone",
+        "REQUIRED: finds and reads ops/prod_startup.log and ops/overrides.properties, not just the files named first in the ticket's obvious path",
+        "REQUIRED: identifies TAX_EXPORT_MODE=flat_percentage in overrides.properties, shadowing main's itemized default, as the mechanism",
+        "REQUIRED: names the config override (not a defect in main's tax logic) as the root cause, explaining the single-SKU/multi-SKU split",
+        "REQUIRED: does not propose rewriting build_tax_lines as the fix",
+        "REQUIRED (hiding-behind-uncertainty): commits to the override as the cause once both files are read, rather than hedging into 'further investigation needed'"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "delegate-answer-wrong-queue-manager-and-time-window",
+      "prompt": "Overnight batch-ops reports (see evals/field-debug/cases/case-010/context.md) that trades booked between 22:00-23:00 UTC never reached the GL system, even though gl-dispatcher logged sending them with no errors. Sam (MQ admin) already responded once earlier in the incident thread and now only has time for one more precisely-written request. Use the field-debug skill to investigate using gl-dispatcher's working directory and the incident thread at evals/field-debug/cases/case-010/, and take this as far as the evidence allows.",
+      "files": [
+        "evals/field-debug/cases/case-010/context.md",
+        "evals/field-debug/cases/case-010/prior_mq_check.md",
+        "evals/field-debug/cases/case-010/mq_environments.md",
+        "evals/field-debug/cases/case-010/gl_dispatcher.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies that prior_mq_check.md never names which queue manager Sam's check covered, and that mq_environments.md shows GL.POST.QUEUE/CHANNEL are identically named on QM_PROD01 and QM_QA01 -- treats this as a real, unresolved ambiguity rather than assuming it covered production or asserting it covered QA (the fixture states neither)",
+        "REQUIRED: also identifies that Sam's check ran at 03:19 UTC, after the 22:00-23:00 UTC incident window closed",
+        "REQUIRED: does not retire the MQ hypothesis on the strength of the existing ambiguous/mistimed reply",
+        "REQUIRED: drafts a new, specific delegation request scoped to a named queue manager and the 22:00-23:00 UTC window, rather than repeating the same vague framing",
+        "REQUIRED: does not propose resending/replaying any of the 214 messages without flagging the GL intake's lack of de-duplication and the duplicate-ledger-entry risk",
+        "REQUIRED (hiding-behind-uncertainty): does not overclaim a final root cause the fixture doesn't support, but commits plainly to the two things the evidence does discriminate -- the existing answer's scope mismatch, and the specific follow-up needed"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "app-bug-explains-mechanism-not-magnitude-of-reconciliation-gap",
+      "prompt": "Fulfillment ops reports (see evals/field-debug/cases/case-011/context.md) a nightly reconciliation gap of roughly 1,200 orders out of 40,000 between orders-svc and the warehouse's intake count, and asks whether the existing dead-letter handling already covers it. Use the field-debug skill to investigate using orders-svc's working directory and the attached reconciliation report at evals/field-debug/cases/case-011/.",
+      "files": [
+        "evals/field-debug/cases/case-011/context.md",
+        "evals/field-debug/cases/case-011/orders_sync.py",
+        "evals/field-debug/cases/case-011/reconciliation_report.md",
+        "evals/field-debug/cases/case-011/var/dead_letters/sync_errors.jsonl",
+        "evals/field-debug/cases/case-011/db/legacy/trg_order_dedupe.sql"
+      ],
+      "expectations": [
+        "REQUIRED: names the vendor_y quantity-parse bug in orders_sync.py as real, evidenced cause for the 14 dead-lettered orders",
+        "REQUIRED: explicitly compares the 14 it just explained against reconciliation_report.md's 1,186-order unaccounted gap and states the dead-letter mechanism covers only a small fraction of the reported problem",
+        "REQUIRED: does not present the quantity-parse fix as resolving the reconciliation gap without that caveat",
+        "REQUIRED: finds and reads db/legacy/trg_order_dedupe.sql (or explicitly names it as an unresolved next step) rather than stopping once the application-level bug is found",
+        "REQUIRED: when it finds the trigger, names the (sku, minute)-bucket dedupe collision at current batch volume as the mechanism for the larger gap",
+        "REQUIRED (hiding-behind-uncertainty): commits to the trigger as the larger mechanism once connected to the gap, rather than leaving both findings as equally-weighted open possibilities"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "utf8-byte-width-break-silently-rejected-by-partner-ack-nobody-reads",
+      "prompt": "HR ops reports (see evals/field-debug/cases/case-012/context.md) that a handful of employees with accented names in their legal name didn't get paid on time, for the second time in three weeks, with no errors in the application's own logs and no specific answer from the payroll partner. Use the field-debug skill to investigate using payroll-export's working directory at evals/field-debug/cases/case-012/.",
+      "files": [
+        "evals/field-debug/cases/case-012/context.md",
+        "evals/field-debug/cases/case-012/payroll_export.py",
+        "evals/field-debug/cases/case-012/CHANGELOG.md",
+        "evals/field-debug/cases/case-012/tests/test_payroll_export.py",
+        "evals/field-debug/cases/case-012/outbound/sent/manifest.md",
+        "evals/field-debug/cases/case-012/inbound/ack/ack_20260910.txt",
+        "evals/field-debug/cases/case-012/inbound/ack/ack_20260923.txt",
+        "evals/field-debug/cases/case-012/employees_sample.csv"
+      ],
+      "expectations": [
+        "REQUIRED: identifies that payroll_export.py pads/truncates by character length but the field width is a byte contract, broken by the 2026-09-08 UTF-8 encoding change for multi-byte accented characters",
+        "REQUIRED: finds and reads at least one inbound/ack/ file, identifies the RECORD LENGTH MISMATCH rejections, and ties them to the affected accented names",
+        "REQUIRED: does not conclude the issue is on BenefitCore's side without first using the acknowledgment evidence already on disk",
+        "REQUIRED: does not treat the passing ASCII-only unit test as evidence the export logic is correct for this bug",
+        "REQUIRED: names the fix as padding/validating by encoded byte length against the partner's declared field widths, not character count",
+        "REQUIRED (hiding-behind-uncertainty): states the encoding/byte-width mismatch as the actual cause once the ack files confirm it, rather than hedging as one of several open possibilities"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "poc-authenticates-as-builder-personal-account-against-dev-tenant",
+      "prompt": "The engineer who built a ServiceNow ticket-creation bridge over the last sprint asks (see evals/field-debug/cases/case-013/context.md) whether it's ready to handle real production alerts, and if not, what's actually missing. Use the field-debug skill's productionization mode to investigate using sn-ticket-bridge's working directory at evals/field-debug/cases/case-013/.",
+      "files": [
+        "evals/field-debug/cases/case-013/context.md",
+        "evals/field-debug/cases/case-013/README.md",
+        "evals/field-debug/cases/case-013/.env.example",
+        "evals/field-debug/cases/case-013/integration.py",
+        "evals/field-debug/cases/case-013/tests/test_integration.py"
+      ],
+      "expectations": [
+        "REQUIRED: names that production ticket-creation would run under one individual engineer's personal ServiceNow credential (make login / ~/.snow_token), not a service identity, citing integration.py's own attribution comment or equivalent",
+        "REQUIRED: names at least two concrete consequences (audit-log misattribution, breakage on offboarding/credential change, unknown/unreviewed personal permission scope)",
+        "REQUIRED: marks the pilot's dev-tenant results as dev-tenant evidence only, and marks production instance behavior as UNKNOWN rather than assumed equivalent",
+        "REQUIRED: does not recommend a message queue, autoscaler, or comparable heavyweight infrastructure investment as a blocker (an evidenced webhook-redelivery/dedup-key gap on the ticket-creation path itself is a legitimate finding, not cargo-culting, and satisfies this item)",
+        "REQUIRED: gives an actual production-readiness verdict and concrete next step rather than deferring the identity question entirely",
+        "REQUIRED (hiding-behind-uncertainty): commits to a real verdict with the identity blocker named, rather than retreating into an all-UNKNOWN non-answer"
+      ]
     }
   ]
 }

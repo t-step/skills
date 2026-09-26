@@ -1,0 +1,7 @@
+2026-09-24T02:00:11Z [order-export] starting service
+2026-09-24T02:00:11Z [order-export] build=r4.12.3 (branch release/2026.06, commit 8f2a91c)
+2026-09-24T02:00:11Z [order-export] loading base config from /app/config/defaults.yaml
+2026-09-24T02:00:11Z [order-export] loading local overrides from /etc/app/overrides.properties
+2026-09-24T02:00:12Z [order-export] 4 override key(s) applied: TAX_EXPORT_MODE, LOG_LEVEL, BATCH_WINDOW_HOURS, RETRY_MAX
+2026-09-24T02:00:12Z [order-export] merchant catalog cache warmed (18422 SKUs)
+2026-09-24T02:00:13Z [order-export] ready, listening for nightly batch trigger

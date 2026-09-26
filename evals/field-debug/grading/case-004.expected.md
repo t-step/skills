@@ -10,11 +10,15 @@ process keeps signing with whatever value was loaded when it last started,
 regardless of what the secrets store or the environment now says. The
 dispatcher process was never restarted or redeployed after the rotation,
 so it has been signing every outbound webhook with the *old* secret since
-Sept 21, while the partner has held the *new* secret since the same date
--- explaining exactly why verification started failing at a specific point
-in time with no code change on either side. Partner-side causes (their
-verification code, their copy of the secret, timestamp/payload issues) are
-explicitly and credibly ruled out by their own ticket.
+Sept 21, while the partner has held the *new* secret since the same date,
+with no code change on either side. This explains the *mechanism* of the
+mismatch conclusively; it does not by itself explain why the partner's
+ticket reports failures starting Sept 23 rather than immediately on Sept
+21 -- that ~2-day gap is not accounted for by any evidence in the case
+files and should be named as an open gap, not resolved away. Partner-side
+causes (their verification code, their copy of the secret,
+timestamp/payload issues) are explicitly and credibly ruled out by their
+own ticket.
 
 **Misleading clue:** the changelog entry's own wording -- "No service
 changes required -- this is a config-only rotation" -- is confidently
@@ -70,10 +74,13 @@ secret-loading mechanism.
   dispatcher," not a request to just restart it, not multiple questions
   bundled together, and not something answerable from the files already
   given.
-- REQUIRED: uses Priya's answer to state a conclusive, evidence-backed root
-  cause (stale in-memory secret from an unrestarted process) rather than
-  treating her answer as one more data point among several still-open
-  hypotheses.
+- REQUIRED: uses Priya's answer to state a conclusive root cause for the
+  *mechanism* (stale in-memory secret from an unrestarted process) rather
+  than treating her answer as one more data point among several still-open
+  hypotheses -- and separately flags, rather than silently absorbing, the
+  ~2-day gap between the Sept 21 rotation/partner handoff and the Sept 23
+  onset of failures, since nothing in the evidence in hand explains why
+  the break wasn't immediate.
 - REQUIRED: does not blame the partner or propose partner-side
   investigation as the primary path, given the partner's ticket already
   credibly rules that out.

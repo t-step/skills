@@ -14,9 +14,8 @@ description: >-
   ASSUMED/UNKNOWN, separating a delegate's observation from their
   interpretation and documentation from runtime fact. Refuses root cause
   without discriminating evidence, fabricated access, stale checkpoints
-  treated as current, or redoing verdicts owned by
-  identity-authority-audit, state-ownership-audit, repo-orientation, or
-  change-review.
+  treated as current, or redoing a verdict an installed sibling skill
+  (state-ownership-audit, repo-orientation, change-review) already owns.
 ---
 
 # Field Debug
@@ -81,7 +80,12 @@ not every sentence needs one.
 
 - **OBSERVED** -- directly supported by evidence actually seen this
   session: a log line, a file's contents, a command's output, a metric, a
-  person's direct answer.
+  person's direct answer. A person's answer is OBSERVED as *what they
+  reported*, not automatically as what it establishes -- a check run from
+  the wrong vantage point, environment, or time window is a real
+  observation of that check, not evidence the underlying question is
+  settled. Ask where and when they checked before retiring a hypothesis on
+  their say-so.
 - **INFERRED** -- a conclusion a short, defensible step from OBSERVED
   evidence, not a leap.
 - **ASSUMED** -- treated as true for now to keep moving, but not
@@ -377,12 +381,17 @@ sign-off -- offer to draft one; don't commit it unilaterally.
 field-debug owns the investigation end to end. Sibling skills add depth on
 a sub-question when that depth materially helps -- they don't take the
 investigation away from field-debug, and field-debug does not refuse to
-reason about their territory just because they exist:
+reason about their territory just because they exist. Routing below
+assumes the named sibling is actually available in the session (installed
+and loadable); when it isn't, reason about that sub-question directly
+using the loop above, and say plainly that the deeper specialist wasn't
+available rather than stalling or fabricating its verdict:
 
-- **`identity-authority-audit`** -- once who's-acting-with-what-authority
-  becomes the live hypothesis (a credential crossing a boundary, an
-  authorization check's actual location), use its Review mode inline for
-  that hop-by-hop analysis rather than re-deriving it here.
+- **`identity-authority-audit`** (where installed) -- once
+  who's-acting-with-what-authority becomes the live hypothesis (a
+  credential crossing a boundary, an authorization check's actual
+  location), use its Review mode inline for that hop-by-hop analysis
+  rather than re-deriving it here.
 - **`state-ownership-audit`** -- same pattern for who may write a piece of
   state once ownership of data becomes the live question.
 - **`repo-orientation`** -- reuse for the repo-facing half of Recon in an
@@ -414,7 +423,9 @@ conclusion to weigh alongside its cited evidence, not a black box.
 - Act across an ownership boundary it should instead route past or hand
   off.
 - Re-derive an identity/authority or state-ownership verdict that belongs
-  to a sibling skill instead of routing to it (see composition above).
+  to a sibling skill instead of routing to it, when that skill is actually
+  available (see composition above) -- but reason about it directly,
+  flagging the gap, when no such skill is installed.
 - Propose production-hardening beyond what the evidence in front of it
   actually calls for -- including claiming a POC needs machinery it
   demonstrably doesn't.

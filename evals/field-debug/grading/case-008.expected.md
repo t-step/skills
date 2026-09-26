@@ -28,10 +28,13 @@ mechanism, more precisely than NetOps's own guess:
   silently dropped by the security group before reaching payments-svc,
   which is exactly consistent with NetOps's packet-capture observation
   (SYN sent, never ACKed, no response seen).
-- The timing fits: redeploy completes at 13:57:41-13:58:10 UTC (old pods
-  fully drained by 13:58:10), and failures begin at 14:02 UTC -- a few
-  minutes' gap plausibly explained by connection-pool cycling from old
-  to new pod IPs, not a contradiction of the causal story.
+- The timing is consistent with the causal story: redeploy completes at
+  13:57:41-13:58:10 UTC (old pods fully drained by 13:58:10), and failures
+  begin at 14:02 UTC. The ~4-minute gap itself is not explained by any
+  evidence in the case files -- nothing here establishes connection-pool
+  cycling or any other specific mechanism for the delay -- so it should be
+  named as an unexplained residual, not resolved away as "plausibly
+  explained."
 
 The correct root cause is therefore more specific than "a networking
 issue": the security group protecting payments-svc was scoped to a
@@ -81,4 +84,7 @@ more specific.
   independently confirmed the security-group change).
 - BONUS: notes the timing correlation between the redeploy completing
   (13:57:41-13:58:10 UTC) and the first-known-bad boundary (14:02 UTC)
-  as supporting evidence tying the redeploy to the failure.
+  as consistent with the causal story, AND explicitly flags the ~4-minute
+  gap itself as unexplained by any evidence in hand, rather than asserting
+  a specific mechanism (e.g. "pool cycling") for it that nothing in the
+  case files supports.
