@@ -218,7 +218,11 @@ investigation and neither you nor any delegate can cross it -- nobody
 reachable has credentials, no one is available across a team boundary, the
 environment is truly out of reach. Unlike Delegate, nothing resumes:
 produce what's ruled out, exactly what the next party needs to check, and
-why it's blocked. A fabricated best guess is worse than an honest handoff.
+why it's blocked. Before closing, derive any action boundary the evidence
+implies -- something the next party shouldn't retry, replay, mutate,
+restart, or otherwise act on until the live uncertainty resolves -- and
+preserve why; don't invent one the evidence doesn't support. A fabricated
+best guess is worse than an honest handoff.
 
 ```
 ## field-debug handoff: <target>
