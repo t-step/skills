@@ -1107,3 +1107,489 @@ graded by the same session that ran it with no independent second
 reviewer -- consistent with, and no stronger than, every prior
 iteration's disclosed limitation.
 
+## Iteration 8 (2026-09-25): four staged, multi-phase cases authored and frozen, not yet run
+
+This iteration is eval-authoring only -- **no baseline or with-skill agent
+was run against any of the four cases below, no model-assisted grading
+was performed, and no grading key was adjusted based on model output.**
+`skills/field-debug/SKILL.md` was not modified. The cases and their
+grading keys are frozen as committed; a future session, with no
+involvement in their design, is expected to run and grade them, exactly
+as PR #61/#62's iteration-6-to-7 handoff did for `case-014` through
+`case-019`.
+
+Iterations 1-7 pressure-test terrain-mapping, delegation, checkpoint/
+resume against a single continuous incident, scoped single-witness
+testimony, and temporal/concurrent/distributed-state reasoning within one
+investigation session -- but none test what happens *across* a session
+boundary when the world keeps moving without the investigator, what a
+*good* checkpoint handoff looks like when nothing needs to change, what
+happens when the people who hold the evidence are split across vantage
+points and one of them leaves mid-investigation, or a genuinely
+multi-stage incident where fixing one real problem reveals a second, and
+then a third, real problem. Four new cases (`case-020` through `case-023`)
+target that gap.
+
+### External design sources (mechanics donors, not scenario material)
+
+Per the task that requested this expansion, four external systems were
+used as sources of *mechanics* to borrow, not scenarios or datasets to
+copy or add as dependencies. No URL was fetched this session; each is
+cited by the title/description given in the task, and the specific idea
+borrowed into a case is named so the citation is checkable against that
+case rather than taken on faith:
+
+- **SentinelBench** (Microsoft Research, described as a benchmark for
+  long-running monitoring agents): the mechanic borrowed is "the
+  environment changes independently of agent actions, and a resumed
+  agent must revalidate perishable facts rather than replay everything or
+  trust everything" -- this is `case-020`'s and `case-021`'s central
+  mechanic (a canary rollout that auto-promotes on its own timer,
+  independent of any agent's request to pause it).
+- **AWS DevOps Agent** (autonomous incident response): the mechanic
+  borrowed is "prior context persists but must be reconciled with new
+  information delivered between reasoning steps, and investigation
+  resumes rather than restarts" -- shaped `case-020`/`case-021`'s
+  checkpoint-then-resume structure (the checkpoint is handed forward, the
+  original investigator's raw process is not).
+- **Gemini Cloud Assist investigations** (Google Cloud): the mechanic
+  borrowed is "explicit Observations/Hypotheses/Findings that stay
+  inspectable across a revision, rather than being silently overwritten
+  when new evidence arrives" -- this is why both `case-020`'s and
+  `case-023`'s grading keys explicitly require *not* discarding or
+  retroactively rewriting an earlier, still-valid finding just because a
+  later one arrived.
+- **Google SRE incident management / handoff**: the mechanic borrowed is
+  "a living incident-state document lets an incoming responder continue
+  from current state instead of reconstructing the incident from
+  scratch" -- this is the core design constraint behind `case-020` and
+  `case-021`'s checkpoint files, and behind `case-022`'s replacement-
+  responder (Chris covering for Dana) receiving pointers to existing
+  evidence rather than starting cold.
+- **Cloud-OpsBench**: the mechanic borrowed is "process-level evaluation:
+  a correct final answer without the supporting evidence chain is not
+  equivalent to a good investigation" -- this is why every new case's
+  grading key includes REQUIRED items about *how* the conclusion was
+  reached (actually running the reproduction at each stage, citing which
+  vantage point said what and how it was checked), not just what the
+  final conclusion says.
+
+None of these four systems' code, datasets, or benchmark harnesses were
+added as a dependency; nothing here imports or reuses their material
+beyond the mechanics named above.
+
+### The four cases
+
+| Case | Mechanic under test | Scenario |
+|---|---|---|
+| `case-020` | Changed-world resume | A colleague's checkpoint on an `orders-svc` -> `partner-erp-gateway` incident correctly implicates a v3.15 retry-logic change while a canary hold request is still pending. Between the checkpoint and resume, the canary auto-promotes to 100% on its own default policy -- independently of the investigation -- and the fleet-wide failure rate rises from a diluted ~9% to ~22%, quantitatively matching the v3.15-specific rate the checkpoint already measured. The resumed investigation must revalidate the now-stale canary/failure-rate snapshot, recognize the world changed rather than concluding the prior model was wrong, and still do real further work (connecting the retry code to the partner's documented rate-limit/burst behavior) to reach the actual root cause. |
+| `case-021` | Unchanged-world resume (control) | A structurally identical checkpoint/resume handoff on an unrelated nightly customer-export job, but nothing material changes between the checkpoint and resume -- same code, same library version, same affected accounts, essentially the same drop rate one more night running. The one open question the checkpoint already scoped (a `recordsdb-client` keyset-cursor caveat) is answered by new documentation. This case exists to catch the opposite failure from `case-020`: needless replay, re-litigating already-ruled-out hypotheses, or general distrust of a checkpoint that was actually sound. |
+| `case-022` | Changing people / scoped witnesses | Three vantage points on a customer-CRM sync complaint -- Northwind's Ops admin (webhook-receipt dashboard), our own platform SRE (send-side job log), and Northwind's CRM admin (the only one who can see CRM-side ingestion) -- each report a true observation from their own layer, two of which superficially conflict ("Delivered" vs. "nothing new has shown up") without either being wrong. The Ops admin goes unavailable (a scheduled system migration) partway through, handing off to a less-experienced replacement responder, forcing the investigation to delegate one bounded, concretely-targeted request rather than either stalling or asking everyone everything. |
+| `case-023` | Sequential genuine failures | The hardest case in the suite. A vendor integration fails three real, sequential, unrelated-cause boundaries in order: an auth-scheme cutover (401), then, once fixed, a payload-contract mismatch the vendor's own migration notice said wouldn't happen (422), then, once that's fixed too, an unbounded-concurrency burst tripping the vendor's documented rate limit (429 on 5/25 orders). All three are real; none is a red herring; a benign, unrelated `DeprecationWarning` fires identically at every stage as an anti-overcorrection trap. Fully mechanized: `run_sync.py`/`pytest` against real, runnable code reproduces each stage deterministically as the agent applies each real fix. |
+
+### Staging approach: no invented orchestration where the existing conventions already cover it
+
+Deliberately, none of these four cases add new orchestration
+infrastructure. Each reuses whichever existing convention in this suite
+already fits its mechanic, rather than building something new:
+
+- **`case-020`/`case-021`** follow `case-008`'s existing checkpoint-handoff
+  convention exactly: Phase 1 is an authored, frozen checkpoint (nothing
+  a live agent produced this session, consistent with this iteration
+  running no agents at all), and the tested agent only ever sees Phase 2
+  -- the checkpoint plus "current state" files gathered fresh for the
+  handoff. There is no phase-1 raw transcript file in either case
+  directory (mechanically checked -- see below).
+- **`case-022`** follows `case-004`'s existing scripted-live-interaction
+  convention exactly: the grading key holds Chris's, Dana's, and Priya's
+  scripted responses, to be played by whichever future session actually
+  runs this case, keyed on whether the tested agent's question is
+  well-targeted -- the same mechanism iteration 1 already established and
+  iterations 3-7 never needed to change.
+- **`case-023`** needed no live orchestration at all: the three sequential
+  failures are produced by actually running real, deterministic Python
+  against a local sandbox harness that mirrors the vendor's documented
+  contract (auth check, then schema validation, then a concurrency cap),
+  in that order, so a stage's failure is only ever observable by fixing
+  the stage before it and re-running. This was verified to reproduce
+  deterministically five times in a row during authoring before being
+  frozen (see below) -- not asserted from the code alone.
+
+The task's suggested "sealed harness returning phase-appropriate tool
+output" was considered and deliberately not built as new infrastructure:
+`case-023`'s real code already provides that property for free (a stage's
+error text does not exist anywhere until the code that produces it is
+actually executed), and `case-020`/`case-021`/`case-022` are each
+adequately served by an existing, already-battle-tested convention in
+this suite. Match the size of the mechanism to the size of the case.
+
+### Fixture/harness validation actually run this session
+
+Two standalone verification scripts were written under
+`evals/field-debug/scripts/` (deliberately outside `cases/`, so they are
+never copied into a tested agent's sandbox under this suite's own run
+protocol, and so they can safely reference grading-relevant specifics
+without being an isolation violation):
+
+- **`verify_case_023_progression.py`** -- copies `case-023`'s real code to
+  a scratch directory and mechanically applies exactly the three fixes a
+  correct investigation would apply, one at a time, re-running the real
+  `run_sync.py` after each. Confirmed, this session: unmodified code
+  produces 25/25 `401` and no `422`/`429` anywhere in the output; the auth
+  fix alone produces 25/25 `422` and no `401`/`429`; the auth+schema fix
+  produces exactly 20/25 accepted and 5/25 `429` (also independently
+  re-run five additional times outside this script during authoring, with
+  an identical 20/5 split every time -- the concurrency window is
+  deterministic, not flaky); all three fixes together produce 25/25
+  accepted. The same script also greps `case-023`'s static agent-visible
+  files (`context.md`, `partner_migration_notice.md`,
+  `sync_log_so_far.md`) and confirms none mentions the stage-2 or stage-3
+  failure signatures ahead of time.
+- **`verify_checkpoint_resume_isolation.py`** -- confirms, for both
+  `case-020` and `case-021`, that (a) the case directory contains no file
+  shaped like a raw prior-investigator transcript (only the distilled
+  checkpoint plus current-state files), and (b) `checkpoint.md` -- the
+  only Phase-1-authored artifact in either case -- contains none of that
+  case's Phase-2-only facts (the specific rollout percentages/failure
+  rates only gathered fresh for `case-020`'s handoff, and the specific
+  drop percentage only gathered fresh for `case-021`'s).
+
+Both scripts were run this session and both passed
+(`verify_case_023_progression: PASS`,
+`verify_checkpoint_resume_isolation: PASS`). `bash scripts/check.sh` also
+passes against the full tree, including the four new cases, their
+`grading/*.expected.md` files, and their `pressure_evals.json` entries
+(206 case directories total, no leakage flagged).
+
+**What is mechanically verified vs. represented as a frozen scripted
+interaction, stated plainly:** `case-023`'s three-stage sequence is fully
+mechanically verified -- it is real, executable code, not a narrated
+outcome. `case-020`/`case-021`'s checkpoint/current-state split and
+`case-022`'s three-vantage-point testimony are internally consistent,
+isolation-checked, static fixtures -- not executable, and not run against
+a live agent this session. `case-022`'s Chris/Dana/Priya interaction is,
+like `case-004`'s Priya before it, a **scripted role to be played live by
+whichever future session actually runs this case** -- its correctness as
+written is a matter of narrative/grading-key consistency (checked by
+hand, adversarially re-read for leakage and chronology this session), not
+something a script can execute and assert on.
+
+### What this adds, and does not add
+
+This is fixture and grading-key authoring evidence: it demonstrates the
+four scenarios are internally consistent, isolated from their own grading
+material, and (for `case-023`) reproducible. It says nothing about
+whether `SKILL.md` performs better than an unassisted baseline on any of
+these four cases -- that comparison has not been run and no claim about
+it is made here. It also does not itself demonstrate that `case-022`'s
+scripted human responses will be played correctly or consistently by
+whatever session eventually runs it live -- that session should re-read
+`grading/case-022.expected.md`'s scripted-response section before playing
+any of the three roles.
+
+### Limitations the future blind-run session should know
+
+- `case-022` requires a human-role-playing orchestrator exactly as
+  `case-004` did -- budget for that when planning the run wave, and route
+  its Chris/Dana/Priya turns through the grading key's scripted responses
+  rather than improvising.
+- `case-023`'s red-herring `DeprecationWarning` fires on every call and
+  will appear in `pytest`'s captured-warnings output by default; this is
+  intentional (see the grading key's anti-overcorrection item) and is not
+  a fixture defect to "clean up" before running.
+- `case-020` and `case-021` intentionally share a mechanic (checkpoint/
+  resume) but not a scenario, domain, or checkpoint author -- they are a
+  matched pair for the changed-world/unchanged-world contrast, not the
+  same incident at two points in time.
+- As with iteration 6, every REQUIRED grading item was checked against
+  actually-discoverable fixture content, not fixture prose that merely
+  asserts a conclusion -- but this session authored the cases and cannot
+  itself be the "fresh, uninvolved reader" iteration 7 called for; that
+  property still depends on the next session being a genuinely fresh one,
+  as instructed.
+
+## Iteration 9 (2026-09-25): blind evaluation of staged cases 020-023
+
+This iteration runs and grades the four staged cases iteration 8 authored
+and deliberately left unrun, per that section's own note that this
+comparison "has not been run and no claim about it is made here." This
+session did not author `case-020`-`case-023` and had no prior involvement
+in their design. Per the run request, `skills/field-debug/SKILL.md`, every
+case fixture, every `grading/*.expected.md` file, and `pressure_evals.json`
+were left unmodified throughout -- confirmed by re-reading `git status`
+after finishing, before writing this section.
+
+**Isolation actually maintained.** `grading/case-020.expected.md`,
+`case-021.expected.md`, and `case-023.expected.md` were not opened until
+all eight non-interactive/executable tested-agent outputs already existed
+as frozen text (saved verbatim before any grading key was read).
+`grading/case-022.expected.md` was opened once, mid-run, at the specific
+point the run protocol anticipated -- after the first tested agent (the
+baseline condition) had already produced its first question to "Chris" and
+a scripted human reply was genuinely needed to continue that interactive
+session; the same file was then reused, not re-read, to script Chris's
+replies in the with-skill condition's own independent interactive run.
+This deviates from a strict "grade only after every run is frozen" reading
+in one respect, disclosed here rather than glossed over: case-022 is
+*interactive*, so playing Chris live necessarily requires the response
+script before that case's runs can finish at all -- the same structural
+requirement iteration 8's own limitations section flagged in advance
+("route its turns through the grading key's scripted responses rather than
+improvising"). The eight non-interactive/executable-fixture cases
+(`020`/`021` baseline+skill, `023` baseline+skill) and the four `022`
+tested-agent turns this unlocked were otherwise handled with the stricter
+sequencing: no case's fixture, `SKILL.md` copy, or agent prompt referenced
+any other case's material or any grading file.
+
+**Run protocol.** Each case's agent-visible files were copied into a
+fresh, isolated scratch directory per condition (eight directories:
+`case-0NN-baseline/` and `case-0NN-skill/` for each of the four cases),
+outside the repo. With-skill directories additionally received a copy of
+`skills/field-debug/SKILL.md`; baseline directories had every "use the
+field-debug skill" sentence stripped from their copy of `context.md` (the
+`020`/`021`/`022` fixtures' own `context.md` names the skill by name for
+the intended with-skill condition, so the baseline copy needed that one
+line edited out to keep the two conditions' framing otherwise identical --
+`case-023`'s `context.md` never names a skill, so its with-skill copy
+instead had one line *added* pointing at `SKILL.md`). Eight fresh
+`general-purpose` subagents (one per case per condition, no `fork`, no
+shared context, no visibility into any other run's output) were launched
+across two waves of five and one of three to respect this session's
+five-concurrent-subagent limit. Every subagent was told its directory was
+the complete evidence, instructed not to read, list, or search anything
+outside it, and told to end with a single self-contained final report.
+`case-023`'s two subagents additionally had real shell/Python access
+scoped (by instruction, not a hard sandbox -- disclosed as a real
+limitation below) to that one directory, and were told to actually run
+`run_sync.py`/`pytest` and edit the client code as needed. `case-022`'s two
+subagents were run interactively: told to end any turn needing human input
+with a `QUESTION FOR CHRIS:` block and stop, with this orchestrating
+session relaying a reply (scripted from the grading key, once it was
+consulted) before resuming them, and to close with a `FINAL REPORT:` block
+once resolved or stuck. All eight final reports were saved verbatim to
+local scratch files before any further grading key was opened.
+
+**A disclosed limitation this iteration did not solve:** subagents were
+*instructed* not to look outside their assigned directory, but nothing
+mechanically prevented a `general-purpose` agent with full tool access
+from doing so. No transcript evidence of any run reading outside its
+assigned directory was observed in any final report (file paths named in
+each report's own narration stay inside the given directory throughout),
+but this iteration relied on instruction-following, not a hard filesystem
+boundary, exactly as iteration 7 also disclosed for its own runs.
+
+### Per-case results
+
+| Case | Baseline REQUIRED | With-skill REQUIRED | BONUS | Substantive difference | Attributable to a specific skill instruction? |
+|---|---|---|---|---|---|
+| 020 (changed-world resume) | 8/8 | 8/8 | Both met | None of substance on the eight REQUIRED items -- both explicitly treated the checkpoint's 40%/22%/0.4% snapshot as stale, both checked `current_rollout_status.md` and correctly attributed the 100% auto-promotion to the deployment tool's own default policy (not Jordan's error, not a manual action), both treated the resulting 22% fleet-wide rate as *confirming* rather than complicating Jordan's H1, both reached the same partner-rate-limit-via-retry-burst mechanism from `partner_gateway_docs.md`, and both retired H2 on the same status-page evidence. With-skill's report added one extra, correct operational nuance baseline's did not state explicitly: that v3.14 is now fully drained, so "roll back the canary" is no longer available as a mitigation and restoring known-good behavior now requires a fresh deploy either way. | Marginal, and not clearly skill-caused -- baseline's report also correctly named rollback *and* jitter/backoff as options; with-skill's report was simply more explicit that rollback-via-canary-hold is no longer mechanically possible. Reads as ordinary report-thoroughness variance, not a traceable instruction effect |
+| 021 (unchanged-world resume, control) | 6/6 | 6/6 | Neither met | None on substance -- both correctly performed a proportionate re-grounding check against `last_night_run_summary.md`, both cited Reese's checkpoint (observations, ruled-out hypotheses, the one open question) as established prior context rather than re-deriving it, both closed the one open question using `db_client_library_docs_excerpt.md`'s exact documented mechanism, neither re-litigated the two already-ruled-out hypotheses (offset miscount, application filtering), and both proposed the same two documented mitigations (snapshot isolation or pre-export reconciliation). With-skill's report opened with a compact, explicit "Resume check (load -> re-ground -> identify deltas -> continue)" paragraph naming the checkpoint facts revalidated and the one that had no delta; baseline's equivalent reasoning was present but spread across a longer, more narrative "What I did" / "Reese's state at handoff" structure covering the same ground at greater length. | No -- this case explicitly rewards efficiency ("the whole resumed investigation should be short"), and while with-skill's opening was more compact, its mandatory full session-report template (System model/Failure/Evidence chain/Reasoning changes/Tools/Intervention/Verification/Remaining uncertainty/Follow-up) made its total report length comparable to baseline's, not shorter -- a formatting/structure difference, not evidence the skill investigated less |
+| 022 (changing people / scoped witnesses) | **5/9** | **8/9** | **Baseline: not met. With-skill: met** | **The one substantive with-skill win this iteration.** Both conditions correctly attributed all three vantage points to their actual layers (webhook-ack vs. send-side log vs. CRM ingestion), never called Dana wrong, and never tried to re-reach her. Both conditions also violated the same REQUIRED item -- neither ever sent Chris a single, unbundled question; each turn bundled two asks. The difference is what the two asks contained: baseline's two rounds asked (1) a customer record's "last updated" timestamp (explicitly disqualified by the grading key's own wording -- "not just re-checking whether new customer records exist") and (2) logs "in the same tool where the delivery dashboard lives," i.e. Northwind's *middleware* tool, not the CRM application's own admin side where the actual discriminating evidence lived. Neither of baseline's two attempts matched the grading key's well-targeted template, so per the frozen script Chris gave baseline the "I'm new, tell me exactly what to click" non-answer both times, and baseline closed with an unconfirmed hypothesis and a "recommended next step... for tomorrow with Dana" -- functionally a soft handoff on a case the grading key explicitly says should not end in one. With-skill's second-round question explicitly asked Chris to check "inside the CRM application's admin settings... distinct from Dana's middleware dashboard" for a sync-error/error-queue view -- precisely the grading key's well-targeted template -- which correctly triggered the scripted "Integration Errors tab... 47 rejected records... missing required field: account_region" answer, and with-skill used it to reach the full, correct root cause, the exact minimal fix (map `customer.region` to `account_region`), and named the residual "why did Northwind enable this without telling us" gap as a narrow, non-blocking follow-up (the BONUS). | Plausibly, but not cleanly -- field-debug's Diagnose-mode hypothesis tracking (with-skill's report explicitly held three labeled, competing hypotheses with a "Gap" field naming exactly what only Chris could resolve) looks like it produced a more precisely-aimed second question than baseline's more informal reasoning did. But the skill did not prevent the *same* bundling defect baseline also committed, so this is at most a partial, unproven attribution -- see below |
+| 023 (sequential genuine failures) | 9/9 | **8/9 (see note)** | Neither met | Both conditions correctly diagnosed and fixed all three real, sequential, unrelated boundaries in the right order (401 legacy-Bearer-auth -> fix with HMAC signing; 422 `line_items` vs. required `items` -> fix the field name; 429 unbounded-concurrency vs. a 20-in-flight cap -> fix with a bounding semaphore, not a bare retry), neither treated a later failure as evidence the earlier fix was wrong, neither collapsed the three into one cause or one "the fix" narrative, neither chased the `DeprecationWarning` red herring, and both preserved a compact ordered evidence chain naming all three stages distinctly. Baseline additionally tried a retry-with-backoff-only fix for the concurrency boundary first, verified it against a 1500-order stress test, found it insufficiently reliable (18/1500 still failing), and only then replaced it with a bounding semaphore -- a real, self-correcting empirical cycle the grading key's "plausible wrong paths" section anticipates almost exactly ("treating the 429s as a flaky/intermittent failure needing a retry-with-backoff wrapper... retries alone would not fix this"), caught by baseline's own re-verification before it was ever presented as a final answer. **The one place baseline's evidence trail is stronger:** baseline's final report shows a literal `python3 run_sync.py` command and its raw `401` output against the *unmodified* code before any fix was proposed. With-skill's report instead establishes the initial `401` by noting the sandbox's hardcoded error text is "byte-identical" to `sync_log_so_far.md`'s prod-log text, calling this "no further experiment needed" -- which is not the same evidentiary standard the grading key requires ("not merely a prose statement that running it 'would' or 'should' confirm this"). This is flagged as a **PLAUSIBLE, not CONFIRMED**, weakness: this session read only each subagent's final report, not its raw tool-call transcript, so it cannot rule out that the with-skill agent did run the unmodified reproduction and simply didn't narrate that specific command -- the with-skill run's total tool-use count (14) versus baseline's (27) is circumstantial, not conclusive, support that it did less hands-on verification overall. | No clear attribution either way -- `SKILL.md` explicitly instructs "Observe the actual result, not the expected one" and tags OBSERVED evidence as requiring something "actually seen this session," which if anything argues *against* this gap being caused by the skill's own text. Reads as ordinary run-to-run variance in a single sample, not a reproducible defect |
+
+### Numeric summary (re-derived from the grading above, not from memory)
+
+- REQUIRED items across the four cases' grading keys: 8+6+9+9 = 32 per
+  condition. **Baseline: 28/32** (misses: four items on case-022 --
+  the single-bounded-question item, and the three downstream items that
+  never became reachable because that question was never asked precisely
+  enough: separating Chris's observation from interpretation, using
+  `crm_payload_mapping.md` to name the concrete fix, and reaching a
+  concrete conclusion instead of a soft handoff). **With-skill: 30/32**
+  (misses: case-022's single-bounded-question item -- committed identically
+  to baseline, just with a well-targeted question bundled alongside the
+  extra one -- and case-023's execution-evidence item, flagged above as
+  plausible-not-confirmed).
+- BONUS items (one per case, four total): **baseline 1/4** (case-020
+  only). **With-skill 2/4** (case-020 and case-022).
+- No case was re-run. No grading key was edited as a result of any run's
+  output this iteration.
+
+### Answering the ten comparison questions
+
+1. **Does the skill preserve a valid prior model while revalidating only
+   the facts that can realistically go stale (case-020)?** Yes, but
+   baseline did this equally well -- both conditions explicitly named the
+   canary percentage and per-version failure split as the checkpoint's
+   time-sensitive facts, revalidated both against the fresh files, and
+   both treated the resulting 22% fleet-wide rate as confirming rather
+   than undermining Jordan's already-established H1. No measurable
+   with-skill advantage on this specific axis this iteration.
+2. **Does it avoid doing the opposite and replaying an unchanged
+   investigation from zero (case-021)?** Yes in both conditions -- neither
+   re-derived the two account-level correlations from scratch or
+   re-litigated either already-ruled-out hypothesis. With-skill's opening
+   "Resume check" paragraph was more compact than baseline's equivalent
+   reasoning, but the skill's mandatory full report template then produced
+   a total report of comparable length to baseline's -- a
+   structure/formatting difference, not evidence of a shorter or longer
+   actual investigation.
+3. **Does it retain provenance across multiple human witnesses,
+   environments, time windows, and semantic layers (case-022)?** Yes, in
+   both conditions, on the parts of the case that didn't require Chris's
+   answer -- both correctly kept Dana's webhook-ack claim, Priya's
+   send-side log, and the still-unknown CRM-ingestion state as three
+   separate, non-interchangeable observations, and neither flattened them
+   into "the sync is working." Only with-skill carried that provenance
+   discipline through to the fourth witness (Chris's CRM-side error-queue
+   read), because only with-skill's question was precise enough to reach
+   it.
+4. **Does it ask a better bounded question when only another person can
+   cross the observation boundary (case-022)?** Partially. With-skill's
+   second question was closer to the grading key's well-targeted template
+   than either of baseline's two attempts, and it was the one that worked.
+   But with-skill did not ask a *clean* single question either -- it
+   bundled the well-targeted CRM-admin-error-queue ask together with a
+   second, unnecessary ask about individual record timestamps, the same
+   structural defect baseline committed twice. This is a real, if partial,
+   with-skill advantage in *targeting*, not in *discipline* -- see the
+   REQUIRED-item table above, where both conditions are marked as
+   violating the single-question item.
+5. **Does it continue effectively when one person disappears and another
+   becomes the available sensor (case-022)?** Yes in both conditions in
+   the sense that neither tried to reach Dana again and neither treated
+   her unavailability as grounds for a full handoff before exhausting
+   Chris. But only with-skill's continuation actually *worked* -- baseline
+   continued talking to Chris across two rounds without ever getting past
+   his "tell me exactly what to click" reply, because neither of its
+   questions was precise enough to unlock the scripted discriminating
+   answer.
+6. **Across sequential real failures, does it revise rather than anchor
+   (case-023)?** Yes, cleanly, in both conditions -- neither ever treated a
+   new failure code (422 after fixing 401, 429 after fixing 422) as
+   evidence the prior fix was wrong, and neither anchored on "basically
+   fixed" at the 20/25 partial-success stage. If anything, baseline showed
+   slightly *more* revision discipline in an observable way: it initially
+   tried a retry-with-backoff-only fix for the concurrency boundary,
+   caught (via its own 1500-order stress test) that this was not reliable,
+   and revised to a bounding semaphore before finalizing -- a live,
+   self-caught instance of exactly the trap the grading key's "plausible
+   wrong paths" section names.
+7. **Does it preserve earlier correct findings rather than rewriting
+   history around the final discovered cause (case-023, and case-020's
+   inherited-checkpoint framing)?** Yes in every condition on both cases --
+   all four `020`/`023` reports name every earlier stage explicitly in
+   their final write-up (Jordan's retry-logic finding is never erased by
+   the rollout-auto-promotion finding; the auth and schema fixes are never
+   erased by the concurrency fix), consistent with the grading keys'
+   explicit "no forced unification" requirement.
+8. **Does baseline outperform with-skill anywhere?** Yes, in one place,
+   disclosed with equal prominence to the with-skill wins: case-023's
+   execution-evidence REQUIRED item, where baseline's final report showed
+   a literal pre-fix reproduction command and its raw output, and
+   with-skill's report instead inferred the same initial failure from a
+   static-text match -- flagged above as plausible, not confirmed, given
+   this session graded final reports rather than raw tool transcripts.
+   Baseline was also arguably more empirically rigorous in its
+   *narration* of the concurrency-boundary trap (an explicit stress-test
+   correction cycle), though with-skill reached the identical final fix.
+9. **Are any with-skill advantages substantive investigation behavior
+   rather than report formatting?** Case-022's is the one genuinely
+   substantive with-skill difference this iteration -- a different literal
+   question was sent to Chris, not a different write-up of the same
+   question, and it produced access to evidence baseline's run never
+   obtained. Case-020's and case-021's with-skill differences (the
+   fully-drained-canary nuance; the compact "Resume check" opening) are
+   real but narrow, and read as report-thoroughness/organization
+   variance rather than different underlying reasoning, consistent with
+   this suite's pattern in every prior iteration.
+10. **Does either condition demonstrate a concrete SKILL.md behavioral
+    defect?** No. The one shared defect this iteration surfaced --
+    bundling two asks into one message to a scoped, hard-to-reach witness
+    -- appeared identically in the *baseline* condition (which has no
+    access to `SKILL.md` at all), so it cannot be attributed to anything
+    field-debug's text says or fails to say; it reads as a shared model
+    tendency this single iteration cannot distinguish from ordinary run
+    variance. The one place with-skill looked weaker than baseline
+    (case-023's execution-evidence item) is flagged as plausible, not
+    confirmed, for the same reason -- and `SKILL.md`'s own text ("observe
+    the actual result, not the expected one") argues against the skill
+    having caused it.
+
+### What this iteration's evidence supports, and does not
+
+**Supports:** on these four cases, with-skill matched baseline on every
+REQUIRED item where baseline succeeded, and closed a REQUIRED-item gap
+baseline could not close on the one case designed to test scoped-witness
+delegation (`case-022`) -- reaching a full, correct root cause and BONUS
+by asking a more precisely-targeted (though still imperfectly singular)
+question of the one remaining reachable witness. On the two checkpoint/
+resume cases (`020` changed-world, `021` unchanged-world control),
+both conditions handled the intended contrast correctly and identically:
+neither over-revalidated the unchanged case nor under-revalidated the
+changed one. On the hardest case (`023`), both conditions correctly
+diagnosed and fixed all three genuine sequential failures without
+anchoring, forced unification, or chasing the red-herring warning.
+
+**Does not support:** a claim that field-debug improves checkpoint-resume
+reasoning specifically (`020`/`021` were ties), a claim that with-skill
+reliably asks a single, cleanly-bounded question of a scoped witness (both
+conditions bundled questions on `022`; with-skill's bundle merely happened
+to contain a well-targeted component), or a claim that with-skill is
+uniformly more rigorous about executing before diagnosing (`023`'s
+baseline showed the clearer, more literal execution trail on the very
+first REQUIRED item, and also demonstrated a real self-correcting
+empirical cycle on the concurrency fix). Each case was run once per
+condition; the case-022 interactive turns required this same session to
+play Chris in character, using judgment calls (documented above and in
+the per-case table) to bucket two bundled, natural-language questions
+against a grading key written with a single unbundled question in mind --
+a second reviewer applying the same script might reasonably bucket
+baseline's second attempt (which did ask about "logs... distinct from the
+delivery/status dashboard") differently. This is disclosed as a genuine
+borderline grading call, not resolved by asserting false confidence.
+
+### Fixture and grading-key findings
+
+None that require a repair. One structural observation, not a defect:
+`case-022`'s grading key scripts responses for a single, unbundled
+question, but a competent agent under realistic time/access pressure
+naturally tends to ask two related things in one message (a record-level
+check plus a log-level check) -- both this iteration's conditions did
+this independently, unprompted by anything the other saw. The scripted
+key still worked (each message was graded by whether *any* component of
+it matched the well-targeted template), but a future revision of this
+case's grading key could usefully clarify, for the next orchestrator, how
+to score a bundled question where one half is well-targeted and the other
+is not, rather than leaving that bucketing entirely to judgment as this
+iteration had to. This is offered as a note for whoever next touches that
+file, not a request to change it now -- the case's result stands as
+graded.
+
+### SKILL.md corrections
+
+None. No with-skill run this iteration missed a REQUIRED item on a case
+where baseline also passed it, entertained an unsupported hypothesis,
+anchored on a superseded finding, collapsed `case-023`'s three boundaries
+into one cause, or fabricated access to partner-erp-gateway's or
+Fulfillco's internals. The one REQUIRED item with-skill missed
+(`case-022`'s single-question discipline) was missed identically by
+baseline, which has no exposure to `SKILL.md` at all -- ruling out the
+current instructions as the cause. The one place with-skill's evidence
+trail looked thinner than baseline's (`case-023`'s pre-fix execution
+proof) is a single-sample observation about one run's report
+completeness, not a reproducible pattern, and nothing in `SKILL.md`'s
+text argues for skipping that step -- if anything its OBSERVED-evidence
+standard argues against it. Per this repo's own instruction to
+distinguish an observed defect from a suspected one, and to only correct
+`SKILL.md` on the former, no change is made.
+
+### Recommendation
+
+**Leave `skills/field-debug/SKILL.md` frozen.** With-skill met or exceeded
+baseline's REQUIRED-item count on every case (30/32 vs. 28/32) and BONUS
+count (2/4 vs. 1/4), with its one clear win (`case-022`) reflecting a
+better-targeted question rather than a different report format, and its
+one weaker showing (`case-023`'s execution-evidence item) flagged as
+plausible rather than confirmed given this session graded final reports,
+not raw transcripts. Neither outcome is a concrete behavioral failure
+traceable to current `SKILL.md` text, which is this repo's own bar for
+changing it. If a future session wants to close the one open question
+this iteration could not -- whether field-debug reliably produces a
+*single*, unbundled discriminating question to a scoped witness, or only
+sometimes does, as this one sample suggests -- that calls for additional
+`case-022`-shaped eval pressure across multiple independent samples per
+AGENTS.md's own guidance ("a suspected weakness should usually become
+eval pressure before a skill rewrite"), not a `SKILL.md` edit made on the
+strength of this single run.
+
