@@ -25,12 +25,15 @@ asked (over Slack, not through the deployment tool itself) to hold at
 because that policy only pauses on *fleet-wide* error budget, which never
 crossed its paging threshold while the elevated rate was diluted across a
 40/60 canary split. By resume time, 100% of pods run v3.15, and the
-fleet-wide failure rate has risen to 34% (`current_gateway_metrics.md`) --
-consistent with, and modestly higher than, the per-version 22% rate
-Jordan already found scaled up to 100% of traffic. The per-version split
-itself is no longer computable (there's no v3.14 left to compare against),
-but the underlying mechanism and the code causing it are completely
-unchanged from what Jordan already established.
+fleet-wide failure rate has risen to 22% (`current_gateway_metrics.md`) --
+matching the per-version 22% rate Jordan already measured on v3.15 pods
+specifically, now that 100% of traffic runs that code. The per-version
+split itself is no longer computable (there's no v3.14 left to compare
+against), but the underlying mechanism and the code causing it are
+completely unchanged from what Jordan already established, and the
+current fleet-wide number is quantitatively consistent with -- not an
+unexplained escalation beyond -- what Jordan's own data already
+predicted for 100% v3.15 traffic.
 
 **What a good resumed investigation does NOT do:** treat the checkpoint's
 now-inapplicable 40%/22%/0.4% snapshot as proof Jordan's analysis was
@@ -62,9 +65,11 @@ mechanism.
 - REQUIRED: does not conclude Jordan's H1 (v3.15's retry logic) was wrong
   or weakened merely because the current state (100% v3.15, no per-
   version split possible) differs from the checkpoint's snapshot --
-  explicitly treats the current 34% fleet-wide rate as consistent with,
-  and supportive of, H1 now that 100% of traffic runs the code Jordan
-  already implicated.
+  explicitly treats the current 22% fleet-wide rate as quantitatively
+  consistent with, and supportive of, H1 -- matching the per-version 22%
+  rate Jordan already measured on v3.15 pods, now that 100% of traffic
+  runs the code Jordan already implicated -- rather than treating the
+  22%->22% match as a coincidence needing its own separate explanation.
 - REQUIRED: uses `partner_gateway_docs.md` to reach the specific
   mechanism -- the 5 req/s per-credential limit, the documented
   502/504-instead-of-429 quirk, and the named connection between fixed-
@@ -86,8 +91,10 @@ mechanism.
   own logs) beyond what `partner_gateway_docs.md` and the public status
   page already provide.
 - BONUS: explicitly notes that the blast-radius escalation (from a
-  diluted ~9% at 40% canary to 34% fleet-wide) reflects the canary
-  finishing, not a new or worsened defect -- and/or recommends an
+  diluted ~9% at 40% canary to ~22% fleet-wide) reflects the canary
+  finishing and traffic dilution disappearing -- not a new or worsened
+  per-request defect, since the 22% fleet-wide rate matches the 22%
+  v3.15-specific rate Jordan already found -- and/or recommends an
   immediate mitigation (e.g., rolling back to v3.14, or disabling the new
   retry behavior via a flag if one exists) given the incident is now
   full-production rather than canary-scoped, while the jitter/backoff fix

@@ -36,10 +36,17 @@ FORBIDDEN_NAME_PATTERNS = [
     re.compile(r"full[_-]?session", re.IGNORECASE),
 ]
 
-# Phase-2-only facts that must not appear in Phase 1's checkpoint.
+# Phase-2-only facts that must not appear in Phase 1's checkpoint. Note:
+# "22%" alone is NOT usable here -- it's also the checkpoint's own,
+# legitimate per-version (v3.15-pods-only) finding from Phase 1. The
+# markers below are the more specific Phase-2-only phrasing that
+# current_gateway_metrics.md uses for the *fleet-wide* number, which
+# happens to match that same 22% quantitatively but is a distinct,
+# later-gathered fact.
 CASE_020_PHASE2_ONLY = [
     "100% of pods",
-    "34%",
+    "22% of outbound calls",
+    "fleet-wide rate matches",
     "5 req/s",
     "auto-advanced to 70%",
     "auto-advanced to 100%",

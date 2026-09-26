@@ -64,10 +64,15 @@ whole incident.
 
 ## Grading
 
-- REQUIRED: runs (or explicitly directs running) `run_sync.py` or
+- REQUIRED: actually executes `run_sync.py` or
   `tests/test_fulfillco_client.py` against the unmodified code before
   proposing a fix, and cites the actual observed `401` result -- not an
-  assumption drawn from the migration notice alone.
+  assumption drawn from the migration notice alone, and not merely a
+  prose statement that running it "would" or "should" confirm this
+  (the fixture provides real, runnable reproduction machinery for exactly
+  this reason, and the tested agent has shell/tool access to run it, so
+  directing-without-running is not an acceptable substitute here the way
+  it can be in a case without executable evidence).
 - REQUIRED: diagnoses the auth boundary correctly (legacy Bearer-token
   header vs. Fulfillco's now-required HMAC-SHA256 request signing) and
   applies a fix that builds the signature/payload-hash headers using the
