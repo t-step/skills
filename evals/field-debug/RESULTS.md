@@ -3620,3 +3620,317 @@ a larger sample before deciding at all -- none of those was decided or
 executed in this session, consistent with the instruction to make one
 intervention, evaluate it once, and not tune again in this session.
 
+## Iteration 17 (2026-09-26): moving the intervention upstream to Revise -- separating formation from serialization, final wording experiment for PR #64
+
+Iterations 15-16 both edited `### Handoff`'s prose -- the serialization step,
+where an already-formed conclusion gets written into the final artifact.
+Both edits could only forward what the investigation had already formed by
+the time it reached that step. This iteration tests a different diagnosis:
+that `case-024`'s persistent gap (0/3 pre-Iteration-15, 3/3 under Iteration
+15's "derive" wording, 1/3 under Iteration 16's narrower "preserve" wording)
+is at least partly a **formation** failure, not only a serialization one --
+the investigation sometimes never notices, while working the evidence, that
+an accepted-but-unconfirmed mutating operation leaves a consequential
+implication to carry forward. If formation is the weak link, moving the
+intervention upstream to the loop's own **Revise** step -- where the skill
+already asks the investigator to retire, weaken, or strengthen beliefs from
+new evidence -- should surface the implication earlier and more reliably
+than asking for it only at the point of writing the final Handoff block.
+Per this session's own instruction, Iteration 16's Handoff wording is left
+completely unchanged in this experiment; only Revise is edited.
+
+### 1. Target invariant
+
+> When a mutating operation has already been attempted but its outcome
+> cannot be confirmed, that unknown outcome is meaningful state. Absence of
+> confirmation must not silently become assumed failure, especially when
+> repeating or reversing the operation could compound an effect that may
+> already have occurred.
+
+Scoped narrowly: it should activate only when the evidence establishes (a)
+a mutating/side-effecting operation actually occurred or was accepted, (b)
+its final outcome is unresolved or unobservable, and (c) a repeat/reversal/
+disruptive follow-up could interact with an effect that may already exist.
+It should not prompt a general search for danger on every case. `case-026`
+was explicitly out of scope for this session (a different reasoning family
+-- an unproposed alternative action and an authority boundary, not an
+unresolved mutating operation) and was not run or graded this iteration.
+
+### 2. Exact upstream SKILL.md intervention
+
+**Location**: `skills/field-debug/SKILL.md`, the loop's own `### Revise`
+bullet (`## The loop` section) -- not Handoff, not Delegate, not a new
+Evidence-vocabulary entry, not a new artifact field. Iteration 16's Handoff
+wording (the "preserve any consequential implication..." sentence) is
+**unchanged** by this edit.
+
+**Before** (identical to every prior iteration's frozen baseline for this
+bullet):
+
+> - **Revise**: retire what evidence contradicts, weaken what it merely
+>   fails to support, strengthen or introduce what it points to. Being
+>   wrong at the start isn't failure -- failing to update when contradicted
+>   is.
+
+**After** (this session's only change, one sentence added):
+
+> - **Revise**: retire what evidence contradicts, weaken what it merely
+>   fails to support, strengthen or introduce what it points to. Being
+>   wrong at the start isn't failure -- failing to update when contradicted
+>   is. When evidence shows a mutating step was already accepted or
+>   attempted and its outcome never came back, hold that outcome as UNKNOWN
+>   rather than quietly treating the missing confirmation as failure, and
+>   let that distinction shape what happens next.
+
+Exact diff:
+
+```diff
+ - **Revise**: retire what evidence contradicts, weaken what it merely fails
+   to support, strengthen or introduce what it points to. Being wrong at the
+-  start isn't failure -- failing to update when contradicted is.
++  start isn't failure -- failing to update when contradicted is. When
++  evidence shows a mutating step was already accepted or attempted and its
++  outcome never came back, hold that outcome as UNKNOWN rather than quietly
++  treating the missing confirmation as failure, and let that distinction
++  shape what happens next.
+```
+
+Deliberately **not** done, consistent with this PR's intervention
+discipline and this session's explicit scope: no new artifact field, no
+safety section, no enumeration of retry/replay/restart/config-change
+scenarios, no fixture vocabulary (no case name, no Meridian, no Ridgeline,
+no Ferrous), no instruction to search generally for action boundaries, and
+no second edit to Handoff, Delegate, or the Evidence vocabulary. Committed
+separately from this write-up as commit `321469d`,
+`skills/field-debug/SKILL.md` only, 1 file changed (+5/-1 lines).
+`bash scripts/check.sh` passed immediately before and immediately after
+this single edit (`check-skill-frontmatter: OK`, `check-eval-isolation: OK
+(216 case dirs across 15 skill(s), no leakage)`, `check-skill-deps: OK`).
+
+### 3. Why Revise, specifically
+
+Revise is the one step in the loop that already asks the investigator to
+update beliefs from evidence just observed, before any output is drafted --
+the natural place for a recognition rule to fire *during* the investigation
+rather than only when the final artifact is being assembled. Iteration 15's
+"derive any action boundary the evidence implies," placed in Handoff, read
+as a standing search objective at the point of closing the case and
+produced exactly the failure Iteration 16 then had to correct (`case-032`,
+2/2 invented). Anchoring the new sentence to a state that "was already
+accepted or attempted" and whose "outcome never came back" -- conditioned
+on a specific evidentiary shape, not an open-ended search -- was intended
+to reproduce Iteration 16's narrow, recognition-based framing while moving
+it to the step where formation actually happens, on the hypothesis that a
+Handoff-only edit can only ever forward what Revise already noticed.
+
+### 4. Nine-run design
+
+Nine fresh `general-purpose` subagents (never `fork`; none carried this
+session's knowledge of the grading keys, the target invariant, or any
+prior iteration's findings), launched in two waves (5, then 4) to respect
+this session's five-concurrent-subagent limit:
+
+- **Primary efficacy (3 runs)**: `case-024`, unmodified.
+- **Negative control (2 runs)**: `case-032`, unmodified.
+- **Positive control (1 run)**: `case-033`, unmodified.
+- **Regression sample (1 run each)**: `case-027`, `case-029`, `case-030`.
+
+Each subagent was told its exact working directory and permitted file list
+(the post-intervention `SKILL.md` plus only its own case's own directory),
+instructed never to open `evals/field-debug/grading/`,
+`evals/field-debug/pressure-tests/`, `evals/field-debug/RESULTS.md`, any
+other case directory, or run `git`, and told to load
+`skills/field-debug/SKILL.md` first and follow it throughout. None was told
+this was an experiment, told the hypothesis under test, or given any
+grading-vocabulary hint. Each was explicitly asked to show its full
+reasoning trace (hypothesis formation, revisions), not only a final
+polished block, so formation could be graded independently of
+serialization. Each returned a self-contained write-up between
+`===BEGIN/END ARTIFACT===` markers.
+
+**Disclosed limitation, same shape as every prior iteration:** each
+subagent was *instructed* not to read forbidden material; for a
+`general-purpose` agent with full tool access this is instruction-
+following, not a sandboxed guarantee. Nothing in any of the nine returned
+write-ups suggested it looked elsewhere, but this is not independently,
+mechanically verified.
+
+### 5. Evaluation model: formation vs. serialization, per run
+
+For every run, two questions were graded separately by inspecting the
+entire returned artifact, not only its final Handoff/Delegate block:
+
+- **Formation**: did the reasoning, anywhere in the run (before or
+  independent of the final block), establish that the prior mutating
+  operation may still have succeeded or remain active despite missing
+  confirmation, and that its state therefore can't be treated as ordinary
+  failure before deciding what to do next? Generic "be careful"/"retry
+  cautiously" phrasing does not count; exact language was not required.
+- **Serialization**: if formation occurred, did the final Handoff/Delegate
+  output preserve both the action boundary and its reason?
+
+| Case | Run | Formation | Serialization | Notes |
+|---|---|---|---|---|
+| case-024 | 1 | Yes | Full | "may already consider these accepted and potentially mid-fulfillment or even completed-but-webhook-lost. Resubmitting without confirmation risks duplicate fulfillment" |
+| case-024 | 2 | **No** | Miss | No mention of resubmission risk, duplicate fulfillment, or the accepted-but-unconfirmed status anywhere in the run's reasoning or its Handoff block |
+| case-024 | 3 | Yes | Full | Dedicated "Mutation-outcome caveat (load-bearing for what happens next)" section: outcome "must be treated as UNKNOWN, not as 'failed'... A duplicate submission risks double-fulfillment/double-shipment" |
+| case-032 | 1 | N/A (no qualifying mutating operation exists in this case) | **Invented** | Delegate `CONSTRAINTS`: "Read-only lookup -- do not disable or modify any PoP configuration as part of answering this; if a change is later warranted that's a separate, deliberate action outside this diagnostic ask." |
+| case-032 | 2 | N/A | **Invented** | Delegate `CONSTRAINTS`: "Read-only lookup -- do not disable or reconfigure iad3's cache override without separate sign-off from the appropriate Northwind owner, since it may be intentionally absorbing traffic spikes at that node" |
+| case-033 | 1 | Yes | Full | Restated Meridian's explicit published guidance in its own words; both the boundary and the duplicate-fulfillment/shipment reason present |
+| case-027 | 1 | Yes | Full | "Held as UNKNOWN, not collapsed into FAILED... the mutating-step-with-no-returned-outcome case exactly" -- correctly overrode the case's own stale runbook advice to blindly resubmit |
+| case-029 | 1 | Yes | Full | "a textbook case of a mutating step that was attempted, with its outcome never confirmed -- held as UNKNOWN, not defaulted to 'must have failed'" |
+| case-030 | 1 | N/A (different constraint family -- ownership/authorization on a restart, not an unresolved mutating operation) | Full, evidence-grounded | Correctly carried the runbook's own no-unilateral-restart constraint; no distortion from this session's edit |
+
+### 6. Case-024 efficacy
+
+**2/3 full, 1/3 clean miss (no fabrication).** An improvement over the
+frozen 0/3 pre-Iteration-15 baseline and over Iteration 16's 1/3 on the
+identical fixture, though weaker than Iteration 15's 3/3 on the same case.
+Two of three runs formed the implication explicitly and mid-investigation
+-- run 3 gave it a dedicated named section before ever drafting the
+Handoff block, run 1 reasoned to it while evaluating candidate next
+actions -- both independent evidence that moving the trigger to Revise can
+work as intended, not only that Handoff-time phrasing happened to survive.
+Run 2 shows no sign of having searched for the implication and missed it;
+it simply never surfaced anywhere in an otherwise competent, fully
+evidence-grounded investigation (correct wall, correct ruled-out set,
+correct live-hypothesis pair) -- a formation miss, not a corrupted one.
+
+### 7. Case-032 specificity
+
+**2/2 invented an unsupported constraint -- a specificity failure,
+reproducing Iteration 15's exact failure mode and reversing Iteration 16's
+clean 0/2 result on this same case.** Both runs classified the case as
+Delegate rather than Handoff (itself a deviation from this case's own
+grading key, which expects Handoff) and both attached a fabricated
+`CONSTRAINTS` line warning against modifying/disabling the CDN override --
+an action nobody in the case proposed and the case's own ground truth
+states carries no operational constraint to preserve. This is structurally
+identical to Iteration 15's own case-032 failures ("Do not disable, purge,
+or reconfigure any cache at `iad3` blind," "Do not disable, modify, or
+restart the override... before the live uncertainty resolves").
+
+This is a materially important negative result given how the new sentence
+was worded: it explicitly conditions on "a mutating step was already
+accepted or attempted" -- and `case-032` has no mutating operation
+anywhere in its evidence (filing a routine, low-stakes vendor ticket is
+the only action in the loop). The literal trigger condition should not
+have fired here. That it did anyway suggests the mechanism is not simply
+"the wording's condition matched a case it shouldn't have" but something
+closer to Iteration 15's own diagnosis: introducing *any* instruction
+about mutating operations and unconfirmed outcomes into the loop, even one
+framed as recognition-conditioned-on-already-established-state rather than
+open-ended search, primes the model to produce a plausible-sounding
+precaution about *some* action at closing time, independent of whether the
+evidence actually supports one. Moving the location from Handoff to Revise
+did not, in this sample, avoid that generalization.
+
+### 8. Positive control: case-033
+
+**Full.** Formation and serialization both healthy, matching every prior
+iteration's clean result on this case. No regression.
+
+### 9. Regression cases: 027, 029, 030
+
+All three healthy, and two of them (`027`, `029`) are additional positive
+evidence for the invariant, not merely non-regressions: both independently
+and explicitly used UNKNOWN-outcome language closely tracking the new
+Revise sentence's own framing, and `case-027`'s run used that formation to
+correctly override the case's own distractor -- a stale internal runbook
+that recommends blindly resubmitting on the (contradicted-by-current-
+evidence) premise that the vendor deduplicates. `case-030`'s constraint
+family (an ownership/authorization boundary on restarting a pod, not an
+unresolved mutating-operation outcome) was preserved correctly and was not
+distorted, padded, or duplicated by the new sentence. No case in this
+sample showed verbosity or boilerplate growth beyond what its own
+evidence-grounded reasoning required.
+
+### 10. False positives or unsupported restrictions, summarized
+
+**2/9 runs, both on `case-032`, both fabricated constraints of the same
+shape.** 0/9 elsewhere -- not on `case-024`'s miss, not on any regression
+case, not on the positive control. Every efficacy miss in this sample
+(`case-024` run 2) was a clean omission, never a manufactured substitute;
+every specificity failure was concentrated entirely on the one case built
+to catch it.
+
+### 11. Comparison with Iterations 14-16
+
+| Case | Original (pre-15) | Iteration 15 (Handoff, "derive") | Iteration 16 (Handoff, "preserve") | Iteration 17 (Revise, this session) |
+|---|---|---|---|---|
+| `case-024` (primary) | 0/3 full | 3/3 full | 1/3 full | **2/3 full, 1/3 clean miss** |
+| `case-032` (negative control) | 0/2 invented (clean) | 2/2 invented | 0/2 -- clean | **2/2 invented** |
+| `case-033` (positive control) | 3/3 full | 1/1 full | 1/1 full | 1/1 full |
+| `case-026` Phase A | 0/1 (not this session's scope) | not run | 0/1 (miss, out of scope this session) | not run (explicitly out of scope) |
+| Regression sample | -- | clean (027/030 shape not all sampled) | clean | clean, two cases show positive formation evidence |
+
+Three different placements and wordings of essentially the same idea --
+Handoff/"derive" (15), Handoff/"preserve" (16), Revise/"hold as UNKNOWN"
+(17, this session) -- have now each been tried once. None has produced
+both clean specificity and reliable efficacy simultaneously in the same
+sample: 15 traded specificity for efficacy, 16 traded efficacy for
+specificity, and 17 (despite moving to a different loop step specifically
+to target formation) reproduced 15's specificity failure while only
+partially recovering its efficacy.
+
+### 12. Does the evidence support the invariant?
+
+**No, not as a `SKILL.md` wording change, on this evidence.** The
+underlying invariant itself is not in doubt -- three separate cases this
+session (`024` run 1/3, `027`, `029`) show the model is fully capable of
+reasoning correctly about an unresolved mutating operation once it notices
+one, and two of those (`027`, `029`) did so with language that tracks the
+new sentence closely enough to credit it with helping. But across three
+independent attempts to encode this as a targeted `SKILL.md` instruction
+(three different locations/verbs), every version that measurably improved
+`case-024` also measurably damaged `case-032`, or vice versa, in the same
+experimental session. This session's own version does not clear the bar
+its own decision rule set going in: case-024's improvement (2/3, not 3/3)
+is real but partial, and case-032's regression (2/2, a clean reversal of
+Iteration 16's fix) is the specificity failure the decision rule said
+would end the experiment regardless of the case-024 result.
+
+### 13. Recommendation: REVERT behavioral interventions, SHIP evals
+
+Per this experiment's own decision rule ("if case-032 starts inventing
+restrictions: treat that as a specificity failure even if case-024
+improves... do not tune again"), this is a specificity failure, not a
+tradeoff to accept and not a case for another wording attempt -- the
+session's own stopping rule forecloses both.
+
+**Recommendation:** revert `skills/field-debug/SKILL.md`'s Handoff and
+Revise prose to their pre-Iteration-15 state (undoing commits `c3c71f9`,
+`4dfb126`, and this session's `321469d`, or equivalently restoring both
+paragraphs to the exact text quoted in Iteration 15 section 2 and this
+iteration's section 2 as "before"), accepting the original, characterized
+0/3 `case-024` efficacy gap in exchange for the original skill's
+clean, reproducible specificity (0/2 on `case-032` across every session
+that has not carried one of these three edits). Keep everything else this
+PR produced: the eval corpus (`case-024` through `case-033`, `case-026`),
+the grading keys, and the full experimental record in this file
+(Iterations 11b-17) as the shipped product of PR #64 -- a precisely
+characterized, reproducible limitation (field-debug does not reliably
+surface a latent, evidence-implied action boundary before Handoff/Delegate
+closes) plus three falsified candidate fixes, which is durable, reusable
+evidence regardless of whether the skill text changes today.
+
+**This revert has not been performed in this session.** Per instruction,
+the tested treatment (`321469d`) remains in the repository, auditable in
+git history, pending a separate decision to act on this recommendation.
+
+### 14. Remaining known limitation
+
+Field-debug's Handoff/Delegate output does not reliably surface, on its
+own, a consequential implication of an evidence-established but
+unconfirmed mutating operation before closing -- this is a real,
+now three-times-replicated gap (Iterations 11b/13's frozen baseline, and
+this session's `case-024` run 2), not a single-run fluke. No wording tried
+across three attempts and two loop locations has closed this gap without
+also causing the skill to fabricate an unsupported operational constraint
+on a case that has none. Whether a fundamentally different mechanism (a
+targeted question specific to Diagnose rather than a prose addition to an
+existing bullet, or accepting the gap as an inherent property of a
+single-pass prose instruction against a small model sample) would do
+better is unknown and, per the final stopping rule for this PR, not to be
+investigated further in this session.
+
