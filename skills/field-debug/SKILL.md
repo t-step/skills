@@ -56,11 +56,7 @@ replace it.
 - **Observe** the actual result, not the expected one.
 - **Revise**: retire what evidence contradicts, weaken what it merely fails
   to support, strengthen or introduce what it points to. Being wrong at the
-  start isn't failure -- failing to update when contradicted is. When
-  evidence shows a mutating step was already accepted or attempted and its
-  outcome never came back, hold that outcome as UNKNOWN rather than quietly
-  treating the missing confirmation as failure, and let that distinction
-  shape what happens next.
+  start isn't failure -- failing to update when contradicted is.
 - **Act** once evidence discriminates, and stop -- further probing past
   that point is wandering, not rigor.
 
@@ -222,10 +218,7 @@ investigation and neither you nor any delegate can cross it -- nobody
 reachable has credentials, no one is available across a team boundary, the
 environment is truly out of reach. Unlike Delegate, nothing resumes:
 produce what's ruled out, exactly what the next party needs to check, and
-why it's blocked. Before closing, preserve any consequential implication
-the evidence already carries for what the next party can safely assume or
-do -- don't manufacture one it doesn't support. A fabricated best guess is
-worse than an honest handoff.
+why it's blocked. A fabricated best guess is worse than an honest handoff.
 
 ```
 ## field-debug handoff: <target>

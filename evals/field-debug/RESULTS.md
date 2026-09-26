@@ -3914,9 +3914,17 @@ surface a latent, evidence-implied action boundary before Handoff/Delegate
 closes) plus three falsified candidate fixes, which is durable, reusable
 evidence regardless of whether the skill text changes today.
 
-**This revert has not been performed in this session.** Per instruction,
-the tested treatment (`321469d`) remains in the repository, auditable in
-git history, pending a separate decision to act on this recommendation.
+**Closeout.** This recommendation has been carried out: `skills/field-debug/SKILL.md`
+is restored, byte-for-byte, to its pre-Iteration-15 state (the state at
+`df43189`, immediately before `c3c71f9`). Commits `c3c71f9`, `4dfb126`,
+and `321469d` remain in git history as auditable experimental lineage; the
+eval corpus, grading keys, and this full record (Iterations 11b-17) ship
+unchanged. Explicit operational constraints (e.g. `case-033`, `case-030`)
+are reliably preserved; the latent-constraint gap on `case-024` is a
+characterized limitation, not a fixed one -- the three tested general
+interventions each failed to close it without an unacceptable specificity
+loss or insufficient efficacy, so no behavioral skill change ships from
+this experimental sequence.
 
 ### 14. Remaining known limitation
 
