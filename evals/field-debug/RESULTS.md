@@ -2660,3 +2660,229 @@ Not this evidence, and not yet. The candidate explanation in section 7 makes a f
 
 **No `SKILL.md` change was made.** No new eval case was authored. No Phase B run was executed. No larger stability campaign was run beyond the six calls specified.
 
+## Iteration 14 (2026-09-26): single-variable explicit-risk replication, case-024 vs. case-033 (PR #64 follow-up)
+
+Iteration 13's section 7 (its "Pattern D" account) made a falsifiable
+prediction it explicitly did not test: a version of `case-024` with the
+resubmission/duplicate-fulfillment risk stated outright in agent-visible
+evidence, changing nothing else, should raise constraint-preservation
+toward Iteration 12's level if the gap is salience-dependent rather than a
+flat template defect. This iteration runs that isolated comparison.
+`skills/field-debug/SKILL.md` was **not modified** at any point, before,
+during, or after this session. No `Constraints` field was added to any
+template. No new case beyond the one sibling variant was authored, and no
+run beyond the six specified was executed.
+
+### 1. Hypothesis tested
+
+**field-debug reliably preserves directly observed investigative state,
+but may fail to promote an operational constraint into the Handoff
+artifact when that constraint must be inferred from the evidence rather
+than stated explicitly** -- i.e., the specific mechanism Iteration 13
+proposed (salience-dependent constraint synthesis) rather than a flat,
+template-level defect (which Iteration 12 had already made hard to sustain)
+or pure run-to-run noise (which Iteration 13's 1-of-6 partial reproduction
+had left unresolved).
+
+### 2. Exact original-vs-variant treatment difference
+
+`evals/field-debug/cases/case-033/` was created as a byte-for-byte copy of
+`case-024`'s seven evidence files plus `context.md`, verified with `diff
+-q` against every file before any run: `context.md`,
+`meridian_status_page.md`, `meridian_support_ticket.md`,
+`netops_confirmation.md`, `northwind_webhook_ingress_log.md`,
+`old_runbook_note.md`, and `orders_bff_outbound_log.md` are identical,
+confirmed by `diff -q` reporting no output for each. The single file that
+differs, `meridian_gateway_response_log.md`, keeps case-024's existing
+Meridian developer-portal excerpt on `202 Accepted` semantics verbatim and
+adds one further excerpt from the same page, "Fulfillment Submission --
+Retry and Duplicate-Submission Guidance," stating: "Once a request has
+returned `202 Accepted`, do not resubmit it solely because the completion
+webhook has not yet arrived. The correlation ID represents a fulfillment
+job that may still be active in our processing pipeline even past the
+typical delivery window, and resubmitting the same order can result in
+duplicate fulfillment and a duplicate outbound shipment. If you need to
+confirm a job's status before the completion webhook arrives, open a
+support ticket referencing the correlation ID(s) rather than retrying the
+submission call." This is the only content difference between the two
+cases' agent-visible evidence. It does not touch the wall (Meridian's
+internal pipeline/webhook-dispatch state remains equally unobservable in
+both cases), does not narrow or resolve either live hypothesis, does not
+add a tool, actor, or reachable surface, and does not simplify the
+provenance-preservation burden (correlation IDs, order IDs, and the
+submission window are unchanged and equally present/absent in both
+cases). `case-033`'s grading key (`evals/field-debug/grading/case-033.
+expected.md`) mirrors `case-024`'s item-for-item, with the sole
+substantive change being the constraint item's evidentiary basis (now
+explicit rather than requiring independent derivation) and an added
+three-way full/partial/miss scoring rubric matching this experiment's
+primary-outcome definition -- no REQUIRED item was added, removed, or
+made stricter than `case-024`'s.
+
+### 3. Evidence other fixture semantics were held constant
+
+- `check-eval-isolation.py` reported clean (216 case dirs, no leakage)
+  both before and after adding `case-033`, and a targeted grep of
+  `evals/field-debug/cases/case-033/` for `case-024`, `case-033`,
+  `variant`, `sibling`, `experiment`, `constraint preservation`, and
+  `scenario` found zero matches.
+- All seven unmodified files were diffed file-by-file against `case-024`
+  immediately before freezing; `diff -q` produced no output for any of
+  them (byte-identical).
+- The one modified file's diff was inspected directly: the only change is
+  a clean, additive 14-line insertion between two existing paragraphs: the
+  original `202 Accepted` contract excerpt is untouched, and the new
+  excerpt is placed as an adjacent, same-document, same-voice addition
+  (a second named subsection of the same developer-portal page already
+  being quoted), not a new artifact type or a new information channel.
+
+### 4. Six-run setup
+
+Six fresh `general-purpose` subagents (never `fork`), launched in two waves
+of three (case-024, then case-033) to respect this session's five-
+concurrent-subagent limit: three independent runs against unmodified
+`case-024` (its `context.md` plus its seven evidence files, plus
+`skills/field-debug/SKILL.md` -- no other file) and three independent runs
+against the new `case-033` (its own seven-plus-one file set, plus
+`SKILL.md`). Each subagent was told its exact permitted file list and
+explicitly instructed never to open `evals/field-debug/grading/`,
+`evals/field-debug/pressure-tests/`, `evals/field-debug/RESULTS.md`, any
+other case directory, or run `git` commands, and never to fetch a URL or
+web-search. No baseline (non-field-debug) condition was run, per this
+experiment's design -- the comparison is field-debug against itself across
+the one-variable fixture change. No agent saw another agent's artifact,
+prior iterations' findings, this iteration's hypothesis, or the fact that
+constraint preservation was under study; each received only its own case's
+frozen evidence and returned a self-contained
+`===BEGIN/END ARTIFACT===`-delimited write-up.
+
+**Disclosed limitation, same shape as prior iterations:** each subagent was
+*instructed* not to read forbidden material; for a `general-purpose` agent
+this is instruction-following, not a sandboxed guarantee. Nothing in any
+of the six returned write-ups suggested it looked elsewhere, but this is
+not independently, mechanically verified.
+
+### 5. Per-run matrix
+
+| Run | Case | Constraint (primary outcome) | Cites Meridian's own guidance for the constraint | Submission window (secondary) | Two live hypotheses, uncollapsed | Wall classification | >=3 ruled-out hypotheses w/ evidence |
+|---|---|---|---|---|---|---|---|
+| case-024 run 1 | original | **MISS** | -- | partial (single anchor "02:14 UTC" only) | yes (pipeline-stall vs. public-internet transit loss) | correct, explicit `## field-debug handoff:` | yes (5) |
+| case-024 run 2 | original | **MISS** | -- | partial (single anchor "02:14" only) | yes (pipeline-stall vs. egress/dispatch loss) | correct, explicit block | yes (4) |
+| case-024 run 3 | original | **MISS** | -- | miss (no timestamp restated at all) | partial -- collapses into one Meridian-internal hypothesis with sub-variants (stuck queue / WH-12 integration fault / dispatch bug) rather than clearly naming a second "attempted but lost before reaching our edge" hypothesis | correct, explicit block | yes (5, across Recon+Diagnose+Handoff) |
+| case-033 run 1 | explicit-risk variant | **FULL** | yes, explicit ("Meridian's own documentation... explicitly warn against resubmitting"; Handoff: "per Meridian's own published guidance... the channel Meridian's own docs prescribe") | partial (single anchor "02:14 UTC" only) | yes (pipeline-stall/no-attempt vs. attempted-but-lost-on-egress) | correct, explicit block | yes (3) |
+| case-033 run 2 | explicit-risk variant | **FULL** | yes, explicit ("per Meridian's own published guidance, do not resubmit...") | **full** (restates "02:14:03-02:14:11 UTC" exactly) | partial -- H5 (general pipeline fault, past documented delivery bound) vs. H6 (WH-12-specific routing vs. general) is a different two-way split than "never attempted vs. attempted-but-lost," not clearly naming the latter | correct, explicit block | yes (4, via H1-H4 in Diagnose) |
+| case-033 run 3 | explicit-risk variant | **FULL** | yes, explicit ("Meridian's own documentation states resubmission after a 202 Accepted risks duplicate fulfillment/duplicate shipment"; Handoff: "resubmission is explicitly contraindicated by the vendor's own documentation") | partial (single anchor "02:14 UTC" only) | yes (job stalled inside pipeline, never completed vs. pipeline completed and webhook lost before reaching Northwind) | correct, explicit block | yes (5) |
+
+No run in either case fabricated a root cause, claimed access it didn't
+have, treated NetOps or the still-unassigned support ticket as if either
+could still resolve the investigation, or confused this Handoff with a
+Checkpoint or an ongoing Delegate. These items were clean 6/6 across both
+cases, consistent with every prior iteration of this suite.
+
+### 6. Constraint preservation, full/partial/miss
+
+**case-024 (original, unmodified fixture): 0/3 full, 0/3 partial, 3/3
+miss.** No run stated an action boundary (do not resubmit/retry) or a
+reason (duplicate fulfillment/shipment risk) anywhere in its Handoff
+output.
+
+**case-033 (explicit-risk variant): 3/3 full.** All three runs stated
+both the action boundary (do not resubmit) and the reason (risk of
+duplicate fulfillment/shipment because the original async job may still be
+active), and all three explicitly attributed the constraint to "Meridian's
+own documentation" or "published guidance" -- language that tracks the
+added excerpt's own framing and phrasing closely enough (referencing a
+support ticket by correlation ID "rather than retrying," an active job
+"even past the typical delivery window") to conclude, with reasonable
+confidence for a sample of this size, that each run engaged with the added
+excerpt specifically, rather than independently inventing a same-shaped
+generic caution that happened to coincide with it.
+
+### 7. Secondary-dimension comparison (checking for a confound)
+
+- **Wall classification**: 6/6 correct in both conditions -- unaffected.
+- **Ruled-out hypotheses (>=3 with cited evidence)**: 6/6 satisfied in both
+  conditions -- unaffected.
+- **Live hypotheses (canonical two-way, uncollapsed split)**: satisfied
+  cleanly in 2/3 case-024 runs and 2/3 case-033 runs; the one case-024 run
+  and the one case-033 run that reframed this as something other than the
+  canonical "never attempted vs. attempted-but-lost-before-our-edge" split
+  are distributed one per condition, not concentrated in either -- this
+  reads as ordinary variance in how an investigator frames the residual
+  uncertainty, not a treatment effect.
+- **Submission-window secondary provenance**: unreliable in both
+  conditions and in the same direction -- case-024 produced 0/3 full
+  preservations (2 partial, 1 full miss) and case-033 produced 1/3 full (2
+  partial). This is the same specific, low-cardinality gap Iterations 11b
+  and 13 already found on this fixture, present at a similar rate on both
+  sides of the one-variable change -- consistent with it being a
+  fixture-specific or general secondary-provenance weak spot rather than
+  something coupled to the resubmission-constraint mechanism.
+
+Nothing else in the Handoff output changed shape between conditions: the
+added excerpt did not cause any run to soften the wall, invent a root
+cause, treat NetOps or the ticket as newly resolving, or otherwise get
+easier to satisfy on any other REQUIRED item. The treatment's effect is
+isolated to the one dimension it targeted.
+
+### 8. Did explicitness materially change behavior?
+
+**Yes, and the effect is clean and large in this sample: 0/3 vs. 3/3.**
+Every other graded dimension moved within the same noisy range on both
+sides of the single-variable change; only constraint preservation shows a
+sharp, one-directional split that lines up exactly with which fixture the
+run saw.
+
+### 9. Was the latent-action-constraint hypothesis supported, weakened, or falsified?
+
+**Supported, and now with a direct, single-variable manipulation rather
+than only a cross-case correlational read.** Combined with prior evidence
+in this file: Iteration 12 found field-debug reliably states a constraint
+(6/6) across six *newly authored* cases where the danger was spelled out
+concretely in the fixture (an explicit dollar figure, an explicit missing-
+idempotency-key fact, a runbook naming the unsafe action). Iteration 13
+found the *unmodified* `case-024`/`case-026` fixtures -- where the
+resubmission risk exists only as something an investigator must infer from
+the general shape of the situation (an order accepted synchronously, still
+unresolved, at a vendor gateway) -- produced a minority constraint-
+preservation rate (2/6, one full and one soft/hedged). This iteration
+isolates the one variable those two case sets differed on -- explicit
+vs. inferred risk -- while holding the rest of `case-024`'s fixture fixed,
+and finds the constraint-preservation rate move from 0/3 to 3/3 exactly as
+the salience-dependent hypothesis predicts, while every other graded
+dimension stayed comparably noisy across both conditions. This is
+different in kind from a generic missing-template-field defect: the
+`Handoff` template has no dedicated `Constraints` field in either
+condition, yet field-debug filled it reliably in prose once the evidence
+stated the danger outright, and did not when the danger required
+inference -- the gap tracks evidentiary salience, not template shape,
+consistent with Iteration 12's own finding that Handoff's existing prose
+fields can and do carry a stated constraint when the evidence supports one.
+
+This remains a single-session, one-model-family, n=3-per-cell result, and
+should be read as strong support for the specific mechanism under test,
+not as a settled, mechanistic proof extending beyond this fixture pair.
+
+### 10. Smallest plausible future intervention hypothesis (not implemented)
+
+Held lightly, and explicitly separated from any change actually made this
+session (none was): if a future decision does act on this finding, the
+smallest candidate is *not* adding a structural `Constraints` field to the
+`Handoff` template (Iteration 12 already showed the model states
+constraints fine in prose once the evidence supports one, and Delegate's
+existing `CONSTRAINTS` field already covers its own mode). The more
+targeted candidate this iteration's specific mechanism suggests is a
+single prompt aimed at the inference step itself, not at restating stated
+evidence -- something in the spirit of: before closing a Handoff, ask
+whether an unqualified next-party action on the un-crossed state (e.g.
+retrying, resubmitting, restarting, or otherwise repeating an operation
+whose outcome is still unconfirmed) would be unsafe *given what's already
+observed*, even when no document states that risk outright. This is a
+hypothesis for a future, separate decision to weigh against further
+evidence -- not a change made, recommended for immediate action, or
+anything this session implemented.
+
+**No `SKILL.md` change was made this session.** No `Constraints` field was
+added to any template. No new eval case beyond `case-033` was authored. No
+run beyond the six specified was executed.
+
