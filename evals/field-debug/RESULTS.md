@@ -661,15 +661,25 @@ per this repo's own precedent for the same situation in iteration 1.
 | 009 | 6/6 REQUIRED + BONUS | 6/6 REQUIRED + BONUS | None -- both found the override via the startup log and overrides file, neither touched the code, both flagged the ~3-months-vs-~3-weeks timing gap as UNKNOWN rather than resolving it |
 | 010 | 6/6 REQUIRED + BONUS | **5/6 REQUIRED, BONUS missed** | Baseline's own re-scoped delegation request asserted, unsupported by the fixture, that Sam's prior check "already confirmed [QM_PROD01] clean" -- the same overclaim-a-vantage-point-as-settled failure this case exists to catch, just aimed at the opposite queue manager from what a shallow reading would guess. The with-skill run explicitly tagged the historical-`GL_MQ_ENV` claim ASSUMED rather than confirmed and never asserted which queue manager the prior check covered, satisfying every REQUIRED item and the BONUS |
 | 011 | 6/6 REQUIRED + BONUS | 6/6 REQUIRED + BONUS | None -- both explained the 14-record parse bug, explicitly compared it against the 1,186 reported gap, found the warehouse-owned dedupe trigger unprompted, and named it a 2015-era scale regression |
-| 012 | 7/7 REQUIRED (incl. hiding-behind-uncertainty) + BONUS | 7/7 REQUIRED + BONUS | None -- both independently executed `build_record` against the sample data to verify byte-length overflow, found the unread acknowledgment files, and rejected the passing ASCII-only test as proof of correctness |
+| 012 | 6/6 REQUIRED (incl. hiding-behind-uncertainty) + BONUS | 6/6 REQUIRED + BONUS | None -- both independently executed `build_record` against the sample data to verify byte-length overflow, found the unread acknowledgment files, and rejected the passing ASCII-only test as proof of correctness |
 | 013 | 6/6 REQUIRED (corrected key) + partial BONUS | 6/6 REQUIRED (corrected key) + partial BONUS | Both named the personal-credential blocker, its consequences, and the dev-tenant-only evidence scope. The with-skill run additionally named, explicitly and by name, that `identity-authority-audit` was the sibling skill this question would ordinarily route to, that it was **not installed in this session**, and that it was therefore reasoned through directly rather than deferred or silently worked around -- a live, first-time demonstration of the sibling-routing-unavailable fallback this iteration's SKILL.md fix (see above) was written to produce, not merely asserted |
 
-**Numeric summary, this iteration's 5 cases:** with-skill 31/31 REQUIRED
-items met (6+6+6+7+6, using each case's post-correction key) plus 4 of 5
-BONUS items fully met (case-013's partially); baseline 30/31 REQUIRED
+**Numeric summary, this iteration's 5 cases:** with-skill 30/30 REQUIRED
+items met (6+6+6+6+6, using each case's post-correction key) plus 4 of 5
+BONUS items fully met (case-013's partially); baseline 29/30 REQUIRED
 (missing one item in case-010) plus 3 of 5 BONUS items fully met
 (case-010's BONUS missed entirely; case-013's partially, same as
 with-skill).
+
+*Correction (made during iteration 5, below):* the two rows above and this
+numeric summary originally read "7/7" for case-012 and totaled 31
+REQUIRED items. `evals/field-debug/grading/case-012.expected.md` has held
+exactly 6 REQUIRED items since it was committed (verified via `grep -c
+"^- REQUIRED"` against the file's one and only commit, `5ed834c` --
+never edited since) -- this was a miscount in the original write-up, not
+a grading-key change or a re-graded case. Fixed here, not silently: the
+correct totals are 6/6 for case-012 in both conditions, 30/30 REQUIRED
+with-skill and 29/30 baseline for this iteration's 5 cases.
 
 ### What this iteration's evidence shows, and does not show
 
@@ -726,3 +736,118 @@ benchmark cases (SRE/incident-response corpora, not general coding
 benchmarks) would provide grading distance from the skill's own author,
 addressing the single-author-bias caveat repeated across all three
 iterations of this file.
+
+## Iteration 5 (2026-09-25): re-validation of cases 009-013 after an editorial SKILL.md compression pass
+
+Between iteration 3 and this iteration, `SKILL.md` went through a
+prose-only compression pass (PR #60's own description has the full
+diff/size accounting): merging the "Anti-patterns" list into "What this
+skill refuses to do," folding Investigation behavior into The loop,
+tightening the Delegate/Handoff distinction and sibling-composition
+prose, and shortening the frontmatter description. No mode, schema field,
+evidence-vocabulary term, or named invariant was intended to change. This
+iteration re-runs the five hardest cases from iteration 3 (009-013, the
+ones targeting enterprise/legacy/POC-to-production terrain, including the
+two cases -- 010 and 013 -- where iteration 3 found a real with-skill vs.
+baseline behavioral difference) against the *compressed* `SKILL.md`, to
+check that compression didn't quietly drop the behaviors those two cases
+depend on.
+
+**Harness, this iteration:** fresh `general-purpose` subagents (one per
+run, 10 runs total), each given its own isolated copy of the case
+directory under a scratch path outside the repo -- with-skill copies also
+received the current `skills/field-debug/SKILL.md`; baseline copies did
+not. Each agent was instructed not to read or explore anything outside
+its assigned directory and not to use web access. With-skill agents were
+told to read `SKILL.md` and follow it exactly, including its output
+formats; baseline agents got the case's own `context.md` and no imposed
+report structure, matching iteration 3's convention. All 10 runs were
+executed once per condition, no case re-run. Every run's full final
+report was read and graded by hand directly against
+`evals/field-debug/grading/case-0NN.expected.md`'s REQUIRED and BONUS
+items (re-read in full for this grading pass, not from memory of
+iteration 3's summary).
+
+### Per-case results
+
+| Case | With-skill | Baseline | Notable difference |
+|---|---|---|---|
+| 009 | 6/6 REQUIRED, BONUS not cleanly met | 6/6 REQUIRED, BONUS closer but still not a clean match to the exact wording | Both found the override via `ops/prod_startup.log` and `ops/overrides.properties`, both proposed the config fix (not a code rewrite), both correctly separated "what `main` does" from "what's running." Neither run's follow-up explicitly names the *override-file mechanism itself* (as opposed to this one flag) as a durability gap independent of this instance -- baseline's "force-retire `flat_percentage`... prevent this class of drift from recurring" comes closer to the BONUS's exact ask than with-skill's follow-up, which only proposed investigating the override's change history |
+| 010 | 6/6 REQUIRED + full BONUS | **5/6 REQUIRED, BONUS not met** | Same failure axis as iteration 3, reproduced in softer form: baseline's report states Sam's check ran "almost certainly against the default/assumed environment (prod), not both" -- an unstated-in-fixture directional assumption about which queue manager was checked, hedged as an assumption rather than flatly asserted (unlike iteration 3's baseline run, which stated it as if confirmed), but still a real, if smaller, instance of the same overclaim-a-vantage-point item this case exists to catch. The with-skill run explicitly declined to name which queue manager Sam's check covered ("Unknowns: which queue manager Sam's 03:19 check covered") and explicitly tagged the historical `GL_MQ_ENV=prod` documentation claim ASSUMED rather than confirmed, satisfying every REQUIRED item and the BONUS |
+| 011 | 6/6 REQUIRED + BONUS | 6/6 REQUIRED + BONUS | None -- both explained the 14-record parse bug, explicitly compared it against the 1,186 reported gap, found the warehouse-owned dedupe trigger unprompted, and both framed it explicitly as a 2015-era scale regression, not a new bug |
+| 012 | 6/6 REQUIRED + BONUS not stated | 6/6 REQUIRED + BONUS met | Both independently executed `build_record` against the sample data to verify the byte-length overflow, found the unread `inbound/ack/` files, and rejected the passing ASCII-only test as proof of correctness -- tied on every REQUIRED item. The baseline run additionally named, unprompted, that "nothing in this pipeline appears to parse or alert on" the ack files (the exact BONUS ask); the with-skill run's follow-up only named the missing non-ASCII test fixture, not the alerting gap -- a case where baseline's finding was more complete than with-skill's |
+| 013 | 6/6 REQUIRED (corrected key) + BONUS not met | 6/6 REQUIRED (corrected key) + BONUS not met | Both named the personal-credential blocker via `integration.py`'s own attribution comment, named >=2 concrete consequences, marked the pilot as dev-tenant-only evidence, and gave an actual "not production-ready" verdict without conflating the conclusive identity issue with the genuinely-unknown production-tenant specifics. Both BONUS misses are clean, anticipated ones: both stopped at "get a dedicated service account" rather than naming the ownership question itself (who owns it, who's on-call, how it's rotated) -- exactly the failure mode the BONUS text names. The with-skill run additionally, and explicitly by name, stated that `identity-authority-audit` was not installed in this session and reasoned through the authority question directly rather than deferring -- reproducing iteration 3's sibling-routing-fallback demonstration under the compressed `SKILL.md` |
+
+**Numeric summary, this iteration's 5 cases:** with-skill 30/30 REQUIRED
+items met (perfect, across all five cases); baseline 29/30 REQUIRED
+(missing the same item, case-010's queue-manager-ambiguity item, that
+iteration 3 flagged, though in a softer/hedged form this time). BONUS:
+with-skill fully met on 2 of 5 (010, 011); baseline fully met on 3 of 5
+(009 partially/arguably, 011, 012); both cleanly missed case-013's BONUS.
+
+**A correction found while re-grading, disclosed above at its source:**
+iteration 3's per-case table and numeric summary recorded case-012 as
+"7/7 REQUIRED" in both conditions and totaled 31 REQUIRED items for its
+five cases. `grading/case-012.expected.md` has always had exactly 6
+REQUIRED items (confirmed via `grep -c` against the file's sole commit,
+which iteration 3 itself made) -- this was a miscount in iteration 3's
+write-up, not a re-graded case or a grading-key edit. Fixed at its source
+in the "Per-case results" table and numeric summary above, not silently:
+the corrected iteration-3 totals are 30/30 with-skill and 29/30 baseline.
+
+### What this iteration's evidence shows, and does not show
+
+The central question this iteration was run to answer -- did the
+editorial compression pass on `SKILL.md` quietly drop any of the
+behaviors that iteration 3 showed actually matter -- has a clear answer
+for the two cases that matter most: no. Case-010's with-skill run
+reproduced the exact discipline (explicit ASSUMED-tagging of a
+documentation claim, explicit refusal to name an unstated vantage point)
+that produced iteration 3's only clean with-skill/baseline REQUIRED-item
+divergence in this suite, and case-013's with-skill run reproduced the
+sibling-routing-unavailable fallback iteration 3 called "a live,
+first-time demonstration" -- this iteration is the second such
+demonstration, under materially shorter instruction text, which is
+meaningfully stronger evidence that the mechanism survives paraphrase
+than either demonstration alone would be.
+
+Baseline reproduced its own iteration-3 pattern too, including the same
+specific miss on case-010 -- weaker this time (a hedged "almost
+certainly," not a flat assertion), which is consistent with ordinary run-
+to-run variance in a single-sample baseline rather than evidence of
+anything about `SKILL.md`. Case-012 is a new data point this iteration
+did not have before: baseline's follow-up named the BONUS-level alerting
+gap and with-skill's did not, the reverse of the usual pattern in this
+suite where with-skill either ties or exceeds baseline. This is one run
+each, on one fixture; it shows with-skill's structured-report discipline
+doesn't guarantee a more complete follow-up list than an unstructured
+baseline's, not that the skill degrades follow-up quality generally.
+
+**What this does not prove:** this is still a single run per condition
+per case, by the same person who wrote the fixtures, the grading keys,
+the skill text, and the compression edit being validated -- the same
+single-author-bias caveat as every iteration before this one. Grading
+this iteration's 10 runs did surface one arithmetic error in iteration
+3's own record (case-012's REQUIRED count), which is itself a small,
+concrete argument for re-deriving totals from the committed grading keys
+at write-up time rather than trusting a prior iteration's summary,
+exactly as this repo's `AGENTS.md` already asks.
+
+### SKILL.md corrections from this iteration
+
+None. No run this iteration surfaced a `SKILL.md` behavioral defect --
+every with-skill REQUIRED item was met across all five cases, and the two
+mechanism-dependent behaviors from iteration 3 (case-010's
+documentation-vs-runtime discipline, case-013's sibling-routing fallback)
+both reproduced correctly under the compressed text. The compression pass
+is not re-litigated here; this iteration's purpose was narrowly to check
+it didn't regress with-skill behavior, and it didn't.
+
+### Recommended next step
+
+Unchanged from iteration 3: sanitized real field-debug incidents (via the
+skill's own CASE SEED mechanism, still never exercised in this suite) or
+selectively adapted external benchmark cases remain the highest-value next
+steps, for the same reason iteration 3 gave -- this suite still cannot
+address the single-author-bias caveat repeated across all five iterations
+of this file now.
