@@ -2886,3 +2886,378 @@ anything this session implemented.
 added to any template. No new eval case beyond `case-033` was authored. No
 run beyond the six specified was executed.
 
+## Iteration 15 (2026-09-26): first `SKILL.md` intervention -- Handoff prompted to derive latent action boundaries (PR #64 follow-up)
+
+Iterations 11b-14 converged on a specific, falsifiable finding: field-debug
+reliably preserves an operational constraint stated explicitly in evidence
+(`case-033`, 3/3, Iteration 14) but not one that must be derived from the
+evidence's general shape (`case-024`, 0/3 across Iterations 11b and 13
+combined), while every other Handoff dimension stayed comparable across both
+conditions. This iteration makes the first actual `skills/field-debug/
+SKILL.md` change of this PR's investigation, targeting exactly that gap, and
+measures it against a primary test, a positive control, a negative control,
+and a small regression sample -- one intervention, one clean measurement, per
+this session's own instruction not to stack edits.
+
+### 1. Established pre-intervention evidence (summary, not restated in full)
+
+- **Iteration 11b** (n=1 per case): 0/2 field-debug Handoff outputs stated a
+  next-party constraint (`case-024`, `case-026` Phase A).
+- **Iteration 12** (n=1 per case, 6 newly authored cases with the danger
+  spelled out concretely in the fixture): 6/6 field-debug outputs stated the
+  intended constraint, including via Handoff's existing prose (no dedicated
+  Constraints field) and via Delegate's own `CONSTRAINTS` field. 0/6
+  fabricated an unwarranted constraint on the one no-constraint control run
+  in that set.
+- **Iteration 13** (n=3 per case, the original `case-024`/`case-026`
+  fixtures): 2/6 constraint statements (1 full, 1 soft/hedged), the same
+  gap reproduced in direction though not as an absolute 0%.
+- **Iteration 14** (single-variable manipulation, `case-024` vs. a sibling
+  with the same risk stated explicitly in evidence, n=3 each): 0/3 on the
+  original fixture, 3/3 on the explicit-risk sibling, with every other
+  graded dimension staying comparably noisy across both. This isolated the
+  mechanism to evidentiary salience, not a flat template-field defect, and
+  proposed (its own section 10, not implemented then) "a single prompt
+  aimed at the inference step itself... before closing a Handoff, ask
+  whether an unqualified next-party action on the un-crossed state... would
+  be unsafe given what's already observed, even when no document states
+  that risk outright."
+
+### 2. The exact skill change, and why this location
+
+**Location:** `skills/field-debug/SKILL.md`, the `### Handoff` subsection's
+own prose, immediately before its template. This is the smallest location
+that could plausibly move the target behavior: it sits inside the one mode
+whose entire job is producing a final, unresumed artifact for a party who
+cannot come back and ask a clarifying question, so anything the artifact
+omits is gone for good -- exactly the property Iteration 14 showed field-debug
+was failing to protect for an *inferred* risk while already protecting it
+for a *stated* one. Editing this location, and only this location, leaves
+Recon, Diagnose, Delegate's own template, Checkpoint, and the refusals list
+textually untouched, so any behavior change elsewhere in the loop is a
+side effect of the model generalizing the instruction, not something the
+edit itself touches (see section 7, which found exactly this happening).
+
+**Pre-intervention text** (the paragraph immediately preceding the Handoff
+template, verbatim, before this session's edit):
+
+> Use when an access, ownership, or authorization wall stops the
+> investigation and neither you nor any delegate can cross it -- nobody
+> reachable has credentials, no one is available across a team boundary, the
+> environment is truly out of reach. Unlike Delegate, nothing resumes:
+> produce what's ruled out, exactly what the next party needs to check, and
+> why it's blocked. A fabricated best guess is worse than an honest handoff.
+
+**Post-intervention text** (the same paragraph, this session's only change,
+one sentence inserted, nothing else in the file touched):
+
+> Use when an access, ownership, or authorization wall stops the
+> investigation and neither you nor any delegate can cross it -- nobody
+> reachable has credentials, no one is available across a team boundary, the
+> environment is truly out of reach. Unlike Delegate, nothing resumes:
+> produce what's ruled out, exactly what the next party needs to check, and
+> why it's blocked. **Before closing, derive any action boundary the
+> evidence implies -- something the next party shouldn't retry, replay,
+> mutate, restart, or otherwise act on until the live uncertainty resolves
+> -- and preserve why; don't invent one the evidence doesn't support.** A
+> fabricated best guess is worse than an honest handoff.
+
+(Bold added here only to mark the diff; the file itself carries no bold.)
+Exact diff:
+
+```diff
+ reachable has credentials, no one is available across a team boundary, the
+ environment is truly out of reach. Unlike Delegate, nothing resumes:
+ produce what's ruled out, exactly what the next party needs to check, and
+-why it's blocked. A fabricated best guess is worse than an honest handoff.
++why it's blocked. Before closing, derive any action boundary the evidence
++implies -- something the next party shouldn't retry, replay, mutate,
++restart, or otherwise act on until the live uncertainty resolves -- and
++preserve why; don't invent one the evidence doesn't support. A fabricated
++best guess is worse than an honest handoff.
+```
+
+Deliberately **not** done, per this PR's own intervention discipline and
+consistent with Iteration 12's and Iteration 14's own held-lightly
+recommendation: no `Constraints:` field added to the Handoff template, no
+new safety section, no enumeration of failure modes, no fixture-specific
+vocabulary (no case, no Meridian, no duplicate fulfillment, no ACH, no SCIM,
+no DLQ). The sentence is deliberately symmetric -- it prompts deriving a
+boundary *and* explicitly warns against inventing one the evidence doesn't
+support -- because Iteration 12's own case-032 control was already built to
+catch exactly the failure mode a one-sided instruction could introduce (see
+section 6: that safeguard did not fully hold).
+
+Committed separately from this write-up, per instruction: commit
+`c3c71f9`, `skills/field-debug/SKILL.md` only, 1 file changed (+5/-1 lines).
+`bash scripts/check.sh` passed immediately before and immediately after this
+single edit (`check-skill-frontmatter: OK`, `check-eval-isolation: OK (216
+case dirs, no leakage)`, `check-skill-deps: OK`).
+
+### 3. Post-intervention run design
+
+Nine fresh `general-purpose` subagents (never `fork`, so none carried this
+orchestrating session's knowledge of the grading keys, the hypothesis under
+test, or any prior iteration's findings), launched in two waves (5, then 4)
+to respect this session's five-concurrent-subagent limit:
+
+- **Primary test (3 runs)**: `case-024`, the original, unmodified fixture --
+  the resubmission risk must still be inferred, not read off a document.
+- **Positive control (1 run)**: `case-033`, the explicit-risk sibling --
+  confirms the edit didn't disrupt the already-working explicit-constraint
+  path.
+- **Negative control (2 runs)**: `case-032`, the no-constraint control --
+  checks the edit didn't turn every Handoff into a manufacturer of invented
+  cautions.
+- **Regression sample (1 run each, 3 cases, chosen for coverage)**:
+  `case-030` (an explicit existing constraint already stated in its own
+  runbook, reaching a Delegate/Handoff-shaped authorization wall);
+  `case-022` (partial access with a reachable delegate -- Handoff must
+  *not* be forced, and the case separately requires not proposing a
+  record resend); `case-006` (an ordinary, fully resolved Diagnose with no
+  wall, no constraint, and no Handoff at all -- the spillover check for
+  whether the new sentence leaks into unrelated, non-Handoff output).
+
+Each subagent was told its exact working directory and permitted file list
+(SKILL.md plus only its own case's own directory), instructed never to open
+`evals/field-debug/grading/`, `evals/field-debug/pressure-tests/`,
+`evals/field-debug/RESULTS.md`, any other case directory, or run `git`, and
+told to load `skills/field-debug/SKILL.md` first and follow it throughout.
+None was told this was an experiment, told the hypothesis under test, or
+given any grading-vocabulary hint. Each returned a self-contained write-up
+between `===BEGIN/END ARTIFACT===` markers.
+
+**Disclosed limitation, same shape as every prior iteration:** each
+subagent was *instructed* not to read forbidden material; for a
+`general-purpose` agent with full tool access this is instruction-following,
+not a sandboxed guarantee. Nothing in any of the nine returned write-ups
+suggested it looked elsewhere, but this is not independently, mechanically
+verified.
+
+### 4. Primary test: case-024 efficacy
+
+**3/3, full, with reasoning -- a clean reversal of the frozen 0/3
+pre-intervention baseline.**
+
+| Run | Constraint | Wording (excerpted) |
+|---|---|---|
+| 1 | FULL | "Do not resubmit or replay `ORD-88231`–`ORD-88235` as new fulfillment requests... it is UNKNOWN whether Meridian's fulfillment intake is idempotent... a blind resubmission risks duplicate fulfillment/shipment if the original request is merely delayed rather than lost" |
+| 2 | FULL | "Action boundary (derived from evidence, not assumed)... Do not resubmit or replay fulfillment requests for ORD-88231–88235... a duplicate submission risks double-processing (duplicate inventory consumption / duplicate shipment) once Meridian's async pipeline catches up" |
+| 3 | FULL | "Action boundary (derived, not assumed)... Do not resubmit or retry ORD-88231 through ORD-88235... nothing in the evidence establishes whether resubmission is idempotent on Meridian's side or would risk a duplicate fulfillment/shipment" |
+
+All three independently used language close to "derived, not assumed" or
+"derived from evidence" -- language that tracks the new sentence's own
+framing closely enough to conclude, at this sample size, that the runs
+engaged with the added instruction specifically rather than coincidentally
+reaching the same construction. All three also correctly kept both live
+hypotheses uncollapsed, cited 3+ ruled-out hypotheses with evidence,
+classified the case as Handoff explicitly, and did not fabricate a root
+cause, claim Meridian-side access, or treat NetOps/the open ticket as still
+resolving. The known secondary-provenance gap persisted unchanged: all
+three runs stated the submission timestamp as a single anchor ("02:14 UTC")
+rather than the full `02:14:03-02:14:11 UTC` range -- 0/3 full on that
+specific REQUIRED provenance item, the same gap Iterations 11b, 13, and 14
+already found on this exact fixture, evidently untouched by this edit (it
+targets constraint derivation specifically, not general provenance
+completeness).
+
+### 5. Positive control: case-033
+
+**FULL**, and the edit did not disrupt or duplicate the existing
+explicit-constraint behavior: "Meridian's own published guidance states a
+`202`-accepted correlation ID may still be an active job in their pipeline
+even past the typical delivery window, and resubmission risks duplicate
+fulfillment and a duplicate outbound shipment." The run also restated the
+full submission window (`02:14:03–02:14:11 UTC`) verbatim in its Inspect
+section -- unlike all three case-024 runs and unlike most of Iteration 14's
+case-033 sample, this one run happened to preserve it fully; consistent
+with Iteration 14's own finding that this secondary item is noisy on both
+sides of the explicit/inferred split, not with any effect from this
+session's edit. No regression on the positive control.
+
+### 6. Negative control: case-032 -- a specificity failure
+
+**2/2 runs fabricated an operational constraint the case's own ground truth
+states does not exist.** This is the central, unwelcome finding of this
+iteration, and per this experiment's own decision rule it must be reported
+as a specificity failure regardless of the case-024 result above.
+
+- **Run 1** (Handoff mode) invented a three-item "Action boundary" section:
+  "Do not disable, purge, or reconfigure any cache at `iad3` blind... Do not
+  restart/bounce the `iad3` edge node as a 'fix'... Do not add origin-side
+  cache-busting." Nothing in `case-032`'s evidence proposes any of these
+  three actions, and nothing in the case's own reachable next step (filing
+  a routine vendor ticket) touches any of them.
+- **Run 2** (Delegate mode, not Handoff -- see section 7) invented a
+  `CONSTRAINTS` line: "Do not disable, modify, or restart the override (or
+  any `iad3` edge config) before the live uncertainty resolves -- if
+  active, an uncoordinated change would remove discriminating evidence and
+  could affect other traffic the override may be legitimately absorbing."
+  Same pattern: nobody in the case proposed modifying the override: this
+  is manufactured caution attached to an action nobody was contemplating.
+
+Both are close, structural matches to the exact failure mode `case-032`'s
+own grading key names by example -- "a warning against purging or flushing
+the CDN cache" -- and both fail that key's REQUIRED no-invented-constraint
+item and its paired BONUS item (explicitly and positively stating the
+absence of a constraint). Everything else in both runs was clean: both
+correctly ruled out origin-level caching using both `app_cache_config.md`
+and `origin_access_log.md` together, both correctly isolated the pattern to
+PoP `iad3` and noted the same-PoP hit/miss split, both correctly named the
+vendor edge-admin-console wall, and both correctly avoided asserting the
+cache override as confirmed rather than inferred. The failure is narrow and
+specific to the one dimension this edit targets, not a general degradation
+of the case.
+
+**This is a direct regression against Iteration 12's frozen baseline on
+this exact case**, where 0/2 conditions (baseline and field-debug) invented
+an unwarranted constraint. The most probable mechanism, given the edit's
+own text ("derive any action boundary the evidence implies"): a model
+primed to look for an action boundary before closing, when handed a case
+whose only concrete next step is "wait for a vendor to check a config,"
+appears willing to manufacture a plausible-sounding one (don't touch the
+thing under investigation) even though the case's own evidence never raises
+that action as a live possibility -- the "don't invent one the evidence
+doesn't support" half of the new sentence did not reliably prevent this in
+this sample.
+
+### 7. Regression sample
+
+- **`case-030`** (explicit existing constraint, already stated almost
+  verbatim in its own runbook): both a Delegate `CONSTRAINTS` field and a
+  separate Handoff "Action boundary" section correctly restated "Do not
+  restart `cart-session-svc-2` directly... until Checkout on-call has
+  explicitly authorized bypassing the drain procedure" -- matching the
+  runbook's own stated policy, not fabricated, and consistent with this
+  case's pre-intervention behavior in Iterations 12-13. No regression;
+  slightly more verbose than earlier runs of this case (both a Delegate and
+  a Handoff constraint statement where one would do), noted but not scored
+  as a failure since neither is wrong.
+- **`case-022`** (partial access, reachable delegate -- Handoff must *not*
+  be forced): correctly stayed in Diagnose/Delegate mode rather than
+  issuing a premature Handoff, matching this case's own REQUIRED
+  "partial access, not full handoff" item, and correctly avoided proposing
+  any resend/replay of the previously-sent CRM records. Its Delegate
+  `CONSTRAINTS` field ("don't reprocess, replay, or manually re-trigger any
+  queued/failed records, and don't change any CRM validation or
+  field-requirement settings... avoid touching anything in the
+  integration/middleware configuration until [Dana] can confirm it's
+  safe") is evidence-grounded, not fabricated -- it tracks the case's own
+  stated facts (Dana mid-migration, the REQUIRED no-resend item) rather
+  than inventing a new one. No regression, and a useful data point: this is
+  the intervention's target behavior generalizing correctly to a Delegate
+  exit, not just a literal Handoff block.
+- **`case-006`** (ordinary resolved Diagnose, no wall, no constraint
+  anywhere in the case): clean `field-debug session report`, no Handoff
+  block, no invented boundary language, root cause correctly identified
+  (nginx `proxy_read_timeout` vs. an SDK that collapses every 5xx into
+  "500"). No spillover into a case with nothing Handoff-shaped in it at
+  all.
+
+**One unplanned but important cross-cutting observation**: this edit's text
+lives structurally inside the `### Handoff` subsection only, but two of the
+nine runs (`case-032` run 2 and `case-022`) applied the same
+derive-a-boundary instinct inside **Delegate** output, which has its own
+pre-existing `CONSTRAINTS` field and was never textually touched by this
+edit. In `case-022` this generalization was evidence-grounded and correct;
+in `case-032` run 2 it is where the second invented constraint appeared.
+This means the edit's effective behavioral reach is not cleanly scoped to
+literal Handoff blocks the way its file location suggested it would be --
+worth naming plainly rather than claiming the change only affects what its
+placement implies.
+
+### 8. Invented-constraint and verbosity behavior, summarized
+
+- **Invented constraints**: 2/9 runs total, both on `case-032`, the case
+  specifically designed to catch this. 0/9 elsewhere (not on `case-024`,
+  `case-033`, `case-030`, `case-022`, or `case-006`).
+- **Verbosity**: no run in this sample produced a materially bloated
+  Handoff/Delegate output without new information -- the added constraint
+  sentences in `case-024`, `case-030`, and the correct parts of `case-022`
+  are each one to three sentences carrying a real, evidence-traceable
+  reason, consistent with every prior iteration's finding that this model
+  states a constraint with its reason rather than as a bare prohibition
+  when it states one at all. `case-032`'s two invented sections are the
+  exception: real added length carrying zero grounded information, which
+  is the concrete cost of the specificity failure in section 6, not a
+  separate verbosity problem.
+
+### 9. Comparison with the frozen pre-intervention evidence
+
+| Case | Pre-intervention (frozen) | Post-intervention (this iteration) |
+|---|---|---|
+| `case-024` (primary) | 0/3 full (Iterations 11b + 13 combined) | **3/3 full** |
+| `case-033` (positive control) | 3/3 full (Iteration 14) | 1/1 full |
+| `case-032` (negative control) | 0/2 invented a constraint (Iteration 12) | **2/2 invented a constraint** |
+| `case-030` | correct, evidence-grounded (Iteration 12-13) | correct, evidence-grounded |
+| `case-022`, `case-006` | not previously run as a Handoff-focused regression case in this PR's constraint-preservation work | correct, evidence-grounded / clean, no spillover |
+
+Every REQUIRED item this iteration graded outside the constraint dimension
+itself -- wall classification, ruled-out hypotheses, live-hypothesis
+preservation, next-party request, no-fabricated-root-cause, correct
+mode selection (Handoff vs. Delegate vs. session report) -- stayed clean
+across all nine runs, matching every prior iteration's finding that those
+dimensions are the stable core of this skill's Handoff behavior. The one
+dimension this edit targeted moved exactly as intended on the case it was
+built for and exactly as feared on the case built to catch overreach.
+
+### 10. Is the intervention supported, unsupported, or a tradeoff?
+
+**A tradeoff, not a clean support.** Per this experiment's own decision
+rule -- "if case-032 starts inventing restrictions: treat that as a
+specificity failure even if case-024 improves" -- this iteration cannot
+report the intervention as simply supported. The efficacy result is real
+and large in this sample (0/3 to 3/3, matching Iteration 14's isolated
+single-variable result almost exactly), the positive control held, and the
+rest of the regression sample showed no spillover. But the negative control
+failed cleanly and reproducibly (2/2, both close structural matches to the
+exact failure mode that control was built to catch), on a case
+Iteration 12 had previously shown this skill handles correctly without the
+edit. The honest summary: **this specific wording fixes the latent-risk
+gap it targeted, but at a real, measured cost to specificity on at least
+one class of no-constraint wall case** -- filing a routine vendor ticket
+and waiting for a config check to be confirmed, with no destructive,
+duplicative, or irreversible action anywhere in the loop.
+
+Per this session's own instruction, no second `SKILL.md` edit was made to
+try to correct this in the same experiment. The most direct, narrowly
+targeted next step -- not implemented here -- would revisit the "don't
+invent one the evidence doesn't support" clause specifically: possibly by
+anchoring it more concretely to "an action someone has actually proposed or
+that the situation's own next step would otherwise invite" rather than the
+current open-ended "any action boundary the evidence implies," since both
+`case-032` failures took the form of prohibiting actions nobody in either
+case had proposed or that the case's actual next step (a vendor ticket)
+would ever touch.
+
+### 11. Remaining uncertainty
+
+- This is a single session, one model family, n=9 total across five cases,
+  with the negative control at n=2 -- enough to call the case-032 failure
+  a reproducible pattern rather than a fluke (2/2, both structurally
+  matching the exact named failure mode), but not enough to characterize
+  its rate precisely or to know whether it recurs on other no-constraint
+  wall shapes beyond `case-032`'s CDN scenario.
+- Whether the Delegate-mode generalization observed in section 7 (the edit
+  affecting output beyond its literal Handoff placement) is a stable
+  property of how this model reads the instruction, or specific to these
+  two cases' phrasing, is unresolved from this sample alone.
+- Whether a more tightly scoped version of the sentence (per section 10)
+  would preserve the `case-024` gain while closing the `case-032` gap is a
+  hypothesis, not evidence -- it was deliberately not tested in this
+  session, consistent with the instruction to make one intervention and
+  one clean measurement rather than stacking a correction on top of an
+  unresolved result.
+- The submission-window secondary-provenance gap (section 4) persisted
+  unchanged through this edit, consistent with every prior iteration's
+  finding that it is a separate, fixture-specific weak spot unrelated to
+  constraint derivation -- not investigated further here since it was out
+  of this iteration's scope.
+
+**Decision left open for the next session**: whether to revert this edit,
+narrow its wording to address the `case-032` failure mode, or accept the
+tradeoff as-is pending a larger sample -- none of those was decided or
+executed in this session, consistent with "one intervention, one clean
+measurement" and the instruction not to stack a second change onto an
+unresolved result.
+
