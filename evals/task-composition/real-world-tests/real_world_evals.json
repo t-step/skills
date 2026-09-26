@@ -1,0 +1,71 @@
+{
+  "skill_name": "task-composition",
+  "note": "Real-world fixture suite -- see README.md. Full REQUIRED/DEFENSIBLE/DIAGNOSTIC reasoning and provenance citations live in evals/task-composition/grading/case-3xx.expected.md; 'expectations' below are a condensed checklist, not a substitute for the grading file.",
+  "evals": [
+    {
+      "id": 301,
+      "name": "real-world-ignite-iep119-phase1",
+      "prompt": "Treat evals/task-composition/cases/case-301/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Recognizes the two stated 'blocks' links onto IGNITE-24850, does not treat IGNITE-24850 as foundational/enabling despite sounding architectural, identifies IGNITE-24782 (module creation) as an inferred multi-consumer enabler without overclaiming it as a stated dependency, does not resolve the IGNITE-24957/IGNITE-24851 tangle into false certainty, does not invent a stated link between the two same-class shared-file pairs, and does not invent detail for the four title-only tasks.",
+      "files": [
+        "evals/task-composition/cases/case-301/context.md",
+        "evals/task-composition/cases/case-301/tasks.md",
+        "evals/task-composition/cases/case-301/dependencies.md",
+        "evals/task-composition/cases/case-301/source-notes.md",
+        "evals/task-composition/cases/case-301/repository-state.md"
+      ],
+      "expectations": [
+        "IGNITE-24850 is shown depending on both IGNITE-24846 and IGNITE-24848 (stated links), not scheduled as an independent or early/foundational step",
+        "IGNITE-24782 (create ignite-commons module) is identified as a real prerequisite for the other 'Move X' tasks via inference, not presented as if the tracker states the link explicitly, and is not casually dismissed as too simple to be an enabler given it unlocks at least 7 other tasks",
+        "The IGNITE-24957/IGNITE-24851 relationship is not resolved into one confident, unacknowledged direction -- either named as a genuine partial tangle, or one reading is chosen with explicit acknowledgment of the other",
+        "No stated dependency is invented between IGNITE-24941/IGNITE-24850 or IGNITE-24946/IGNITE-24846 (both same-class pairs with no actual link) -- shared-class exposure may be flagged, but not presented as a tracker-stated fact",
+        "IGNITE-24846, IGNITE-24847, IGNITE-24848, and IGNITE-24852 are not given invented detail (file paths, method signatures, rationale) beyond their real title-only content"
+      ]
+    },
+    {
+      "id": 302,
+      "name": "real-world-cassandra-sai-cep7",
+      "prompt": "Treat evals/task-composition/cases/case-302/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Identifies CASSANDRA-18112 as blocked by an external community DISCUSS process rather than by anything in this task set, identifies CASSANDRA-18345 as reaching into shared storage-engine machinery outside SAI's own ownership, names a real dependency/convergence between CASSANDRA-18067, -18345, and -18490 rather than treating them as independent, does not serialize the eight smaller cleanup tasks behind -18067 without a stated reason, does not manufacture CASSANDRA-18166 into a horizontal enabler with unnamed consumers, and honors -18067 as the one stated priority signal without inventing a ranking among the rest.",
+      "files": [
+        "evals/task-composition/cases/case-302/context.md",
+        "evals/task-composition/cases/case-302/tasks.md",
+        "evals/task-composition/cases/case-302/dependencies.md",
+        "evals/task-composition/cases/case-302/source-notes.md",
+        "evals/task-composition/cases/case-302/repository-state.md"
+      ],
+      "expectations": [
+        "CASSANDRA-18112 is named as blocked by something outside this task set (an unresolved community DISCUSS thread), not treated as an ordinary orderable/parallelizable task",
+        "CASSANDRA-18345 is distinguished from an ordinary in-task-set dependency -- named as touching shared, non-SAI-owned storage-engine machinery (the SSTable streamed-component set) with wider blast radius",
+        "CASSANDRA-18067, -18345, and -18490 are not listed as fully independent/parallel-safe with no dependency or shared-checkpoint relationship named between them",
+        "The eight smaller cleanup/improvement tasks (18165, 18166, 18167, 18216, 18280, 18494, 18515, 18521) are not silently serialized behind CASSANDRA-18067 purely because they share the SAI label",
+        "CASSANDRA-18166 is not promoted to horizontal-enabler status with two or more named downstream consumers the record doesn't support",
+        "CASSANDRA-18067 is treated as the one stated priority signal (Phase 3, active); no substitute priority ranking is invented among the other twelve tasks"
+      ]
+    },
+    {
+      "id": 303,
+      "name": "real-world-hudi-metadata-table",
+      "prompt": "Treat evals/task-composition/cases/case-303/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Treats several genuinely open/unscoped tickets (HUDI-2436, -2459, -2460) as uncertain rather than inventing a concrete fix; names HUDI-2432/-2477 as dependent on HUDI-2422 without asserting a confident order between 2432 and 2477 themselves; does not silently merge or strictly sequence HUDI-2458/-2459; does not elevate HUDI-2474 into a standalone multi-consumer enabler; does not declare HUDI-2476 cleanly independent of HUDI-2285; does not fabricate a link from HUDI-2452 into the rest of the plan; keeps HUDI-2459/-2460 as two distinct deliverables; does not treat the shared 'Blocker' label (11 of 19 tasks) as a real priority signal; surfaces the rollback/restore/bootstrap-check correctness cluster (2422/2432/2477/2468/2476) as a shared-area signal worth naming, without folding in HUDI-2478; and treats HUDI-2303/HUDI-2472 as functionally tied to HUDI-2276 rather than freely parallel.",
+      "files": [
+        "evals/task-composition/cases/case-303/context.md",
+        "evals/task-composition/cases/case-303/tasks.md",
+        "evals/task-composition/cases/case-303/dependencies.md",
+        "evals/task-composition/cases/case-303/source-notes.md"
+      ],
+      "expectations": [
+        "HUDI-2436, HUDI-2459, and HUDI-2460 are treated as open/unscoped investigations, not given an invented concrete fix presented as the task's real content",
+        "HUDI-2432 and HUDI-2477 are both shown depending on HUDI-2422, and no confident single execution order between 2432 and 2477 themselves is presented as settled fact (filing-date/number order is not treated as dependency order)",
+        "HUDI-2458 and HUDI-2459 are not silently treated as either the same fix or strictly sequential without naming that the record doesn't state which",
+        "HUDI-2474 is not elevated into a standalone horizontal enabler -- its record supports only one real named consumer",
+        "HUDI-2476 is not declared fully independent of HUDI-2285 with no caveat, given both describe the same delta-commit retry mechanics",
+        "HUDI-2452 is not given a fabricated dependency link to the rollback/restore cluster or to HUDI-2276 just because it shares a filing window or priority label",
+        "HUDI-2459 and HUDI-2460 are kept as two distinct deliverables, not merged into one 'async metadata ops' slice",
+        "The shared 'Blocker' priority label (11 of 19 tasks) is not treated as a discriminating priority order used to justify a sequencing choice",
+        "The rollback/restore/bootstrap-check cluster (HUDI-2422, -2432, -2477, -2468, -2476) is named as a shared-area signal worth a closer look somewhere in the report (any resulting grouping is acceptable), and HUDI-2478 is not folded into that cluster",
+        "HUDI-2303 and HUDI-2472 are shown as functionally tied to HUDI-2276's rollout, not listed as freely parallel with it with no mention of the consequence relationship"
+      ]
+    }
+  ]
+}
