@@ -3261,3 +3261,362 @@ executed in this session, consistent with "one intervention, one clean
 measurement" and the instruction not to stack a second change onto an
 unresolved result.
 
+## Iteration 16 (2026-09-26): narrower intervention -- preserve an established implication, don't derive an action boundary (PR #64 follow-up)
+
+### 1. Iteration 15's efficacy/specificity tradeoff (starting point)
+
+Iteration 15's edit ("derive any action boundary the evidence implies")
+fixed `case-024`'s latent-constraint miss (0/3 pre-intervention -> 3/3)
+but caused `case-032`'s no-constraint control to regress from a clean 0/2
+(Iteration 12) to 2/2 invented restrictions -- a specificity failure. Every
+other Handoff dimension (wall classification, ruled-out hypotheses, live
+hypotheses, no-fabricated-root-cause) stayed clean across both cases.
+Iteration 15 itself named the likely mechanism: an instruction to *derive*
+a boundary reads as a standing search objective, satisfiable by
+constructing a plausible-sounding precaution even where the evidence
+raises no such action as live.
+
+### 2. The mechanism this intervention is intended to change
+
+Iteration 15's sentence asked the investigator to search the evidence for
+something the next party should not do. This iteration instead asks the
+investigator to notice when evidence already gathered carries a
+consequential implication -- treating constraint-statement as a
+recognition step conditioned on established state, not a standing search
+task performed on every Handoff regardless of what the evidence supports.
+The intended effect: on a case whose evidence has no such implication
+(`case-032`: a routine vendor ticket, no destructive or duplicative action
+anywhere in the loop), there is nothing for the narrower instruction to
+trigger on, because there is no established finding or unresolved state
+that implies a boundary. On a case whose evidence does carry one
+(`case-024`: an accepted-but-unconfirmed async job, no stated idempotency
+behavior for the submit endpoint), the same instruction should still
+recognize it.
+
+### 3. Exact wording change
+
+**Location, unchanged from Iteration 15**: `skills/field-debug/SKILL.md`,
+the `### Handoff` subsection's own prose, immediately before its template
+-- the smallest location that could plausibly move the target behavior,
+per Iteration 15's own reasoning for choosing it.
+
+**Original, pre-Iteration-15 text** (restored as the base for this edit):
+
+> Use when an access, ownership, or authorization wall stops the
+> investigation and neither you nor any delegate can cross it -- nobody
+> reachable has credentials, no one is available across a team boundary, the
+> environment is truly out of reach. Unlike Delegate, nothing resumes:
+> produce what's ruled out, exactly what the next party needs to check, and
+> why it's blocked. A fabricated best guess is worse than an honest handoff.
+
+**Iteration 15's text** (in place immediately before this session):
+
+> Use when an access, ownership, or authorization wall stops the
+> investigation and neither you nor any delegate can cross it -- nobody
+> reachable has credentials, no one is available across a team boundary, the
+> environment is truly out of reach. Unlike Delegate, nothing resumes:
+> produce what's ruled out, exactly what the next party needs to check, and
+> why it's blocked. Before closing, derive any action boundary the evidence
+> implies -- something the next party shouldn't retry, replay, mutate,
+> restart, or otherwise act on until the live uncertainty resolves -- and
+> preserve why; don't invent one the evidence doesn't support. A fabricated
+> best guess is worse than an honest handoff.
+
+**This session's text** (the only change made this session):
+
+> Use when an access, ownership, or authorization wall stops the
+> investigation and neither you nor any delegate can cross it -- nobody
+> reachable has credentials, no one is available across a team boundary, the
+> environment is truly out of reach. Unlike Delegate, nothing resumes:
+> produce what's ruled out, exactly what the next party needs to check, and
+> why it's blocked. Before closing, preserve any consequential implication
+> the evidence already carries for what the next party can safely assume or
+> do -- don't manufacture one it doesn't support. A fabricated best guess is
+> worse than an honest handoff.
+
+Exact diff against the pre-Iteration-15 base (i.e. what this session's
+commit changes relative to Iteration 15's commit, which is what actually
+landed):
+
+```diff
+ reachable has credentials, no one is available across a team boundary, the
+ environment is truly out of reach. Unlike Delegate, nothing resumes:
+ produce what's ruled out, exactly what the next party needs to check, and
+-why it's blocked. Before closing, derive any action boundary the evidence
+-implies -- something the next party shouldn't retry, replay, mutate,
+-restart, or otherwise act on until the live uncertainty resolves -- and
+-preserve why; don't invent one the evidence doesn't support. A fabricated
+-best guess is worse than an honest handoff.
++why it's blocked. Before closing, preserve any consequential implication
++the evidence already carries for what the next party can safely assume or
++do -- don't manufacture one it doesn't support. A fabricated best guess is
++worse than an honest handoff.
+ 
+ ```
+
+Deliberately **not** done, consistent with this session's own intervention
+discipline: no `Constraints:` field added to the template, no safety
+section, no instruction to "search for" an action boundary, no enumeration
+of retry/replay/restart/configuration scenarios, no fixture-specific
+vocabulary (no case, no Meridian, no Solstice, no CDN), and no second
+reinforcing instruction placed elsewhere in the file. Committed separately
+from this write-up as commit `4dfb126`, `skills/field-debug/SKILL.md`
+only, 1 file changed (+4/-5 lines). `bash scripts/check.sh` passed
+immediately before and immediately after this single edit
+(`check-skill-frontmatter: OK`, `check-eval-isolation: OK (216 case dirs
+across 15 skill(s), no leakage)`, `check-skill-deps: OK`).
+
+### 4. Why the new instruction should generate less speculative searching
+
+The old sentence's verb was "derive" applied to "any action boundary the
+evidence implies" -- an instruction to actively search for and construct a
+boundary from the evidence's general shape, exactly the search-and-satisfy
+pattern Iteration 15 itself identified as the likely mechanism behind
+`case-032`'s invented restrictions. The new sentence's verb is "preserve"
+applied to "any consequential implication the evidence already carries" --
+grammatically and conceptually a recognition-and-forwarding step
+conditioned on a state that must already exist ("already carries"), not an
+open-ended construction task. On a case with no such implication in its
+evidence, there is nothing for "preserve" to act on, whereas "derive"
+supplies its own motive to manufacture one. The clause "don't manufacture
+one it doesn't support" is retained as a second-order guard, structurally
+identical to Iteration 15's own "don't invent one the evidence doesn't
+support," in case the recognition framing alone proves insufficient.
+
+### 5. Seven-run design
+
+Seven fresh `general-purpose` subagents (never `fork`, so none carried this
+orchestrating session's knowledge of the grading keys, prior iterations'
+findings, or this session's hypothesis), launched in two waves (5, then 2)
+to respect this session's five-concurrent-subagent limit:
+
+- **Primary efficacy (3 runs)**: `case-024`, unmodified. Question: does the
+  narrower intervention still preserve the latent operational implication
+  that the accepted-but-unobserved orders must not simply be treated as
+  failed/resubmitted?
+- **Primary specificity (2 runs)**: `case-032`, unmodified. Question: does
+  the narrower intervention avoid manufacturing restrictions where the
+  evidence establishes no consequential action boundary?
+- **Positive control (1 run)**: `case-033`, unmodified. Confirms the
+  already-explicit constraint remains preserved.
+- **Original latent-condition replication (1 run)**: `case-026` Phase A
+  only (Phase B not run, per instruction).
+
+Each subagent was told its exact working directory and permitted file list
+(the post-intervention `SKILL.md` plus only its own case's own directory),
+instructed never to open `evals/field-debug/grading/`,
+`evals/field-debug/pressure-tests/`, `evals/field-debug/RESULTS.md`, any
+other case directory, or run `git`, and told to load
+`skills/field-debug/SKILL.md` first and follow it throughout. None was told
+this was an experiment, told the hypothesis under test, or given any
+grading-vocabulary hint. Each returned a self-contained write-up between
+`===BEGIN/END ARTIFACT===` markers.
+
+**Disclosed limitation, same shape as every prior iteration:** each
+subagent was *instructed* not to read forbidden material; for a
+`general-purpose` agent with full tool access this is instruction-
+following, not a sandboxed guarantee. Nothing in any of the seven returned
+write-ups suggested it looked elsewhere, but this is not independently,
+mechanically verified.
+
+### 6. Primary efficacy: case-024
+
+**1/3 full, 0/3 partial, 2/3 miss.** A weak, non-clean improvement over the
+frozen 0/3 pre-intervention baseline (Iterations 11b + 13 combined), and a
+clear regression from Iteration 15's 3/3 on the same fixture.
+
+| Run | Constraint | Notes |
+|---|---|---|
+| 1 | **FULL** | Explicit "Consequential implication for the next party (established by evidence, not manufactured)" section: reasons from the evidence already in hand (202 Accepted = validated + queued/in-flight; no stated idempotency behavior for the submit endpoint) to "Do not resubmit ORD-88231..88235 while the ticket is pending," with duplicate-fulfillment/double-shipment risk stated as the reason. |
+| 2 | **MISS** | No resubmission/retry constraint anywhere. Produced a "Consequential implication to pass along" section, but its content is procedural (surface the WH-12 correlation to speed vendor triage) rather than the resubmission-risk action boundary. |
+| 3 | **MISS** | No resubmission/retry constraint and no consequential-implication section of any kind. |
+
+All three runs correctly classified the case as Handoff, kept the two live
+hypotheses uncollapsed (or, in run 3, kept a hedged preference without
+discarding the alternative, which the grading key permits), did not
+fabricate a root cause or claim Meridian-side access, and did not treat
+NetOps or the open ticket as still resolving. Run 1's ruled-out count was
+5/5; run 2's was 2 explicitly named (below the grading key's >=3 bar,
+though its surrounding reasoning cites more evidence than it explicitly
+enumerates); run 3's was evidence-grounded but organized as H1-H4 rather
+than a clean five-item list. The known secondary-provenance gap persisted:
+all three runs stated the submission time as a single "02:14 UTC" anchor,
+never the full `02:14:03-02:14:11 UTC` range -- the same gap every prior
+iteration has found on this fixture, unrelated to this edit.
+
+Run 1's own language ("established by evidence, not manufactured") tracks
+the new sentence's framing closely enough to conclude it engaged with the
+instruction specifically. Runs 2 and 3 show no sign of having searched for
+and failed to find a boundary -- they simply did not surface one, which is
+the behavior the narrower wording is supposed to produce on a case with no
+qualifying evidence, except `case-024` does carry a qualifying implication
+(per its own grading key), and two of three runs did not preserve it. This
+is a real efficacy shortfall, not evidence the mechanism only fires on
+cases with no implication -- see section 9.
+
+### 7. Primary specificity: case-032
+
+**0/2 invented a constraint.** Clean, and a direct reversal of Iteration
+15's 2/2 specificity failure on this same case.
+
+Both runs correctly ruled out origin-level caching using
+`app_cache_config.md` and `origin_access_log.md` together, correctly
+isolated the pattern to PoP `iad3`, correctly cited `c_0091` (same PoP, not
+stale) as consistent with a per-node cache hit/miss rather than a blanket
+outage, and correctly named the vendor edge admin console as the wall.
+Neither run proposed a restart, purge, cache-disable, reconfiguration, or
+generic "proceed carefully" caution -- the exact failure shape Iteration 15
+produced twice. Run 1's Handoff ends on an epistemic caution about the
+*conclusion* ("declaring the override the root cause without confirmation
+would launder documented vendor capability into an unverified runtime
+fact"), which is not an operational constraint on any action and does not
+count as one. Neither run explicitly stated the positive absence of a
+constraint (the case's own BONUS item), but neither fabricated one either
+-- distinguishing "no invented constraint" from "weak speculative caution"
+from "concrete unsupported prohibition" per this session's grading
+instructions, both runs land cleanly in the first category.
+
+### 8. Positive control: case-033
+
+**FULL.** "Consequential implication to preserve: Per Meridian's own
+published guidance..., do not resubmit any of these 5 orders -- each
+already returned 202 Accepted and holds an active correlation ID;
+resubmitting risks duplicate fulfillment and a duplicate outbound
+shipment." The run restated the case's own explicit vendor guidance in its
+own words, exactly as the grading key's constraint item allows, and showed
+the same 5/5 ruled-out set and uncollapsed two-hypothesis split as
+`case-024`. No regression against Iteration 14's or Iteration 15's clean
+behavior on this case.
+
+### 9. Original latent-condition replication: case-026 Phase A
+
+Every other Part 1 grading item was satisfied: the objective was stated
+correctly, the `static_pinned`/`certificate_mode` correlation was
+established with `tenant_sso_config.md` and `auth_gateway_saml_log.md`
+together, clock skew and rate limiting were both ruled out with named
+evidence, the wall (IAM lead unreachable this shift; Solstice's own
+support SLA has no faster tier) was named precisely, provenance (the five
+tenant/connection IDs, the 00:15 UTC rotation time, representative session
+IDs and error text, ticket `#SOL-88410`) was preserved, a concrete
+next-party request was stated, and the cert-pinning mechanism was
+presented as INFERRED "near-certainty" with an explicitly named residual
+UNKNOWN (vendor confirmation of rotation-inclusion) rather than either
+overclaiming or under-claiming -- exactly the acceptable framing the
+grading key's design-tension note calls for.
+
+**The grading key's specific constraint item -- "don't switch the five
+connections to `dynamic_metadata` or disable SSO for them without the IAM
+lead's approval, given the security/change-control implications of
+altering a customer's SSO trust configuration" -- was a MISS.** The run's
+Handoff routes the actual remediation through the IAM lead implicitly (its
+"what the next party needs to check/do" list has the IAM lead reaching
+Solstice and applying the fingerprint update), but at no point states a
+boundary against an alternative action (switching modes, disabling SSO, or
+otherwise altering the trust config without that approval). This is
+consistent with `case-026` being, per this PR's own prior findings, the
+other original case where latent constraint preservation was already
+unreliable before Iteration 15 (Iteration 11b: 0/2 across `case-024` and
+`case-026` Phase A) -- this run neither introduces a new contradiction nor
+demonstrates a fix.
+
+### 10. Unsupported or speculative constraints observed
+
+**None.** Across all seven runs, zero fabricated, weakly speculative, or
+unsupported constraints appeared anywhere -- not on `case-032` (the case
+built to catch exactly this), not on the two `case-024` misses, and not on
+`case-026` Phase A's miss. Every miss in this iteration was a clean
+omission (the implication simply wasn't stated), never a manufactured
+substitute. This is the mirror image of Iteration 15's failure mode: that
+intervention traded misses for fabrications; this one has misses with no
+fabrications at all.
+
+### 11. Comparison: original skill vs. Iteration 15 vs. this intervention
+
+| Case | Original skill (pre-Iteration-15, frozen) | Iteration 15 | This intervention |
+|---|---|---|---|
+| `case-024` (primary) | 0/3 full (Iterations 11b + 13 combined) | 3/3 full | **1/3 full, 2/3 miss** |
+| `case-032` (negative control) | 0/2 invented a constraint (Iteration 12) | 2/2 invented a constraint | **0/2 -- clean** |
+| `case-033` (positive control) | 3/3 full (Iteration 14) | 1/1 full | **1/1 full** |
+| `case-026` Phase A | 0/1 constraint stated (Iteration 11b) | not run this case in Iteration 15 | **0/1 constraint stated (miss), all other Part 1 items correct** |
+
+The specificity dimension is restored to the original skill's clean
+behavior. The efficacy dimension partially reverted toward (but did not
+fully return to) the original skill's failure on `case-024`, and showed no
+improvement at all on `case-026` Phase A, the other case this PR's own
+history identifies as testing the same latent-condition mechanism.
+
+### 12. Is this intervention supported?
+
+**No -- per this experiment's own decision rule, this is closer to
+"narrowing restored specificity at the cost of efficacy" than to a clean
+support, and the `case-026` result weakens even that reading.**
+`case-032` is unambiguously clean (0/2, matching the original skill and
+reversing Iteration 15's regression). `case-024` moved from the frozen 0/3
+baseline to 1/3 -- technically nonzero, but weak evidence at this sample
+size, and a clear regression from Iteration 15's 3/3 on the identical
+fixture. `case-033` held. `case-026` Phase A, the one case in this
+session's design meant to independently corroborate whichever direction
+`case-024` pointed, showed no improvement over its own pre-Iteration-15
+baseline (still a miss on the constraint item specifically).
+
+Per the decision rule as stated going in: this is not "both improve"
+(case-024's improvement is too weak and case-026 shows none), and it is
+not the clean "case-032 clean, case-024 fully reverts to pre-intervention
+behavior" case either, since `case-024` did produce one full preservation
+where the original skill produced none across the same three-run design.
+The honest characterization is the hedged middle the decision rule
+anticipated: **narrowing the instruction from "derive a boundary" to
+"preserve an already-carried implication" successfully closed the
+specificity gap, but did not reliably restore the efficacy Iteration 15
+had achieved -- it fixed the false-positive problem at a real, measured
+cost to the true-positive rate, and left the other latent-condition case
+(`case-026`) exactly where it was before any intervention.**
+
+Per this session's own stopping rule, no second wording, no rerun, and no
+increased trial count were used to try to improve on this result.
+
+### 13. Remaining uncertainty
+
+- This is a single session, one model family, n=7 total across four cases,
+  with the primary efficacy cell at n=3 and the specificity cell at n=2 --
+  enough to call the specificity fix a real, reproducible reversal of
+  Iteration 15's failure (0/2, matching the original skill's own 0/2 on
+  this exact case), but not enough to characterize `case-024`'s 1/3 rate
+  precisely, nor to know whether a larger sample would land closer to
+  Iteration 15's 3/3, the original skill's 0/3, or somewhere stably
+  between.
+- Whether `case-024`'s two misses reflect the narrower wording failing to
+  recognize the implication, or ordinary run-to-run variance in how
+  thoroughly a given run reasons about idempotency before closing, is not
+  distinguishable from this sample -- run 1's explicit "established by
+  evidence, not manufactured" framing suggests the instruction can work as
+  intended, but two other runs under the identical instruction and
+  identical evidence did not produce it.
+- `case-026` Phase A's constraint item concerns a different kind of
+  implication (an authorization/change-control boundary on altering SSO
+  trust config, following from an access-ownership fact rather than an
+  unresolved-async-outcome fact) than `case-024`/`case-033`'s
+  duplicate-fulfillment risk. Whether the narrower wording's weaker
+  showing here reflects a genuine difference in how legible that kind of
+  implication is, versus this case simply being a harder latent-condition
+  fixture across every iteration measured so far (Iteration 11b: 0/2
+  including this case), is not resolved by this sample.
+- Whether the "preserve" framing's recognition-conditioned trigger, rather
+  than the "derive" framing's search trigger, is the actual mechanism
+  behind `case-032`'s clean result -- as opposed to, say, ordinary sample
+  noise at n=2 -- is a hypothesis this session's design supports but
+  cannot prove at this sample size.
+- The submission-window secondary-provenance gap (section 6) persisted
+  unchanged through this edit, consistent with every prior iteration's
+  finding that it is a separate, fixture-specific weak spot unrelated to
+  constraint derivation.
+
+**Decision left open for the next session**: whether to accept this
+intervention's specificity-for-efficacy tradeoff, revert to the original
+pre-Iteration-15 wording (accepting the original 0/3 efficacy gap in
+exchange for guaranteed specificity), attempt a still-different wording
+that targets `case-024` and `case-026`'s shared mechanism directly, or run
+a larger sample before deciding at all -- none of those was decided or
+executed in this session, consistent with the instruction to make one
+intervention, evaluate it once, and not tune again in this session.
+
