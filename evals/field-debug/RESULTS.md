@@ -2557,3 +2557,106 @@ six varied domains in a single trial -- more of the same case shape would
 mostly re-confirm that ceiling rather than resolve the disagreement with
 Iteration 11b.
 
+## Iteration 13 (2026-09-26): direct stability replication on the original case-024/026 fixtures, 6 fresh field-debug runs (PR #64 follow-up)
+
+Iteration 12's own recommended next step (its section 10) was a direct
+re-run of the *original, unmodified* `case-024` and `case-026` Phase A --
+the two fixtures Iteration 11b's constraint-omission finding actually came
+from -- rather than another new case set. This iteration is that re-run,
+scaled to n=3 per case for a first read on run-to-run stability. Neither
+`skills/field-debug/SKILL.md` nor any case/grading file was modified,
+before, during, or after these runs. No new fixtures were authored. No
+Phase B consumer runs were executed.
+
+### 1. Exact six-run setup
+
+Six fresh `general-purpose` subagents (never `fork`, so none carried this
+orchestrating session's knowledge of the grading keys or prior iterations)
+were launched in two waves of three: three independent runs against
+unmodified `case-024` (its `context.md` plus its seven evidence files, plus
+`skills/field-debug/SKILL.md` -- no other file), and three independent runs
+against unmodified `case-026/phase_a` (its `context.md` plus its six
+evidence files, plus `SKILL.md` -- explicitly excluding `case-026`'s
+top-level `context.md`, which describes the two-phase round-trip design and
+would have leaked eval-awareness, and excluding `phase_b/` entirely, per
+that case's own run instructions). Each subagent was told its exact
+permitted file list and explicitly instructed never to open
+`evals/field-debug/grading/`, `evals/field-debug/pressure-tests/`,
+`evals/field-debug/RESULTS.md`, any other case directory, or run `git`
+commands. No baseline condition was run this iteration -- the question
+this time is field-debug's own run-to-run stability, not a
+field-debug-vs-baseline comparison. No agent saw another agent's artifact,
+transcript, or output at any point; each received only its own case's
+frozen evidence and produced a self-contained
+`===BEGIN/END ARTIFACT===`-delimited write-up.
+
+**Disclosed limitation, same shape as prior iterations:** each subagent was
+*instructed* not to read forbidden material; for a `general-purpose` agent
+this is instruction-following, not a sandboxed guarantee. Nothing in any
+of the six returned write-ups suggested it looked elsewhere, but this is
+not independently, mechanically verified.
+
+### 2. Per-run matrix (Phase A / case-024 grading key, Part 1 for case-026, applied to each run)
+
+Graded on the five dimensions the requesting task specified, against each
+case's existing frozen `grading/*.expected.md` -- no wording requirement
+invented beyond what those keys already state.
+
+| Run | Constraint (stated + reason) | Provenance: primary identifiers | Provenance: secondary detail | Ruled-out + live hypotheses | Next-party request (bounded) | Wall classification |
+|---|---|---|---|---|---|---|
+| case-024 run 1 | **MISSING** -- no resubmission/duplicate-fulfillment caution anywhere | correlation IDs (MF-88231-CORR..-88235-CORR) + order IDs: full | submission window (02:14:03-02:14:11 UTC): **MISSING entirely** | full -- 5/5 named hypotheses ruled out with cited evidence; both live hypotheses (processing stall vs. delivery-path failure) preserved, un-collapsed | present; 3 sub-asks bundled around one uncertainty; discriminating purpose stated only implicitly | correct, explicit `## field-debug handoff:` block |
+| case-024 run 2 | **PRESENT** -- explicit: confirm idempotency before resubmitting, "a blind resubmission risks duplicate fulfillment" | full | **PARTIAL** -- states "02:14:03 UTC" as the batch's start time only; the closing time (02:14:11 UTC) and the window framing are not restated | full -- 5/5 cited; live hypotheses reframed as pipeline-fault-vs-still-within-window, not collapsed | present; 4-item numbered list; discriminating purpose implicit | correct, explicit block |
+| case-024 run 3 | **MISSING** | full | **PARTIAL** -- single anchor "02:14 UTC" mentioned once, no range | full -- 6 hypotheses discussed, ruled-out ones cited; 2 live (WH-12-specific fault primary, generic transit loss secondary and explicitly unfavored) | present; single bounded ask | correct, explicit block |
+| case-026 run 1 | **SOFT-PRESENT** -- raises the `dynamic_metadata`-switch idea but explicitly gates it: "requires the same IAM-lead config-edit access... this is a decision for whoever owns that trust policy, not a default recommendation" | tenant IDs (all 5) + rotation time (00:15 UTC) + exact error text + ticket `#SOL-88410`: full | session IDs (e.g. `sess-77a1`): **MISSING** | full -- clock skew and rate limiting both ruled out with reasoning; cert-pinning hedged as strongly-supported-but-vendor-unconfirmed (acceptable framing (a) from the key's design-tension note) | present; single bounded ask combining rotation-confirmation + fingerprint, matching the key's own example | correct, explicit block; also explicitly reasons about why this isn't a session report |
+| case-026 run 2 | **MISSING** -- raises the same `dynamic_metadata`-migration idea but with no approval/authorization caveat attached ("separately worth a follow-up... not decided here, since it wasn't asked as a productionization review") | full | **MISSING** | full, same hedge | present; single bounded ask | correct, explicit block |
+| case-026 run 3 | **MISSING** -- does not raise the `dynamic_metadata` idea at all, and states no other next-party constraint | full | **MISSING** | full, same hedge | present; single bounded ask | correct, explicit block |
+
+### 3. Specific omissions, run by run
+
+- **case-024 run 1**: constraint absent; submission window absent. Everything else (provenance IDs, both ruled-out and live hypotheses, wall classification) intact.
+- **case-024 run 2**: constraint present with reasoning; submission window half-preserved (start time only). The most complete of the three case-024 runs.
+- **case-024 run 3**: constraint absent; submission window reduced to a single unranged timestamp. Everything else intact.
+- **case-026 run 1**: session IDs absent; constraint present but phrased as a hedged, easy-to-miss gate on an optional suggestion rather than a standalone prohibition.
+- **case-026 run 2**: session IDs absent; constraint-shaped material present in the artifact (the migration idea) but with the specific safety caveat stripped out -- structurally the same near-miss the grading key's own BONUS item warns against, though milder than Iteration 11b's baseline instance (that one recommended the switch outright as a stopgap; this one merely fails to caveat a deferred suggestion).
+- **case-026 run 3**: session IDs absent; no constraint-shaped content of any kind.
+
+No run in either case fabricated a root cause, claimed access it didn't have, treated an already-exhausted delegate (NetOps, the Meridian ticket, the Solstice ticket) as if it could still resolve things, or confused a genuine Handoff with a Checkpoint or an ongoing Delegate. These four items were clean 6/6 across both cases.
+
+### 4. Cross-run pattern
+
+Five dimensions behaved very differently from each other:
+
+- **Wall classification**: 6/6 correct. The single most stable behavior observed across every iteration of this suite so far.
+- **Ruled-out + live hypotheses**: 6/6 fully preserved, always with the evidence or reasoning that eliminated each ruled-out hypothesis, and always with both live hypotheses left un-collapsed into an invented verdict.
+- **Next-party request**: 6/6 present and bounded to one uncertainty. A softer, non-REQUIRED-blocking observation: all three case-024 runs state the request as a purposeful list of checks without explicitly narrating *why* each observation would discriminate between the two live hypotheses (the case-024 key's own phrasing example -- "never attempted" vs. "attempted but lost" -- is not echoed explicitly in any of the three, though the requests are clearly built around resolving exactly that ambiguity). Case-026's three requests meet this cleanly, matching the key's own example almost verbatim in all three.
+- **Provenance, primary identifiers** (correlation/order/tenant IDs, rotation timestamp, exact error text, ticket references): 6/6 fully preserved in both cases.
+- **Provenance, secondary detail**: unreliable in both cases, but a *different* specific field in each -- case-024's exact submission window (0/3 fully preserved: one run drops it entirely, two preserve only a single anchor timestamp rather than the full 02:14:03-02:14:11 UTC range) and case-026's representative session IDs (0/3 preserved in any run). Both are single, specific, low-cardinality facts, not a random scatter of different details across the six runs.
+- **Constraint**: the most volatile dimension by far -- 1 full pass (`case-024` run 2), 1 soft/hedged pass (`case-026` run 1), 4 misses (`case-024` runs 1 and 3, `case-026` runs 2 and 3).
+
+### 5. Comparison with the earlier case-024/026 observations (Iteration 11b) and the differently-shaped replication (Iteration 12)
+
+- **Iteration 11b** (n=1 field-debug run per case): 0/2 field-debug Handoff outputs stated a next-party constraint; field-debug's one `case-024` run also dropped the exact submission window.
+- **Iteration 12** (n=1 field-debug run per case, 6 newly-authored, more evidence-salient cases): 6/6 field-debug Handoff outputs stated the intended constraint, including on cases requiring real synthesis from scattered facts (`case-027`, `case-029`, `case-031`).
+- **This iteration** (n=3 field-debug runs per case, the *original* `case-024`/`case-026` fixtures): 2/6 constraint statements (1 full, 1 soft), and case-024's submission window is fully preserved in 0 of 3 runs -- the same specific gap Iteration 11b found once, now observed in a majority of a larger sample on the identical fixture.
+
+### 6. Did the previous constraint-gap hypothesis replicate?
+
+**Partially, and specifically in direction rather than in magnitude.** The majority of runs on these two original cases still omit the constraint (4 of 6, plus one soft pass that a strict reading could also count as a miss), which is a real reproduction of Iteration 11b's direction and rules out "that finding was pure noise from an unlucky n=2 sample." But it does not reproduce as the deterministic, template-level failure a 0/2 sample could suggest -- one case-024 run and one case-026 run did produce the constraint. The honest picture sits between Iteration 11b's 0/2 and Iteration 12's 6/6, not confirming either extreme.
+
+### 7. Constraint-specific loss, serialization pressure, or ordinary variance?
+
+None of the three offered patterns fits cleanly on its own; the best-supported account is closer to Pattern D, and worth naming precisely rather than folding into the other three:
+
+- **Against a flat, template-level constraint defect (Pattern A in its strong form)**: Iteration 12 already showed field-debug's Handoff can and does state a constraint reliably -- 6/6, including on cases (`027`, `029`, `031`) that required assembling the constraint from several separate facts rather than restating one salient document, per that iteration's own freeze-review characterization. A defect that fires 0% of the time regardless of evidence would not explain that ceiling.
+- **Against generic state-density/serialization collapse spread across arbitrary fields (Pattern B in its strong form)**: the *other* substantial, evidence-heavy sections of these same six Handoff artifacts -- the full list of ruled-out hypotheses with citations, the pair of live hypotheses left uncollapsed -- survived at 6/6 in both cases. If length or density alone were degrading arbitrary fields, these sections (arguably the most token-heavy part of each artifact) would be at equal or greater risk; they were not. What *did* recur is a specific, low-cardinality secondary-provenance detail per case (case-024's exact time window; case-026's session IDs) plus the constraint -- a narrower, more targeted loss than "anything can vanish under pressure."
+- **Against pure ordinary variance (Pattern C)**: the task's own Pattern-C criterion is that "the six fresh runs overwhelmingly preserve all important dimensions" -- true for four of the five dimensions graded here, but not true for the constraint dimension specifically, which is a minority-preserved (1-2 of 6) result, not an overwhelming-majority one. Calling this "ordinary variance, no pattern" would undersell the one dimension that actually did show a skewed, reproducible-in-direction result.
+- **What best fits (a specific version of Pattern D)**: constraint preservation looks tied to how much the underlying evidence *states* the danger outright versus requires the investigator's own domain inference. Iteration 12's strongest, most reliably-preserved cases had the danger spelled out concretely in the fixture itself -- an explicit dollar figure, an explicit missing-idempotency-key fact, a stale runbook actively recommending the unsafe action (`case-027`); an explicit dollar figure and an explicit single-delivery-attempt trace (`case-029`). By contrast, nothing in any of `case-024`'s eight files states that resubmission risks duplicate fulfillment, mentions idempotency, or gives a runbook recommending or warning against resubmission at all -- the constraint exists only as an inference a careful investigator is expected to draw from the general shape of the situation (an order accepted synchronously, in an unresolved state, at a vendor gateway). Similarly, nothing in `case-026/phase_a`'s seven files proposes switching to `dynamic_metadata` as an option; the constraint exists only to catch an unprompted suggestion some investigators volunteer and others simply never raise (in which case there is nothing to caveat from that investigator's own vantage point, even though the grading key still credits any run that states some general protective constraint). Both original cases place their constraint at a lower evidentiary-salience level than Iteration 12's newer set. This reads as **salience-dependent variance in constraint synthesis**, not a uniform Handoff-template defect and not an undifferentiated density effect.
+
+This account is inferred from six runs across two cases and cannot be fully separated from ordinary sampling noise at n=3 per case -- it is offered as the best-supported reading of this evidence, not a settled mechanism.
+
+### 8. What, if anything, would justify a later intervention
+
+Not this evidence, and not yet. The candidate explanation in section 7 makes a falsifiable prediction that this session did not test: a version of `case-024` with one additional sentence establishing the resubmission/idempotency risk explicitly (without changing anything else) should raise field-debug's constraint-preservation rate on that case toward Iteration 12's level, if the salience-dependent account is correct; if the rate stayed low regardless, that would point back toward a genuine template-level gap instead. Running that isolated, single-variable comparison -- not a larger unfocused stability campaign, and not a `SKILL.md` change -- would be the next informative step, and it was intentionally not run this session per the requesting task's instruction to measure only. The two secondary-provenance gaps (case-024's exact time window, case-026's session IDs) are lower-stakes and, per Iteration 11b's own note on the session-ID gap applying equally to a careful baseline, may be a fixture-strictness question about whether that specific level of granularity is actually load-bearing provenance rather than a field-debug-specific weakness -- worth continuing to watch, not worth acting on alone.
+
+**No `SKILL.md` change was made.** No new eval case was authored. No Phase B run was executed. No larger stability campaign was run beyond the six calls specified.
+
