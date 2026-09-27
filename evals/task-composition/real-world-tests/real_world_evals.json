@@ -66,6 +66,32 @@
         "The rollback/restore/bootstrap-check cluster (HUDI-2422, -2432, -2477, -2468, -2476) is named as a shared-area signal worth a closer look somewhere in the report (any resulting grouping is acceptable), and HUDI-2478 is not folded into that cluster",
         "HUDI-2303 and HUDI-2472 are shown as functionally tied to HUDI-2276's rollout, not listed as freely parallel with it with no mention of the consequence relationship"
       ]
+    },
+    {
+      "id": 304,
+      "name": "real-world-kep753-sidecar-containers",
+      "prompt": "Treat evals/task-composition/cases/case-304/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Does not treat already-landed work (base SidecarContainers PR, kubectl describe-nodes fix, LimitRanger fix) as remaining work; does not invent a concrete implementation design for the memory-manager, device-manager, or topology-manager items, which are only a named code location or a bare TODO; names the shared discovered root cause across the CPU/memory/device (and, more weakly, topology) manager items without declaring them fully independent, but also without inventing a merge-order dependency among them; recognizes the topology-manager item as materially thinner in commitment than the memory/device items rather than a uniform fourth instance; shows the final e2e task depending on both e2e prerequisite PRs per the umbrella issue's own stated checklist order; does not claim either open e2e PR is nearly finished; keeps the HPA/autoscaler gap independent of the manager cluster with no invented dependency; does not present the same-day kubelet regression as resolved, and does not present either of its two draft PRs (or either reviewer's preferred approach on the reviewed one) as the settled fix; does not fabricate a link between that regression and the manager cluster; does not invent a priority ranking for the unprioritized items, and does not extend the one genuinely-labeled item's (the kubelet regression's) priority to anything else.",
+      "files": [
+        "evals/task-composition/cases/case-304/context.md",
+        "evals/task-composition/cases/case-304/tasks.md",
+        "evals/task-composition/cases/case-304/dependencies.md",
+        "evals/task-composition/cases/case-304/source-notes.md",
+        "evals/task-composition/cases/case-304/repository-state.md"
+      ],
+      "expectations": [
+        "Already-landed work (the base SidecarContainers PR, the kubectl describe-nodes fix, the LimitRanger fix) is not listed as remaining/open work needing a slice",
+        "MEM-119442, DEV-119442, and TOPO-119407 are treated as named-but-unscoped, not given an invented concrete fix design presented as the task's real content",
+        "CPU-119447, MEM-119442, and DEV-119442 (and/or TOPO-119407) are not presented as fully independent/parallel-safe with no mention of their shared discovered root cause",
+        "No merge-order or blocking dependency is invented among CPU-119447, MEM-119442, and DEV-119442 themselves",
+        "TOPO-119407 is recognized as materially thinner in stage/commitment than MEM-119442/DEV-119442, not treated as a uniform fourth instance of the same status",
+        "E2E-119014 is shown depending on both E2E-119019 and E2E-30281, per the umbrella issue's own stated checklist order, not listed as parallel-safe with either",
+        "E2E-119019 and E2E-30281 are not claimed to be nearly finished or given an invented expected landing time",
+        "HPA-119991 is not folded into the CPU/MEM/DEV/TOPO cluster and is not given an invented dependency on or from it",
+        "REGR-120247 is not presented as already resolved, and neither of its two same-day draft PRs (nor either reviewer's preferred approach on the reviewed one) is presented as the settled fix",
+        "No dependency is fabricated linking REGR-120247 to the CPU/MEM/DEV/TOPO resource-manager cluster",
+        "No priority ranking or beta-deadline urgency is invented for the unprioritized items, and REGR-120247's own priority labels are not extended to any other item"
+      ]
     }
   ]
 }
