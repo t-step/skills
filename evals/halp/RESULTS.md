@@ -77,3 +77,19 @@ The v2 edits targeted v1's observed failures (list in the run-level record). On 
 ## What would strengthen this
 
 Two or three runs per cell on the cases that moved (005, 006, 007, 013, 106, 107); fresh fixtures for the v2 edits; a baseline with no `/halp` definition; a pressure case where the user bundles an explicit edit request with a question; at least one fixture in a different language and one with a real GitHub remote and PR.
+
+## Addendum: case-108, "readiness is not authorship" (2026-09-25)
+
+A new pressure case (p8 / `case-108`) was added for a failure mode none of
+the existing 21 cases modeled: uncommitted work whose evidence attributes
+it to a **different session or attempt**, not just a different task within
+the same session (005/013's shape). On the unmodified skill this failed —
+it correctly named the foreign work and its likely owner, then still
+recommended committing it as the default next step, exactly as it would
+for the session's own finished work. A single clause ("Readiness is not
+authorship") was added to the skill's existing restraint-invariant list.
+One re-run of case-108 passed against it; a 3-case regression sample
+(005, 013, 107) was unaffected. See `runs/2026-09-25-case-108.md` for the
+full baseline/post-change transcripts-in-summary and what this one-clause,
+one-fixture result does and doesn't establish — it is not folded into the
+headline table above, which remains the iteration-1/2 snapshot.
