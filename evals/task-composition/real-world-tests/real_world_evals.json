@@ -119,6 +119,32 @@
         "No priority ranking, urgency signal, or deadline is invented for any of the nine items beyond what the record states",
         "Return-type notation (RTN) is not pulled into scope as a task or dependency beyond what AFIT-RTN-110963 and RFC-3425-QUESTIONS's own text state"
       ]
+    },
+    {
+      "id": 306,
+      "name": "real-world-kafka-kip405-tiered-storage-spi",
+      "prompt": "Treat evals/task-composition/cases/case-306/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Does not treat KAFKA-9554 (a same-day duplicate of KAFKA-9548) as a remaining open task; recognizes KAFKA-9548 (the SPI) as a real, textually-established prerequisite for KAFKA-9549, KAFKA-9550, KAFKA-9555, and KAFKA-9579; recognizes the SPI has more than one real, distinctly-owned downstream consumer and gives it independent standing rather than folding it silently into one slice; does not place KAFKA-9565 (S3) and KAFKA-9569 (HDFS) on the same in-scope-deliverable footing as the other consumers without naming the KIP's own stated external-repo intent for them; does not collapse all five SPI-related items into one indivisible slice; does not invent a merge-order dependency between KAFKA-9550 and KAFKA-9579; does not overclaim the SPI's stability in either direction (neither 'already finished' nor 'blocked until finalized'); does not treat KAFKA-9564 (integration test framework) as a second independent enabler; does not invent a priority ranking among the nine items; does not invent implementation detail for title-only tasks; and does not treat automatic umbrella-subtask linkage as a curated roadmap signal.",
+      "files": [
+        "evals/task-composition/cases/case-306/context.md",
+        "evals/task-composition/cases/case-306/tasks.md",
+        "evals/task-composition/cases/case-306/dependencies.md",
+        "evals/task-composition/cases/case-306/source-notes.md",
+        "evals/task-composition/cases/case-306/repository-state.md"
+      ],
+      "expectations": [
+        "KAFKA-9554 (filed one day after KAFKA-9548, closed same day as a stated duplicate) is not listed as an open, remaining task needing its own slice",
+        "KAFKA-9548 is shown as a real, textually-established prerequisite for at least KAFKA-9549, KAFKA-9550, KAFKA-9555, and KAFKA-9579, not as an unrelated, independently-schedulable item",
+        "The SPI is recognized as having more than one real, distinctly-owned downstream consumer (at minimum KAFKA-9549 under one assignee and the KAFKA-9550/-9555/-9579 group under another) and is given independent slice standing rather than being folded silently into a single consumer's slice",
+        "KAFKA-9565 (S3) and KAFKA-9569 (HDFS) are not placed on the same in-scope-deliverable footing as KAFKA-9549/-9550/-9555/-9579 without naming the KIP's own stated intent that HDFS/S3 implementations were planned for external repositories, not this one",
+        "KAFKA-9548, -9549, -9550, -9555, and -9579 are not collapsed into one indivisible slice purely because they share the SPI -- at minimum KAFKA-9549 stays visibly separable from the KAFKA-9550/-9555/-9579 group",
+        "No merge-order or blocking dependency is invented between KAFKA-9550 and KAFKA-9579, which the KIP's own text describes as two separate, unordered thread pools",
+        "The SPI's stability is not overclaimed in either direction -- neither presented as already finished/settled at filing, nor as having blocked all downstream work until finalized",
+        "KAFKA-9564 (integration test framework) is not treated as a second independent horizontal enabler on the same footing as KAFKA-9548 merely because its title sounds architectural",
+        "No priority ranking, urgency signal, or deadline is invented for any of the nine items beyond the record's identical priority label on all of them",
+        "No concrete implementation detail (class names, method signatures, design decisions) is invented for the six items whose own description is empty or a single line",
+        "KAFKA-7739's automatic subtask linkage of all nine items is not treated as a curated, hand-sequenced roadmap or priority signal"
+      ]
     }
   ]
 }
