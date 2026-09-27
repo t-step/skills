@@ -92,6 +92,33 @@
         "No dependency is fabricated linking REGR-120247 to the CPU/MEM/DEV/TOPO resource-manager cluster",
         "No priority ranking or beta-deadline urgency is invented for the unprioritized items, and REGR-120247's own priority labels are not extended to any other item"
       ]
+    },
+    {
+      "id": 305,
+      "name": "real-world-rust-afit-rpitit",
+      "prompt": "Treat evals/task-composition/cases/case-305/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Does not treat already-landed work (both features' original implementation, the AFIT gate-split PR, RFC 3425's own ratification, AFIT's resolved Send-bounds question) as remaining work; does not present AFIT and RPITIT as fully unrelated features given their stated shared desugaring mechanism, a verified shared implementation file, and a core-team quote that async fn in trait 'is just' RPITIT; does not collapse all nine items into one indivisible slice on the strength of that coupling; treats the one dual-labeled ticket with a stated shared-mechanism claim as one piece of work, not two; does not assume the other two dual-labeled tickets share that same status without saying so; shows the RFC's own named stabilize-together question as linked to (not independent of, and not automatically resolved by) the one issue that RFC text itself names alongside it; does not extend that pairing's scope to the other seven, unrelated items; does not present the RFC's own explicitly unresolved question as already decided; does not conflate two textually distinct RPITIT lifetime-capture bugs into one; does not invent a merge-order dependency among the four single-feature-only items; does not invent a priority ranking beyond what the record states; and does not pull return-type notation into scope beyond what's actually named.",
+      "files": [
+        "evals/task-composition/cases/case-305/context.md",
+        "evals/task-composition/cases/case-305/tasks.md",
+        "evals/task-composition/cases/case-305/dependencies.md",
+        "evals/task-composition/cases/case-305/source-notes.md",
+        "evals/task-composition/cases/case-305/repository-state.md"
+      ],
+      "expectations": [
+        "Already-landed work (both features' 2022 implementation, the AFIT gate-split PR, RFC 3425's ratification, AFIT's resolved Send-bounds question) is not listed as remaining/open work needing a slice",
+        "AFIT and RPITIT are not presented as fully unrelated features with no shared mechanism, given the stated desugaring relationship, the verified shared file, and the direct core-team quote that async fn in trait is just RPITIT",
+        "All nine items are not collapsed into one indivisible slice purely because a shared mechanism exists somewhere in the codebase -- at minimum the four single-feature-only items stay visibly separable from a merged grouping",
+        "AFIT-RPITIT-108309 is treated as one piece of work, not split into a separate AFIT sub-task and RPITIT sub-task",
+        "AFIT-RPITIT-108304 and AFIT-RPITIT-109016 are not silently assumed to share AFIT-RPITIT-108309's stated shared-mechanism status merely because they carry the same two labels",
+        "RFC-3425-QUESTIONS's stabilize-together question is shown as textually linked to RPITIT-112194 (per RFC 3425's own 'Unresolved questions' text), not as a fully independent item with no relationship at all",
+        "RFC-3425-QUESTIONS's or RPITIT-112194's scope is not extended to any of the other seven items with no dependency the record states",
+        "RFC 3425's stabilize-together question and RPITIT-112194 are not presented as already resolved or decided -- both are explicitly unresolved in the RFC's own ratified text",
+        "RPITIT-109468 and RPITIT-112194 (two textually distinct RPITIT lifetime-capture bugs filed about ten weeks apart) are not conflated into one bug or given an invented dependency between them",
+        "No merge-order or blocking dependency is invented among AFIT-104689, AFIT-RTN-110963, RPITIT-111105, and RPITIT-109468, or between any of these and the dual-labeled/convergence items",
+        "No priority ranking, urgency signal, or deadline is invented for any of the nine items beyond what the record states",
+        "Return-type notation (RTN) is not pulled into scope as a task or dependency beyond what AFIT-RTN-110963 and RFC-3425-QUESTIONS's own text state"
+      ]
     }
   ]
 }
