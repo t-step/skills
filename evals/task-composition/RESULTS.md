@@ -512,3 +512,290 @@ outcome.
   case-304's own neutral fixture was frozen (commit `92a7ac0`); no separate
   hash/manifest file was introduced, since none of the other 300-series
   cases or the pressure suite use one.
+
+## Real-world fixture iteration 3 (2026-09-26) — case 305 (independence-then-convergence)
+
+A fifth real-world fixture, built independently of the sessions that
+produced 301-304, deliberately probing a different topology question from
+any prior case in this suite: **can a run preserve legitimate
+independence between two workstreams while recognizing the point where
+they acquire a shared semantic convergence constraint?** Source: Rust's
+`async fn` in trait (AFIT) and return-position `impl Trait` in trait
+(RPITIT) stabilization history (rust-lang/rust, rust-lang/rfcs). **SKILL.md
+was not modified for this case, and nothing below argues for changing it**
+— see "Does this justify a SKILL.md change?" under Q14 below.
+
+### Source, cutoff, and fixture size
+
+`evals/task-composition/cases/case-305/` reconstructs the open work as of
+**2023-06-13, end of day UTC** — the day RFC 3425 (RPITIT's own, real,
+ratified RFC) merged, and one day before the umbrella tracking issue
+(`rust-lang/rust#91611`) was itself restructured to formally name both
+features and cross-reference the central convergence bug. **9
+agent-visible tasks**: two AFIT-only bugs, two RPITIT-only bugs, three
+dual-labeled bugs (each one ticket, not a two-feature split), one central
+convergence bug (RPITIT-112194), and one item drawn directly from RFC
+3425's own ratified "Unresolved questions" text (RFC-3425-QUESTIONS).
+Full provenance, including a Phase-1 adversarial audit of each candidate
+hypothesis claim in the historical-fact/supported-constraint/not-supported
+format, is under `evals/task-composition/provenance/case-305/`.
+
+Before any tested-agent run, a fresh, independent reviewer agent (no
+access to this session's reasoning) audited the fixture and grading key
+against live GitHub/RFC data and found and fixed four genuine defects —
+none of them instances of the ten adversarial failure modes it was
+specifically asked to hunt for:
+
+1. A quote on issue #108309 ("...equally as broken with the latter") had
+   its trailing question mark silently dropped in three files
+   (`tasks.md`, `dependencies.md`, `grading/case-305.expected.md`),
+   turning a hedged, slightly uncertain remark into a flat assertion.
+2. `repository-state.md` misattributed issue #112194's filing to the
+   compiler-team member who authored most implementation PRs; it was
+   actually filed by a different person (`tmandry`, one of RFC 3425's two
+   co-authors).
+3. `sources.md`'s "no candidate missed" claim was inaccurate: a fresh,
+   unbounded label search turned up three same-window, same-label
+   ICE/glacier reports (#112047, #109464, #108580) the original research
+   pass hadn't logged. All three are correctly excludable under the
+   fixture's own already-stated "one-off ICE/diagnostic report" criterion
+   — the task count (9) was unaffected — but the audit trail claiming
+   completeness was wrong until this was added.
+4. A cross-reference timestamp for #112194 conflated a `referenced` event
+   with the actual `cross-referenced` event (an 11-second-vs-1-minute
+   difference); corrected to state both precisely.
+
+All four were corrected before freezing (commit `1739f3b`). No REQUIRED
+item was added, widened, or narrowed in response to either tested run's
+later output.
+
+### What the record actually establishes
+
+- **Real, textually strong mechanism-level coupling, not just a shared
+  name.** `async fn` in a trait desugars to RPITIT's own return-type
+  mechanism; the two features' original 2022 implementation shares a
+  verified file (`compiler/rustc_ast_lowering/src/lib.rs`); a
+  compiler-team member states directly, on the one dual-labeled ticket
+  with a stated shared-mechanism claim (AFIT-RPITIT-108309): "async fn in
+  trait is just return position impl trait in trait."
+- **A real, explicit, RFC-text-level convergence pairing that predates
+  its own concrete test case.** RFC 3425 states, as one of its own design
+  goals (not a later discovery), that `async fn` should remain usable
+  interchangeably with its `impl Trait` desugaring — and its own ratified
+  "Unresolved questions" section names, back to back, whether to
+  stabilize the two features together and "Resolution of [RPITIT-112194]"
+  as two linked but distinct open items.
+- **A deliberate, stated, administrative independence decision that
+  coexists with that coupling, not one that erases it.** AFIT was
+  deliberately split onto its own feature gate in 2022 "since async fn in
+  trait doesn't need to follow the same stabilization schedule" — five
+  weeks after RPITIT's own initial implementation had AFIT running under
+  RPITIT's gate.
+- **A convergence question the record poses but does not answer.** Both
+  of RFC 3425's linked open questions are listed, verbatim, under its own
+  "Unresolved questions" heading — the ratified RFC states the hazard and
+  names the linked bug without resolving either.
+- **Four single-feature bugs and two of three dual-labeled bugs with no
+  stated relationship to the convergence pairing, or to each other,**
+  despite sharing labels, subsystem area, or surface-level "lifetime bug"
+  wording with items that are genuinely linked.
+
+### Results: both runs pass all 12 REQUIRED items — another tie on correctness, with one genuine, attributable topology difference
+
+Both runs used the exact same frozen five files, one fresh subagent per
+condition, neither with access to provenance, the grading key, the other
+condition's output, or this session's own reasoning. Raw outputs:
+`runs/2026-09-26-real-world-iteration-3/case-305-{baseline,skill}.md`.
+
+**Both runs met all 12 REQUIRED items.** Both: excluded already-landed
+work entirely; recognized real AFIT/RPITIT mechanism coupling without
+claiming full independence; kept the four single-feature-only items
+(AFIT-104689, AFIT-RTN-110963, RPITIT-111105, RPITIT-109468) fully
+separate from each other and from everything else, with no invented
+merge-order; treated AFIT-RPITIT-108309 as one piece of work grounded in
+its stated shared-mechanism quote, without assuming AFIT-RPITIT-108304 or
+AFIT-RPITIT-109016 shared that same status merely from shared labels;
+showed RFC-3425-QUESTIONS' stabilize-together question as textually
+linked to (not independent of, and not automatically resolved by)
+RPITIT-112194, without extending that pairing's scope to the other seven
+items; treated RFC 3425's own unresolved questions as genuinely
+unresolved, not decided; declined to conflate RPITIT-109468 and
+RPITIT-112194 despite both being "RPITIT lifetime" bugs; and invented no
+priority ranking beyond the one institutional-visibility signal the
+record itself supports.
+
+**On most DEFENSIBLE points, both runs made the identical choice.** Both
+kept the three dual-labeled tickets as three separate slices rather than
+one grouped cluster; both kept all four single-feature-only items fully
+separate rather than grouped by feature side; both treated
+AFIT-RTN-110963 as in-scope AFIT work with RTN flagged as an external
+touchpoint, not adopted into scope.
+
+**One DEFENSIBLE point produced a genuine, traceable topology
+difference — the first of its kind in this suite since case-301.**
+Baseline composed **9 slices**: it gave RFC-3425-QUESTIONS' two policy
+sub-questions (stabilize together? / limit positions to RTN-nameable
+ones?) their own dedicated ninth slice, with an explicitly non-code
+verification checkpoint ("a recorded decision (RFC amendment or
+tracking-issue comment), since this is a policy artifact, not shippable
+code"). The with-skill run composed **8 slices**: it folded the "resolve
+RPITIT-112194" sub-question into S8 (the slice that fixes RPITIT-112194
+itself — the RFC's own text literally names that ticket as the
+resolution, so no separate slice does independent work), and explicitly
+declined to manufacture a slice for the other two sub-questions at all,
+naming them instead as an open gap under "Topology issues": "have no PR,
+no assignee, no design proposal, and no stated verification path
+anywhere in [the five files]... A component with no independent
+verification path either gets folded into the slice that actually
+verifies it... or is named as an open gap rather than force-fit into an
+invented slice." This is directly traceable to one specific piece of
+SKILL.md text (the vertical-grouping test's verifiability question, and
+the verifiability-folding rule added in iteration 3) — not a vaguer
+"the skill produced a different vibe" observation.
+
+Neither choice violates any REQUIRED item; both are permitted by
+`case-305.expected.md`'s DEFENSIBLE section, which anticipated a
+one-slice-vs-two-linked-slices split for this exact pairing but not this
+third variant (fold the literally-named sub-question, decline a slice for
+the un-scoped remainder entirely). This write-up does not treat either
+choice as more "correct" — see Q7/Q8 below.
+
+### Answers to this session's own fourteen questions
+
+1. **Did either condition preserve feature-specific independence where
+   supported?** Yes, both — all four single-feature-only items stayed
+   independent in both runs, with no invented cross-links.
+2. **Did either prematurely lump AFIT and RPITIT into one giant slice?**
+   No, neither did — both produced 8-9 separate slices, none collapsing
+   the backlog.
+3. **Did either keep them falsely independent through the shared
+   convergence point?** No — both explicitly linked RFC-3425-QUESTIONS
+   and RPITIT-112194 rather than treating them as unrelated.
+4. **Did either identify a shared stabilization/semantic boundary?** Yes,
+   both explicitly, grounding it in RFC 3425's own text rather than
+   inventing one.
+5. **Did either confuse joint stabilization with joint implementation?**
+   Not applicable in the direct sense — neither run had access to the
+   eventual joint-stabilization outcome (it postdates cutoff by three
+   months and is DIAGNOSTIC-only); what both correctly avoided was the
+   nearby trap of treating the *already-landed 2022 implementation's*
+   shared file/mechanism, or RFC 3425's *own* convergence pairing, as
+   license to merge the other seven, unrelated tickets into one slice.
+6. **Did either confuse separate feature gates with permanent
+   independence?** No — both explicitly named the shared desugaring
+   mechanism and the verified shared file rather than treating the
+   2022-09-23 gate split as proof the two features are unrelated.
+7. **Did the skill materially change topology?** Yes, for the first time
+   since case-301 in this suite (case-302, case-303-corrected, and
+   case-304 were all ties on both correctness and topology) — slice count
+   differs (9 vs. 8), specifically in how the two literally-unscoped RFC
+   sub-questions are handled. See "One DEFENSIBLE point" above.
+8. **If topology changed, was the change better supported by evidence?**
+   No clear winner, and this write-up declines to call one. The
+   with-skill run's choice is more precisely argued from a specific,
+   quotable principle (no independent verification path exists for two
+   literally-unfiled, unassigned, un-designed questions, so don't force a
+   slice) and is arguably more honest about how thin those two items
+   really are. The baseline's choice is also defensible and arguably more
+   practically useful to a real team (it gives the two open questions
+   *something* to track rather than a dangling, slice-less gap) — nothing
+   in the frozen grading key or the record itself picks a winner between
+   "track it as a lightweight decision-slice" and "name it as an
+   explicit non-slice gap," and this write-up is not retroactively
+   inventing one now that the runs are in (see this suite's own standing
+   rule against tuning against observed output).
+9. **Did the skill merely make convergence reasoning more explicit?** No
+   — this is the material difference from case-304, where the skill's
+   only contribution was format/explicitness on an otherwise identical
+   graph. Here the skill's own verifiability-folding text changed an
+   actual slice-count/boundary decision, not just how it was reported.
+10. **Did baseline already express the same invariant unaided?** Yes, for
+    every REQUIRED-level invariant (no over-merging, no over-independence,
+    correct convergence linking, no fabricated priority) — baseline
+    reasoned soundly on all of these with no assistance. The specific
+    difference in Q7 traces to a piece of SKILL.md text baseline had no
+    access to, not to a gap in baseline's own reasoning quality.
+11. **Are multiple topologies still defensible?** Yes, explicitly, and
+    this case's two actual runs demonstrate two of them concretely rather
+    than only in the abstract (unlike case-304, where both runs happened
+    to converge on the identical DEFENSIBLE choice).
+12. **Does this case expose a failure shape not seen in cases 301-304?**
+    Yes: a case where both conditions pass every REQUIRED item (a clean
+    tie on correctness) *and* the skill still produces a materially
+    different topology, via a specific, attributable SKILL.md mechanism,
+    on an item the record itself under-specifies (no PR, no assignee, no
+    verification path at all) rather than on an item the record merely
+    leaves ambiguous between two well-formed alternatives (case-304's
+    manager cluster, where both alternatives are equally well-formed).
+13. **Does this case materially change our current understanding of the
+    skill?** It adds one nuance, not a correction: the verifiability-
+    folding rule (added in iteration 3 to stop an unverifiable sub-piece
+    from being counted as a second enabler-consumer) also has the effect,
+    on real-world data, of making the skill decline to manufacture a slice
+    for an organizationally-real but technically bare policy question —
+    an effect the synthetic cases and cases 301-304 never exercised,
+    because none of them contained an item with literally zero tracked
+    implementation work (no PR, no assignee, no design proposal) sitting
+    alongside eight items that do have at least a filed, described bug.
+14. **Does the result justify any SKILL.md change?** No. Recorded per this
+    session's own instruction not to modify SKILL.md regardless of
+    outcome. Nothing here indicates the verifiability-folding rule is
+    behaving incorrectly — both its effect here (Q7-Q9) and its absence of
+    effect on the twelve REQUIRED items (Q1-Q6, Q10) are consistent with
+    the rule working as designed; this is new evidence about the rule's
+    *reach*, not evidence that it needs to change.
+
+### Comparison to existing evidence
+
+Placed alongside the rest of this suite's real-world evidence: case-302
+and case-304 (neutral and pressure) are clean ties on both correctness
+and topology; case-303 is a tie on correctness once its REQUIRED #8
+defect was corrected, with a granularity-only (not correctness) topology
+difference; case-301 is a genuinely mixed result (skill improved on one
+axis, regressed on another, both traceable to specific causes). **Case-305
+is the first case in this suite to combine a clean tie on every REQUIRED
+item with a real, skill-attributable topology difference that isn't
+merely granularity or format** — the skill changed an actual
+include/exclude-from-any-slice decision on a specific pair of items,
+citing its own text almost verbatim, without that change being provably
+better or worse than baseline's alternative. Against the synthetic
+suite's own iteration-3 finding (the verifiability-folding rule was
+originally added to fix case-006/014's over-elevated-enabler failure,
+then found to need the "predicted-to-fail" carve-out after case-010), this
+is the first time that same rule's behavior has been observed on
+real-world, not author-designed, data — and it produced a defensible,
+not obviously wrong, effect there too.
+
+The operating envelope this suggests, stated cautiously (one sample per
+condition, see limitations below): task-composition's distinct,
+repeatable value on this suite's real-world fixtures continues to be
+explicit, criteria-traceable structure and, occasionally (case-301,
+now case-305), a topology decision traceable to specific SKILL.md text —
+not, so far, a demonstrated correctness advantage over a capable,
+unguided baseline on the REQUIRED-item axis itself, which baseline has
+matched on every real-world case in this suite to date.
+
+### Limitations specific to this case
+
+- **Single sample per condition**, same limitation as every other
+  real-world case in this suite — a second sample could resolve
+  differently on the one DEFENSIBLE point that actually diverged here.
+- **Training-data contamination risk is the most severe in this suite.**
+  Rust's AFIT/RPITIT stabilization is extensively documented in public
+  blog posts, official announcement posts, and "Async Rust" educational
+  material, arguably more heavily represented in general training corpora
+  than any single case in cases 301-304. Both tested agents were
+  instructed not to use web tools and not to rely on memorized/trained
+  knowledge of this history; no transcript referenced any fact absent
+  from its five case files (no mention of Rust version numbers, the
+  actual stabilization PR, or any post-cutoff date), but this cannot be
+  verified or ruled out, and this is the case in the suite where that
+  limitation is weakest.
+- **The one substantive topology difference found (Q7-Q9) rests on a
+  single pair of runs.** A second sample on either condition could
+  reproduce the same choice, the other condition's choice, or a third
+  variant this write-up hasn't seen; nothing here should be read as "the
+  skill reliably declines to slice unscoped policy questions" beyond this
+  one observed instance.
+- **No comparison against `slice-plan` or `next-best-slice`**, consistent
+  with the existing limitation noted for cases 301-304.
