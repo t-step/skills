@@ -1124,3 +1124,18 @@ opposite direction from its predecessor case.
   wiki) that most obviously needed it.
 - **No comparison against `slice-plan` or `next-best-slice`**, consistent
   with the existing limitation noted for cases 301-305.
+
+## Diagnostic: parallel-safety calibration audit
+
+A separate, later diagnostic pass audited whether case-306's
+KAFKA-9550/KAFKA-9579 parallel-safety divergence (topology difference 2
+above) is operationally justified by the historical record, using
+case-304's manager cluster as a comparison case. It found the divergence
+is a single, textually-grounded confidence caveat that does not serialize
+either slice, and that the historical record is genuinely silent on
+whether the underlying shared-component risk ever materialized — neither
+condition's claim is fully settled by the evidence, but the skill's
+handling of that unresolved evidence (flag it, keep both slices
+schedulable) held up under audit. No REQUIRED score changed. See
+`parallelism-audit.md` for the full evidence note and the audit's answers
+to its own fifteen operational questions.
