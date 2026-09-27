@@ -799,3 +799,328 @@ matched on every real-world case in this suite to date.
   one observed instance.
 - **No comparison against `slice-plan` or `next-best-slice`**, consistent
   with the existing limitation noted for cases 301-304.
+
+## Real-world fixture iteration 4 (2026-09-27) — case 306 (real enabler recognition, mirror image of case-305)
+
+A sixth real-world fixture, built specifically as the deliberate mirror
+image of case-305. Case-305 tested whether a run avoids over-merging work
+that shares real, textually-established coupling. This case tests the
+opposite direction: **does a run correctly recognize independent slice
+identity for a real horizontal enabler with genuine, distinctly-owned
+downstream consumers, without over-crediting look-alike "consumers" the
+record itself scopes differently, and without collapsing the real
+consumers into one indivisible foundation slice?** Source: Apache Kafka's
+KIP-405 ("Tiered Storage") initiative, specifically the SPI
+(`RemoteStorageManager`/`RemoteLogMetadataManager`) and its earliest
+consumers under KAFKA-7739. **SKILL.md was not modified for this case,
+and nothing below argues for changing it** — see Q15 below.
+
+### Source, cutoff, and fixture size
+
+`evals/task-composition/cases/case-306/` reconstructs the open work as of
+**2020-02-20, end of day (UTC)** — the day the ninth and last ticket in
+this window (KAFKA-9579) was filed, three days after the KIP-405 wiki
+text settled at the version in effect throughout this window and one
+full year before the SPI's first official pull request would open
+against `apache/kafka` trunk. **Nine agent-visible tasks**: the SPI
+definition itself (KAFKA-9548), a same-day duplicate of it later closed
+without code (KAFKA-9554 — included specifically as a trap; its title
+could pass for a second, independent foundational task), four real,
+textually-established, distinctly-owned SPI consumers (KAFKA-9549's
+local/test implementation, KAFKA-9550's copy path, KAFKA-9555's
+topic-based metadata default, KAFKA-9579's fetch path), an
+architectural-sounding item that is not itself a second enabler
+(KAFKA-9564, an integration-test framework with no consumers of its
+own), and two more SPI-consuming tickets whose own governing design
+document — the KIP's own text — states, in advance, that they were never
+planned to be delivered inside this repository at all (KAFKA-9565's S3
+implementation, KAFKA-9569's HDFS implementation). Full provenance,
+including a ten-claim Phase-1 adversarial audit in the historical-fact/
+supported-constraint/not-supported format, is under
+`evals/task-composition/provenance/case-306/`.
+
+Before any tested-agent run, a fresh, independent reviewer agent (no
+access to this session's reasoning) audited the fixture and grading key
+against live Jira/GitHub/Confluence data and found and fixed one genuine,
+substantive defect and one citation-only date error (see
+`provenance/case-306/cutoff-rationale.md`, "Corrections made after the
+pre-freeze audit"): four agent-visible files, one provenance table, and
+this session's own draft grading key had all inherited the live Jira
+API's *current* assignee value for KAFKA-9579 (Satish Duggana) rather
+than its *cutoff-time* value — the ticket's full changelog shows its only
+assignee change happened in 2023, and at this fixture's 2020-02-20
+cutoff it was actually assigned to Ying Zheng, the same person assigned
+to KAFKA-9569 (HDFS). This is exactly the "read the live/current state
+instead of the historical one" failure mode this fixture's own
+KIP-wiki version-pinning discipline (citing a specific, dated Confluence
+revision rather than the current page) was built to avoid, and it had
+been missed in the initial research pass despite that discipline being
+applied everywhere else. All five references were corrected, and the
+corrected fact — KAFKA-9569 and KAFKA-9579 are the fixture's one real
+assignee overlap, pairing an out-of-repo-scoped item with core in-repo
+framework work — was preserved as a real, useful observation rather than
+simply deleted. No REQUIRED item needed to change as a result.
+
+### What the record actually establishes
+
+- **A real, textually-established prerequisite with multiple, genuinely
+  distinctly-owned downstream consumers.** KAFKA-9549 and KAFKA-9555's
+  own descriptions name the SPI directly; the KIP's own architecture text
+  describes KAFKA-9550's copy path and KAFKA-9579's fetch path as both
+  built on the same two interfaces. These four consumers split across
+  three different assignees-at-cutoff, not one.
+- **A real trap that looks like more of the same signal but isn't.**
+  KAFKA-9565 (S3) and KAFKA-9569 (HDFS) are textually SPI-consuming,
+  filed the same week, each with a named assignee — indistinguishable
+  from KAFKA-9549 at the ticket-title level. But the KIP's own v118 text
+  states directly: "HDFS and S3 implementation are planned to be hosted
+  in external repos and these will not be part of Apache Kafka repo.
+  This is inline with the approach taken for Kafka connectors" — a
+  cutoff-time, primary-source caveat a plan has to weigh, not resolve by
+  ignoring either the ticket or the KIP text.
+- **A trap that looks architectural but carries zero real scope**
+  (KAFKA-9554) and one that looks architectural but isn't a second
+  enabler (KAFKA-9564, whose only plausible relationship to the rest of
+  the set is as an unscoped verification consumer of some concrete
+  implementation, not something that itself unlocks further work).
+- **A genuinely unresolved tension the record does not settle**: whether
+  the SPI needed to be finished before downstream work began. The KIP
+  was still formally "under discussion" (unaccepted) through this window
+  and well beyond it, yet the one piece of concrete implementation
+  evidence (a linked, dated work-in-progress fork pull request) shows the
+  SPI's own interface files and its first downstream implementation being
+  developed together, three days after filing.
+
+### Results: both runs pass all 11 REQUIRED items — another tie on correctness, with two genuine, attributable topology differences
+
+Both runs used the exact same frozen five files, one fresh subagent per
+condition (isolated to a scratch copy containing only those five files,
+plus `SKILL.md` for the with-skill condition), neither with access to
+provenance, the grading key, the other condition's output, or this
+session's own reasoning. Raw outputs:
+`runs/2026-09-27-real-world-iteration-4/case-306-{baseline,skill}.md`.
+
+**Both runs met all 11 REQUIRED items.** Both: excluded KAFKA-9554
+entirely, by name, as a same-day duplicate with no remaining scope; gave
+KAFKA-9548 its own independent slice, explicitly justified by naming
+multiple, distinctly-owned consumers (echoing SKILL.md's own three-part
+horizontal-enabler test almost exactly, in baseline's case with no access
+to that text at all); named the KIP's own external-repo statement as a
+real, unresolved tension for KAFKA-9565/-9569 rather than either treating
+them as fully equivalent to KAFKA-9549/-9555 or dropping them from the
+plan; kept at minimum KAFKA-9549 visibly separate from the KAFKA-9550/
+-9555 group; invented no merge-order between KAFKA-9550 and KAFKA-9579;
+declined to overclaim the SPI's stability in either direction (neither
+"already finished" nor "blocked until finalized," both runs citing the
+same work-in-progress fork PR as evidence of real, if uncertain,
+co-evolution); declined to elevate KAFKA-9564 to enabler status; invented
+no priority ranking (both runs independently noted the identical priority
+label across all nine items); invented no implementation detail for the
+six title-only/near-empty tickets; and never treated the umbrella's
+automatic subtask linkage as a curated roadmap signal.
+
+**Baseline already recognizes the enabler, unaided, as completely as the
+with-skill run does.** This is the central finding for the case's own
+core hypothesis: a capable baseline's own reasoning about why KAFKA-9548
+deserves independent slice status — "it's justified as its own slice
+because six of the seven other open items name it as a direct or
+KIP-architecture-inferred prerequisite" — lands on essentially the same
+conclusion, for essentially the same reasons, as the with-skill run's
+explicit, three-part, SKILL.md-quoting justification. Recognizing a real
+enabler when one exists did not require the skill on this fixture, any
+more than declining to over-merge coupled work required it on case-305.
+
+**Two genuine, SKILL.md-traceable topology differences were found —
+the most of any case in this suite to date.**
+
+1. **KAFKA-9564's handling.** Baseline gives it its own slice (a
+   softly, non-stated-inferred dependency on KAFKA-9549's local
+   implementation), explicitly flagging that the ticket itself states no
+   verification bar of its own and needs one defined before work starts.
+   The with-skill run instead **folds KAFKA-9564 directly into KAFKA-9549's
+   slice**, citing SKILL.md's vertical-grouping verifiability-folding rule
+   almost verbatim: "[it] has nothing to exercise and nothing that
+   verifies its own become-true claim except 'this will be exercised once
+   some RSM exists' — under the vertical grouping test's tightened rule, a
+   grouping whose verification is only implicit or deferred to something
+   else folds into the grouping that actually establishes and verifies the
+   combined behavior." This is the same rule (added in the synthetic
+   suite's iteration 3, and previously observed changing case-305's
+   RFC-3425-QUESTIONS handling) now observed folding two *real* Kafka
+   tickets together on a second, independent real-world fixture.
+2. **KAFKA-9550/KAFKA-9579 parallel-safety.** Baseline explicitly calls
+   these "safe to treat as independent." The with-skill run explicitly
+   **declines to confirm this**, naming a specific, real (if not certain)
+   risk neither ticket's own text addresses: `context.md` describes
+   `RemoteLogManager` as *one* new component holding both thread pools,
+   and no ticket states how that shared class divides between the two —
+   "S4 and S5 are graph-parallel... but are not confirmed safe to run
+   concurrently in practice, because both plausibly need to extend the
+   same new, not-yet-built `RemoteLogManager` class with no stated
+   division of responsibility... the 'unmet prerequisite' here is an
+   undecided shared class shape rather than a missing ticket, but the
+   effect is the same false-parallelism pattern this check exists to
+   catch." This traces directly to SKILL.md's "Assess safe parallelism"
+   section ("shared files or interfaces... a signal to look closer") and
+   "Minimal topology validation" ("slices proposed as parallel that in
+   fact share an unmet prerequisite neither has flagged") — not to the
+   enabler/verifiability rule behind difference (1). Neither run violates
+   any REQUIRED item either way (the grading key does not require this
+   specific caution), but this is the one place in this case where the
+   with-skill run's added rigor looks like a plausible, if unproven,
+   quality edge over baseline: the record's own `context.md` text (RLM as
+   one component, two thread pools) directly supports the caution
+   baseline didn't raise.
+
+### Answers to this case's own fifteen questions
+
+1. **Did either condition identify a real shared prerequisite/enabler?**
+   Yes, both, independently and completely — see "Baseline already
+   recognizes the enabler" above.
+2. **Did either condition fail to give independent identity to a genuine
+   multi-consumer prerequisite?** No — both gave KAFKA-9548 its own,
+   explicitly justified slice.
+3. **Did either condition create a fake enabler from merely
+   architectural-looking work?** No — both correctly declined to elevate
+   KAFKA-9554 (a same-day duplicate) or KAFKA-9564 (an unscoped test
+   framework with no named consumers) to enabler status.
+4. **Did either condition duplicate shared foundation work inside
+   multiple consumer slices?** No — the SPI's own interface content
+   stayed solely in its own slice in both runs; no consumer slice
+   redefined or re-specified the interfaces themselves.
+5. **Did either condition over-serialize downstream consumers?** No —
+   neither invented a hard chain among KAFKA-9549/-9550/-9555/-9565/
+   -9569/-9579 beyond each one's stated dependence on the SPI itself.
+6. **Did either condition claim parallel safety beyond the evidence?**
+   Baseline came closer to this than the with-skill run did, on one
+   specific pair (KAFKA-9550/KAFKA-9579) — see topology difference 2
+   above. This is a mild, single-instance finding, not a REQUIRED
+   violation for baseline (nothing in the grading key required flagging
+   this specific risk), but it is the one place in this case where a
+   parallel-safety claim's rigor differed between conditions.
+7. **Did either condition preserve meaningful consumer independence?**
+   Yes, both — KAFKA-9549 (the local/test track) and KAFKA-9565 (S3, the
+   set's one fully unshared assignee) stayed cleanly independent slices
+   in both runs.
+8. **Did the skill materially change topology?** Yes, twice — see the two
+   numbered differences above. This is the third case in this suite (after
+   case-301 and case-305) where the skill changed an actual
+   include/fold/parallel-safety decision, not just report structure or
+   explicitness.
+9. **If it changed topology, was the change traceable to the
+   multi-consumer/verifiability invariant?** For difference 1, yes,
+   directly and almost verbatim. For difference 2, no — that one traces
+   to the separate safe-parallelism-assessment text, not the
+   enabler/verifiability rule. This case is the first in the suite to
+   show two *different* SKILL.md mechanisms independently producing real
+   topology effects on the same fixture.
+10. **Was that change actually better supported by historical evidence,
+    or merely different?** Difference 1 is a defensible judgment call
+    with no clear winner, the same conclusion this suite reached for
+    case-305's comparable fold-vs-stand-alone choice — the historical
+    record (DIAGNOSTIC section) doesn't clearly favor either grouping.
+    Difference 2 is the more interesting case: the with-skill run's
+    caution is directly grounded in `context.md`'s own text (RLM described
+    as one component, two thread pools) in a way baseline's "safe to treat
+    as independent" claim does not engage with — a plausible, real quality
+    edge, though resting on a single sample and a textually real but not
+    certain risk (the KIP's prose groups the two thread pools
+    conceptually; it does not state they must share one literal class).
+11. **Did baseline already recognize the same enabler unaided?** Yes,
+    completely — see above. This is the sharpest instance yet in this
+    suite of the recurring finding that a capable, unguided baseline
+    already performs most of this skill's core judgment correctly.
+12. **Did either condition treat interface reuse as equivalent to
+    independent verifiability?** No — both explicitly noted the SPI
+    itself has no stated "done" criteria of its own, and both borrowed
+    KAFKA-9554's done-text as an explicitly flagged proxy rather than
+    inventing a stronger, standalone verification story for the SPI in
+    isolation.
+13. **Does this case form a useful mirror image of case-305?** Yes,
+    cleanly, and see the dedicated comparison below.
+14. **Does this case materially change our understanding of
+    task-composition?** It adds one new observed effect, not a
+    correction: this is the first real-world case in this suite where the
+    skill's own "assess safe parallelism, not maximum parallelism" text
+    visibly changed a parallel-safety verdict (not merely a slice-count or
+    fold-vs-stand-alone choice) on real data, joining the
+    verifiability-folding rule (already observed on case-305) as a second,
+    independently-triggered mechanism producing a real topology effect on
+    this same fixture.
+15. **Does the result justify any SKILL.md change?** No. Recorded per this
+    session's own instruction not to modify SKILL.md regardless of
+    outcome. Both mechanisms behind the two topology differences
+    (verifiability-folding; safe-parallelism-assessment) are existing
+    SKILL.md text that worked as designed on real data; nothing here
+    indicates either needs new wording.
+
+### Comparison to case-305
+
+**Case-305** asked whether the skill would correctly *decline* to give
+standalone identity to work that lacked independent verifiability or a
+stated multi-consumer relationship — testing whether real, strong,
+textual coupling (a stated desugaring relationship, a shared file, a
+core-team quote) would tempt it into over-merging. It didn't: both
+conditions kept the coupled Rust tickets appropriately separated, and the
+one topology difference found (whether to manufacture a slice for two
+literally-unscoped RFC sub-questions) had no clear winner.
+
+**Case-306** asked the converse question: does the skill correctly
+*recognize* standalone slice identity when work genuinely enables
+multiple downstream consumers, without over-crediting look-alike
+"consumers" the record itself scopes differently? It does — and this
+fixture's own historical record genuinely supports the "real enabler"
+side of the hypothesis the way case-305's record did not support a
+"forced merge" story: KAFKA-9548 has real, named, distinctly-owned
+consumers, and both conditions gave it independent status for that
+reason, not because it merely sounded architectural. Unlike case-305,
+where the interesting finding was a fold-vs-stand-alone choice on an
+under-specified item, this case surfaced two *different* real topology
+mechanisms (verifiability-folding and safe-parallelism-assessment), one
+of which shows a plausible, if unproven, correctness edge for the
+with-skill condition — the closest thing to a demonstrated case-by-case
+advantage this suite has produced, short of a REQUIRED-item difference.
+
+**Together, these two cases show the same decomposition policy working
+in both directions on real, independently-sourced data**: case-305 shows
+the skill fold work inward when it does not earn slice identity (declining
+to manufacture a slice for two thin sub-questions); case-306 shows it
+pull work outward when it genuinely does (giving KAFKA-9548 independent
+standing) while still folding a look-alike, unscoped item (KAFKA-9564)
+inward for exactly the same verifiability reason case-305 used. This is
+not a new capability — baseline reasoned correctly in both directions on
+its own, in both cases — but it is the clearest evidence yet in this
+suite that the skill's stated policy is coherent rather than merely
+biased toward one direction (always splitting, or always merging) when
+tested against real material specifically designed to pull in the
+opposite direction from its predecessor case.
+
+### Limitations specific to this case
+
+- **Single sample per condition**, the same limitation as every other
+  real-world case in this suite — a second sample could reproduce
+  either topology difference, the other condition's choice, or a third
+  variant not seen here, especially for difference 2 (parallel-safety),
+  which rests on a single pair of runs and a real but not certain risk.
+- **Training-data contamination risk is real but likely lower than
+  cases 301/304/305.** Kafka's tiered-storage KIP is publicly documented,
+  but this fixture's specific 2020-02-20 cutoff window (nine subtasks
+  filed within one week, one closed as a same-day duplicate, an
+  unaccepted KIP) is a much narrower, less-commonly-summarized slice of
+  the initiative's multi-year history than, say, the feature's eventual
+  GA. Both tested agents were instructed not to use web tools and not to
+  rely on memorized project history; no transcript referenced any fact
+  absent from its five case files (no post-2020-02-20 date, no mention of
+  the eventual "Won't Fix" resolution or Azure implementation), but this
+  cannot be verified or ruled out.
+- **The pre-freeze audit found and fixed a real defect in this session's
+  own research, not just in a downstream draft.** The assignee-history
+  error (see "Source, cutoff, and fixture size" above) was present in the
+  provenance, the agent-visible fixture, and the first draft of the
+  grading key simultaneously — a reminder that this suite's own
+  discipline (citing a specific historical revision rather than a live
+  API's current state) has to be applied consistently to *every* live
+  data source pulled into a fixture, not just the one (here, the KIP
+  wiki) that most obviously needed it.
+- **No comparison against `slice-plan` or `next-best-slice`**, consistent
+  with the existing limitation noted for cases 301-305.
