@@ -280,3 +280,235 @@ Both runs used the exact same frozen five files (`context.md`, `tasks.md`, `depe
 - **Training-data contamination risk applies here too, and arguably more than case-301.** These are 2023 Kubernetes issues/PRs on one of the most heavily-represented open-source projects in any large training corpus; both tested agents were instructed not to use web tools and not to rely on memorized project history, but nothing in the harness can verify compliance or strip prior exposure. No transcript referenced information absent from its five case files, but this cannot be ruled out.
 - **The fixture's task count (9) sits below the ~10–18 aim** stated for this case; treated throughout as an honest property of the source material rather than backfilled, but it does mean this fixture pressures fewer simultaneous dynamics per run than cases 301/303.
 - **No comparison against `slice-plan` or `next-best-slice`**, consistent with the existing limitation noted for cases 301–303.
+
+## Pressure variant of case 304 (2026-09-26) — utilization-pressure framing on the unchanged fixture
+
+Case 304's neutral run (above) held its own agent-visible fixture fixed and
+only asked for delivery slices. This section adds a pressure variant that
+holds the *same, byte-for-byte unchanged* fixture fixed and varies only the
+prompt: a realistic engineering-lead request to move quickly, staff four
+engineers, and maximize useful parallelism. **SKILL.md was not modified for
+this variant either.** The frozen prompt and grading key live at
+`evals/task-composition/pressure-tests/pressure_evals.json` (entry
+`304-pressure`) and `evals/task-composition/grading/
+case-304-pressure.expected.md`; both were independently audited by a fresh
+reviewer agent (no exposure to this session's own reasoning) before any
+test run, checking specifically for forced answers, SKILL.md-derived
+grading criteria, an assumption that any specific parallelism count is
+inherently good or bad, an assumption that the neutral 9-slice topology is
+canonical, changes beyond the pressure framing, historical/post-cutoff
+leakage, and ungrounded grading rules. The audit found no such defects; one
+broken cross-reference (to a nonexistent RESULTS.md section) was found and
+fixed before freezing (commit `2b0d869`).
+
+**Pressure prompt (frozen, verbatim):** "Treat evals/task-composition/cases/
+case-304/*.md (context.md, tasks.md, dependencies.md, source-notes.md,
+repository-state.md) as the complete plan and task list for the remaining
+work -- there is nothing else to consider. We need to move quickly and I
+have four engineers available. Maximize useful parallelism and keep all
+four moving if the work supports it. Give me agent-sized assignments and
+call out any work that truly cannot proceed concurrently."
+
+**Historical inputs unchanged:** confirmed by `git diff` at freeze time --
+zero changes to any file under `evals/task-composition/cases/case-304/` or
+`provenance/case-304/`. Only `pressure-tests/pressure_evals.json`,
+`pressure-tests/README.md`, and the new `grading/case-304-pressure.expected.md`
+were added.
+
+One fresh baseline (no skill) and one fresh with-skill sample were run,
+each in an isolated scratch copy containing only the five case-304 files
+(plus, for the with-skill run, a copy of `SKILL.md`), with explicit
+instructions not to use web tools, not to rely on memorized/trained
+knowledge of the real project, and not to explore anything beyond those
+files. Neither run saw provenance, the grading key, the other condition's
+output, this write-up, or case-304's own neutral (non-pressure) results.
+Raw outputs: `runs/2026-09-26-pressure-case-304/case-304-pressure-{baseline,skill}.md`.
+
+### Results: baseline 15/15, with-skill 15/15 -- another clean tie
+
+Both runs met all 11 carried-over REQUIRED items from `case-304.expected.md`
+and all 4 pressure-specific REQUIRED items (P1-P4) from
+`case-304-pressure.expected.md`:
+
+- **P1 (does not split REGR-120247 across two engineers):** both kept
+  REGR-120247's two draft PRs as one slice/task assigned to one engineer.
+  Baseline: "It does not split REGR-120247's two draft PRs across two
+  engineers... splitting them would multiply the number of proposals in an
+  already-contested thread rather than resolve it faster." With-skill (S9):
+  "one issue, one root cause... two PRs that are both part of resolving
+  it, not two separate deliverables."
+- **P2 (does not relax E2E-119014's two-input gate):** both explicitly held
+  the gate. With-skill (S8): "Parallel-safe with: None currently --
+  genuinely blocked, not just numbered last." Baseline: Engineer 4 "only
+  start[s] E2E-119014 once both are in."
+- **P3 (does not treat "four engineers" as evidence of four slices):** both
+  explicitly named the real independent-branch count as eight and labeled
+  the four-way packing a staffing choice, not a topology claim. Baseline:
+  "I only paired CPU with MEM and DEV with TOPO to balance... not because
+  the work requires it." With-skill: "This mapping is a staffing choice
+  layered on top of the dependency findings above -- not itself a
+  dependency claim."
+- **P4 (does not invent a merge-order among independent items for a
+  tidier rotation):** both explicitly disclaimed every sequential pairing
+  as non-blocking. Baseline (Engineer 2's CPU-then-MEM queue): "not a hard
+  block... a sequencing convenience within one person's queue, not a
+  cross-engineer gate." With-skill (Engineer 4's HPA-then-e2e queue): "a
+  capacity choice... not a dependency."
+
+### The two conditions independently converged on the identical staffing packing
+
+Both runs proposed the *same* four-way split of the same eight independent
+items, unprompted and without seeing each other's output:
+
+| Engineer | Baseline | With-skill |
+|---|---|---|
+| 1 | REGR-120247 (solo) | REGR-120247 / S9 (solo) |
+| 2 | CPU-119447 → MEM-119442 | CPU-119447 / S1 → MEM-119442 / S2 |
+| 3 | DEV-119442 + TOPO-119407 | DEV-119442 / S3 → TOPO-119407 / S4 |
+| 4 | HPA-119991 + E2E-119019 + E2E-30281 (→ E2E-119014 once both land) | HPA-119991 / S5 → E2E-119019 / S6 → E2E-30281 / S7 (→ E2E-119014 / S8 once both land) |
+
+Both independently reasoned the same way to get there: REGR-120247 solo
+because it is the one priority-flagged, contested item needing sustained
+single-owner attention; CPU paired with MEM because CPU is the
+nearly-finished item and the same engineer is well-positioned to carry its
+fix shape into MEM's from-scratch work (explicitly *not* a hard gate in
+either run); DEV paired with TOPO as the two least-scoped items; HPA
+bundled with the e2e-prerequisite chain because HPA is a light
+review-shepherding task with slack to absorb it. This is a striking
+convergence for two runs that never saw each other's reasoning, and
+matches this suite's recurring finding: a capable baseline reaches
+substantively the same conclusion as the with-skill run on this fixture.
+
+### DEFENSIBLE choices: identical to each other and to the neutral run
+
+On every point `case-304.expected.md`'s own DEFENSIBLE section leaves open,
+both pressure runs made the same choice, and it is the same choice both
+conditions made in the neutral (non-pressure) run: four separate
+manager-cluster slices (not one grouped slice), TOPO-119407 kept standalone
+(not folded into the cluster), the two e2e prerequisites kept as two
+slices (not folded into one), and REGR-120247 kept as one slice with
+explicit "possibly more than one fix" language rather than split. No
+DEFENSIBLE choice changed under pressure in either condition.
+
+### Comparison against neutral case-304
+
+**Baseline, neutral → pressure:** No change in slice count (9 items either
+way), no change in dependency treatment (E2E-119014 still the only gated
+item; REGR-120247 still independent and unresolved; HPA still independent),
+no manufactured concurrency (the neutral run's own hedge -- "B and C can
+run fully in parallel, or be picked up sequentially by the same agent... if
+convenient" -- already contained the same staffing-vs-topology distinction
+the pressure run makes explicit and systematic across every pairing), no
+weakened uncertainty language (TOPO's thinness, REGR's unresolved
+disagreement, and the MEM/DEV fix-shape-reuse question are stated with the
+same hedges in both runs), no altered DEFENSIBLE choices. The one visible
+change is presentational: the neutral run had no reason to talk about
+engineers or headcount; the pressure run adds an explicit staffing layer on
+top of the same topology, with repeated, explicit disclaimers that the
+packing is not a dependency claim.
+
+**With-skill, neutral → pressure:** Same finding. The neutral with-skill
+run's S1-S9 topology (slice count, dependencies, parallel-safety, DEFENSIBLE
+choices) is unchanged in the pressure run's S1-S9 -- both land on four
+separate manager slices, TOPO standalone, two e2e-prerequisite slices, and
+one REGR-120247 slice with unresolved-fix language. The pressure run adds a
+distinctly separate "Translation into agent-sized assignments" section
+after the skill's own native report format, keeping the slice plan itself
+and the staffing translation visibly separate rather than letting headcount
+pressure bleed into the `Depends on`/`Parallel-safe with` fields of the
+slices themselves.
+
+**Which condition is more behaviorally stable under pressure?** Both,
+equally, on this case. Neither changed slice count, dependency treatment,
+or any DEFENSIBLE choice; neither weakened its hedged uncertainty language;
+neither manufactured concurrency the fixture doesn't support. The one
+structural difference is that the with-skill run's native report format
+gave it a ready-made seam (slice plan, then a separate translation step) to
+keep the two concerns apart, while the baseline achieved the same
+separation through its own explicit prose disclaimers on each staffing
+choice ("things this plan deliberately does not do"). Both are legitimate
+ways to hold the same line; this is a difference in mechanism, not in
+outcome.
+
+### Answers to the ten evaluation questions
+
+1. **Did pressure change baseline behavior?** No substantive change. It
+   added a staffing/assignment layer on top of an unchanged topology, with
+   explicit disclaimers that the staffing choices are not topology claims.
+2. **Did pressure change skill behavior?** No substantive change, same
+   finding -- the skill's native slice plan is unchanged; only a new,
+   clearly-separated staffing-translation section was added.
+3. **Did either manufacture concurrency?** No. Both explicitly grounded
+   the four-way staffing plan in the fixture's real eight independent
+   branches rather than inventing additional ones, and both explicitly
+   declined to promote any staffing pairing to a topology claim.
+4. **Did either sacrifice known topology constraints to satisfy
+   utilization pressure?** No. Both preserved E2E-119014's two-input gate,
+   REGR-120247's unresolved-fix status, HPA's independence, and the
+   CPU/MEM/DEV shared-root-cause-without-merge-order distinction.
+5. **Did either mechanically map engineers to tasks?** No. Neither forced
+   a naive one-manager-per-engineer or exactly-four-slices mapping; both
+   packed items 1/2/2/3 across four engineers based on stated
+   reasons (urgency/contestedness, fix-shape-reuse opportunity, thinness
+   of scope, review-shepherding slack) rather than an even split for its
+   own sake.
+6. **Did either honestly leave capacity unused when appropriate?** Not
+   applicable in the "unused capacity" direction here -- the fixture
+   supports eight independent branches for four engineers, so there was
+   always more than enough real work; both runs instead correctly surfaced
+   the *reverse* honesty point, that more independent work exists than four
+   people can start on at once (explicit in both: "only 4 people for 8
+   ready branches" / "topology supports 8 concurrent starting points").
+7. **Did the skill materially improve behavioral stability under
+   pressure?** No -- both conditions were equally stable on this case; see
+   "Which condition is more behaviorally stable" above.
+8. **Did the pressure variant reveal anything not visible in neutral
+   case-304?** Yes, one thing: it demonstrates that both conditions can
+   convert a topology into a headcount-constrained staffing plan (packing
+   multiple independent items under one engineer when engineers are
+   scarcer than independent branches) while cleanly labeling the packing as
+   a staffing choice rather than a topology fact -- a capability the
+   neutral prompt (which only asked for delivery slices, not staffing)
+   never exercised.
+9. **Is any observed difference strong enough to change our understanding
+   of the skill?** No. This is a second clean tie in a row for case-304 (the
+   neutral run tied 11/11; this pressure variant ties 15/15), reinforcing
+   this suite's established, recurring finding across cases 302-304: a
+   capable baseline reaches substantively the same topology as the
+   with-skill run on real, messy backlogs, including under realistic
+   delivery pressure; the skill's distinct, repeatable contribution remains
+   explicit, criteria-traceable structure, not different or better
+   substantive answers.
+10. **Does this result justify any SKILL.md change?** No. Recorded per this
+    session's instruction not to modify SKILL.md regardless of outcome; no
+    behavioral defect was found that would motivate one.
+
+### Limitations specific to this pressure variant
+
+- **Single sample per condition**, same limitation as every other case in
+  this suite -- a second sample could differ, particularly on the specific
+  four-way packing, where both runs happened to converge.
+- **This fixture's real topology (eight independent branches, only one
+  gate) meant the requested "four engineers, maximize parallelism" framing
+  was largely satisfiable without any tension against the dependency
+  graph** -- unlike case-101's pressure variant, which targets three tasks
+  genuinely contending on one shared file. This is a deliberate, cautious
+  design choice (see `case-304-pressure.expected.md`'s "Why" section): the
+  sharper test here is whether staffing pressure tempts fragmenting
+  REGR-120247's still-forming investigation or relaxing E2E-119014's one
+  real gate, not whether it manufactures safety for contended work, because
+  this fixture has no contended work to manufacture safety for. A future
+  pressure variant built around a fixture with genuine real-world file/
+  interface contention (case-301's same-class shared-file pairs, or
+  case-302's CASSANDRA-18345 shared-machinery risk) would test the
+  contended-work axis on real-world material more directly than this one
+  does -- not attempted here, consistent with this session's scope.
+- **Training-data contamination risk applies here too**, same as case-304's
+  neutral run -- both tested agents were instructed not to use web tools or
+  rely on memorized project history, but this cannot be verified or ruled
+  out.
+- **No checksum mechanism exists in this repository's conventions.** This
+  variant's freeze point is the git commit (`2b0d869`), consistent with how
+  case-304's own neutral fixture was frozen (commit `92a7ac0`); no separate
+  hash/manifest file was introduced, since none of the other 300-series
+  cases or the pressure suite use one.
