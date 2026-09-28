@@ -1,0 +1,237 @@
+{
+  "skill_name": "identity-authority-audit",
+  "evals": [
+    {
+      "id": 101,
+      "name": "clean-bff-token-exchange",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-101/ (bff_orders_route.py, token_exchange.py, orders_api.py, context.md) as the complete evidence available about this system for this review -- there is nothing else to consult. A new teammate wants to know whether the token-exchange step between the BFF and the Orders API is doing anything real, or whether forwarding the session cookie straight through instead would lose nothing. Use Review mode and answer their question directly.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-101/context.md",
+        "evals/identity-authority-audit/cases/case-101/bff_orders_route.py",
+        "evals/identity-authority-audit/cases/case-101/token_exchange.py",
+        "evals/identity-authority-audit/cases/case-101/orders_api.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies that the browser holds only an opaque session cookie and never receives the downstream Orders API's own credential -- the BFF is the sole holder of that token",
+        "REQUIRED: identifies the token-exchange step as a real narrowing of audience/scope (issued specifically for orders-api, with a scope narrower than or distinct from whatever the session implies), not theater or leftover complexity",
+        "REQUIRED: identifies orders_api.py's resource-level authorization check (order[\"account_id\"] against the exchanged token's own account_id claim) as a genuine destination-side check, not merely an authentication check",
+        "REQUIRED: does not fabricate a finding that the token exchange, the BFF pattern, or the session mechanism itself is unsound or needless, and directly tells the teammate that forwarding the raw session cookie through instead would be a regression, not a simplification (see grading/case-101.expected.md's post-run update: a report that additionally, correctly finds token_exchange.py's unconditional orders:write scope request unused by its only GET-only call site -- hedged about whether other call sites justify it -- is a correct, higher-quality answer, not a violation of this expectation)"
+      ]
+    },
+    {
+      "id": 102,
+      "name": "raw-forwarding-chain-hop-discrimination",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-102/ (context.md, token_issuer.py, api_a.py, api_b.py, mcp_gateway.py) as the complete evidence available about this system -- there is nothing else to consult. A platform engineer noticed the same bearer token is forwarded unchanged across all three hops (API A to API B to the internal MCP server) and wants to know whether that's a problem or just how these things normally work. Use Review mode and answer their question hop by hop.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-102/context.md",
+        "evals/identity-authority-audit/cases/case-102/token_issuer.py",
+        "evals/identity-authority-audit/cases/case-102/api_a.py",
+        "evals/identity-authority-audit/cases/case-102/api_b.py",
+        "evals/identity-authority-audit/cases/case-102/mcp_gateway.py"
+      ],
+      "expectations": [
+        "REQUIRED: names the BFF/caller-to-API-A hop as clean -- the token's aud claim is \"api-a\", and api_a.py's validate_incoming_token() explicitly checks audience=\"api-a\" -- and does not flag this hop",
+        "REQUIRED: names, as a directly observable/confirmed structural fact, that api_a.py forwards the exact same token unchanged to API B with no exchange or narrowing (raw forwarding)",
+        "REQUIRED: names that api_b.py's own validate_incoming_token() sets verify_aud=False and never checks the audience, and connects this to the forwarded token still carrying aud=\"api-a\" -- but does not flatly declare this exploitable in production with full Confirmed severity; it caps its confidence at Likely issue or an explicit ambiguity requiring verification, citing that no gateway/infrastructure configuration for API B exists anywhere in the evidence to confirm or rule out an enforcement layer in front of this code",
+        "REQUIRED: recognizes the MCP server hop (mcp_gateway.py) as a continuation of the same unaddressed audience-persistence issue rather than reporting it as a separate, third, independent finding",
+        "REQUIRED: does not conclude either extreme -- does not say all forwarding here is invalid, and does not clear the whole chain as fine merely because forwarding tokens between internal services is a normal pattern"
+      ]
+    },
+    {
+      "id": 103,
+      "name": "teams-notification-legitimate-continuation",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-103/ as the complete evidence available about this system for this review -- there is nothing else to consult. A teammate clicked a Teams notification link, landed on /orders/o_789 while logged out, got redirected to a login page, and is asking whether it's a problem that /orders/:id is reachable without being logged in at all -- specifically, whether this is a vulnerability. Run the identity-authority-audit skill in Review mode and answer their question.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-103/context.md",
+        "evals/identity-authority-audit/cases/case-103/notifier.py",
+        "evals/identity-authority-audit/cases/case-103/orders_route.py",
+        "evals/identity-authority-audit/cases/case-103/login_route.py"
+      ],
+      "expectations": [
+        "REQUIRED: names the notification deep link built by build_order_link() as carrying only navigation/resource identity -- the order id and a tracking param -- not a capability, token, or pre-authorization",
+        "REQUIRED: identifies the unauthenticated /orders/:id route redirecting to /login?continue=... as an authentication/continuation transition, not a defect or vulnerability in itself",
+        "REQUIRED: explicitly verifies and reports, citing the actual check in orders_route.py (order[\"account_id\"] against get_account_ids_for_user(user_id)), that view_order performs real per-resource authorization after login resumes -- not merely that the route requires a session",
+        "REQUIRED: does not simply assume the notification -> unauthenticated route -> login -> resume shape is safe by pattern recognition alone -- the report points to the specific post-login authorization check as what makes it true in this fixture, rather than asserting it must exist because the overall pattern is familiar",
+        "REQUIRED: notes that the continue= parameter is validated for same-origin/relative-only handling (_safe_continue_target rejecting any scheme, netloc, or //-prefixed value) before being honored, guarding the continuation mechanism against open redirect",
+        "REQUIRED: does not flag /orders/:id being reachable without a prior session as broken or vulnerable merely because the entry route is unauthenticated"
+      ]
+    },
+    {
+      "id": 104,
+      "name": "platform-authenticity-vs-resource-authorization",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-104/ (context.md, slack_signature.py, interactive_callback_handler.py, expense_service.py) as the complete evidence available about this system -- there is nothing else to consult. Both Slack button handlers check the request signature before doing anything. Use Review mode to determine whether that makes both of them safe, or just one.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-104/context.md",
+        "evals/identity-authority-audit/cases/case-104/slack_signature.py",
+        "evals/identity-authority-audit/cases/case-104/interactive_callback_handler.py",
+        "evals/identity-authority-audit/cases/case-104/expense_service.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies approve_expense_callback as a confirmed issue -- it verifies the Slack signature (proving the request's authenticity) and then approves the expense using payload[\"user\"][\"id\"] with no check against expense_service.get_assigned_approver() or any other authorization mechanism, meaning any workspace member who can click the button can approve any expense",
+        "REQUIRED: explicitly names the conflation being made: a verified external-platform signature (proof the message is genuine) is being treated as proof the specific human is authorized for the specific resource operation, which are different facts",
+        "REQUIRED: identifies add_comment_callback as the correct contrast -- it also verifies the Slack signature, but separately checks expense_service.user_can_view() against the mapped internal user before allowing the write -- and does not flag this handler as unsafe",
+        "REQUIRED: does not apply a blanket verdict to both handlers merely because both call verify_slack_signature() -- the report must discriminate between the two based on what each does afterward",
+        "REQUIRED: rates approve_expense_callback's issue as Confirmed and names it as HIGH consequence, given it is a sensitive/irreversible financial-approval write reachable by any workspace member"
+      ]
+    },
+    {
+      "id": 105,
+      "name": "ui-only-authorization-no-server-check",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-105/ (context.md, AdminUserTable.jsx, users_api.py) as the complete evidence available about this system -- there is nothing else to consult. A support engineer replayed the delete-user network request from a non-admin session and it succeeded, even though the delete button doesn't render for non-admins. Use Review mode to determine whether the button hiding is the only thing stopping this.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-105/context.md",
+        "evals/identity-authority-audit/cases/case-105/AdminUserTable.jsx",
+        "evals/identity-authority-audit/cases/case-105/users_api.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies that AdminUserTable.jsx's isAdmin check only controls whether the delete button renders, and is not itself an enforcement mechanism",
+        "REQUIRED: identifies that users_api.py's delete_user() calls only require_session() -- confirming a session exists, with no role/permission check at all -- as the actual (missing) enforcement point",
+        "REQUIRED: reports this as a Confirmed issue at HIGH consequence -- authorization enforced only by the frontend for a destructive operation -- grounded directly in the code and in the support engineer's own reproduction, not framed as an unresolved ambiguity or something to verify against a gateway (there is no gateway/middleware evidence in this fixture suggesting otherwise)",
+        "A stronger report also notices update_user_role() has the identical gap (require_session() only, enabling self-service privilege escalation to admin) -- this is not required to pass, but is credited as a more thorough read of the evidence if present"
+      ]
+    },
+    {
+      "id": 106,
+      "name": "legitimate-spa-pkce-no-bff-needed",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-106/ as the complete evidence available about this system -- there is nothing else to consult. Use Review mode to evaluate the SPA's token handling and directly answer whether a backend-for-frontend is needed before this ships more broadly.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-106/context.md",
+        "evals/identity-authority-audit/cases/case-106/auth0-client.js",
+        "evals/identity-authority-audit/cases/case-106/orders-client.js",
+        "evals/identity-authority-audit/cases/case-106/orders-api-server.js"
+      ],
+      "expectations": [
+        "REQUIRED: correctly identifies the Authorization Code + PKCE flow against a public client (no client secret) together with the audience- and scope-narrowed access token as an appropriate, legitimate SPA architecture -- not a defect or gap",
+        "REQUIRED: does not recommend adding a backend-for-frontend as if one is required, and does not treat the SPA holding an access token by itself as a Confirmed or Likely finding -- a report that raises the BFF-vs-direct-token question only to conclude no BFF is needed here, grounded in the evidence, satisfies this",
+        "REQUIRED: verifies the audience/scope narrowing by citing the actual code (authorizationParams.audience being the single Orders API and scope being 'orders:read orders:write:own' in auth0-client.js, and the token being attached only to https://api.example.com/orders in orders-client.js) rather than asserting narrowing generically or taking the ticket's description on faith",
+        "REQUIRED: if the 8-hour token lifetime / no refresh-token rotation detail is mentioned at all, it is treated as at most a LOW-consequence note (or omitted, or explicitly framed as a deliberate tradeoff) -- never elevated to a Confirmed or Likely finding at MEDIUM or HIGH consequence",
+        "The report may note express-oauth2-jwt-bearer's issuer/audience/scope validation and the destination-side per-order userId ownership check in orders-api-server.js as evidence the enforcement points are coherent, but this is not required to pass"
+      ]
+    },
+    {
+      "id": 107,
+      "name": "genuine-workload-identity-no-user-needed",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-107/ as the complete evidence available about this system for this review -- there is nothing else to consult. A platform engineer reviewing the nightly reconciliation job noticed there's no user token or session anywhere in the flow and is asking whether that's a gap -- whether this should be running under someone's delegated credentials, or attributed to an engineer, instead of however it's authenticating now. Run the identity-authority-audit skill in Review mode and directly answer their question.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-107/context.md",
+        "evals/identity-authority-audit/cases/case-107/nightly_reconciliation_job.py",
+        "evals/identity-authority-audit/cases/case-107/workload_identity.py",
+        "evals/identity-authority-audit/cases/case-107/ledger_service_reconcile_handler.py"
+      ],
+      "expectations": [
+        "REQUIRED: correctly identifies this operation as genuinely workload-owned -- a scheduled job with no human user or session in its lifecycle -- and does not demand that a user or delegated-user identity be found somewhere in the flow, nor flag the absence of a user principal as a gap or missing-attribution finding",
+        "REQUIRED: names the credential mechanism (a short-lived, single-audience OIDC identity token obtained from the metadata server per get_workload_id_token in workload_identity.py, not a static key or borrowed/forwarded user credential) and characterizes it as an appropriate mechanism for this operation, not a deficiency",
+        "REQUIRED: identifies the destination-side check in ledger_service_reconcile_handler.py (authenticate_workload validating signature/issuer/audience, then authorize_reconciliation_workload checking the caller's service-account identity against ALLOWED_RECONCILIATION_WORKLOADS) as a workload-scoped authorization decision, not a human RBAC check standing in for one",
+        "REQUIRED: if ALLOWED_RECONCILIATION_WORKLOADS being a hardcoded list (rather than sourced from a central policy engine) is mentioned at all, it is kept out of Confirmed/Likely territory -- a LOW-consequence paved-road note, or a Deliberate tradeoff (equally acceptable, since the code comment states the rationale), never a Confirmed or Likely authority-hazard finding, since the check as implemented is still correctly enforced",
+        "REQUIRED: directly answers the engineer's question -- states plainly that running this under someone's delegated credentials or attributing it to an engineer would be the wrong fix, not a missing safeguard"
+      ]
+    },
+    {
+      "id": 108,
+      "name": "user-to-workload-authority-frozen-at-enqueue",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-108/ (context.md, report_request_handler.py, report_worker.py) as the complete evidence available about this system -- there is nothing else to consult. A customer wants to know: if a user's access to a project is revoked five minutes after clicking \"Generate report,\" would a report that finishes ten minutes later still include data from the project they can no longer see? Use Review mode to answer.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-108/context.md",
+        "evals/identity-authority-audit/cases/case-108/report_request_handler.py",
+        "evals/identity-authority-audit/cases/case-108/report_worker.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies this as a user-to-workload authority transition -- an interactive action (generate_report) enqueues execution (report_worker.py) that continues independently of the browser session or the user's continued access",
+        "REQUIRED: identifies that permission_service.get_accessible_project_ids(user_id) is checked exactly once, at enqueue time, and that report_worker.py runs later under its own broad service credential (reporting_service_client), treating the enqueue-time project_ids list as still valid with no second permission check anywhere in the execution path",
+        "REQUIRED: frames the finding as the transition question SKILL.md names -- who owns re-authorization for data accessed after enqueue time, the frozen snapshot or a live recheck -- rather than a vague 'async is risky' comment",
+        "REQUIRED: answers the customer's actual scenario directly: yes, as implemented, a report finishing after revocation would still include the revoked project's data, because no code path rechecks access after enqueue",
+        "REQUIRED: does not propose a specific remediation design (e.g. 'add a live recheck before rendering') as the substance of the finding -- naming the gap and the transition question is sufficient; a proposed fix would belong to Design mode",
+        "REQUIRED: does not overclaim this as a proven, currently-occurring incident -- what's confirmed is the structural gap (no recheck exists); what's likely/consequential is tied to the scenario described, and the report should reflect that distinction rather than asserting certainty about live exploitation"
+      ]
+    },
+    {
+      "id": 109,
+      "name": "read-write-capability-boundary-metadata-only",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-109/ (context.md, salesforce_client.py, agent_tools.py, agent_runtime.py) as the complete evidence available about this system -- there is nothing else to consult. The team wants to remove per-call human approval for routine account lookups while keeping some kind of gate for destructive operations, and is asking whether the current tool setup already supports that distinction. Use Review mode to answer directly.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-109/context.md",
+        "evals/identity-authority-audit/cases/case-109/salesforce_client.py",
+        "evals/identity-authority-audit/cases/case-109/agent_tools.py",
+        "evals/identity-authority-audit/cases/case-109/agent_runtime.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies that get_account, update_account_owner, and delete_account all execute through the same SalesforceClient instance authenticated with one full-CRUD SALESFORCE_ACCESS_TOKEN -- there is no separate, narrower-scoped credential distinguishing reads from destructive writes",
+        "REQUIRED: identifies that agent_tools.py's \"destructive\": True/False field is unused by the dispatch path -- agent_runtime.py's dispatch_tool_call() never reads that field, and the approval gate currently applies uniformly to every call for a reason unrelated to the flag",
+        "REQUIRED: connects both findings to directly and explicitly answer the team's actual either/or question: no, removing per-call approval for \"routine lookups\" today would remove the only gate destructive calls currently have too, since nothing in the dispatch path currently keys off the read/write or destructive distinction",
+        "REQUIRED: reports this as a Confirmed issue at HIGH consequence (destructive Salesforce operations reachable with no distinguishing control once uniform approval is removed for any call), and does not design the specific fix (e.g. does not mandate 'split into two credentials' or 'make dispatch check the flag' as the deliverable) beyond naming the missing property -- a distinguishable, separately gated boundary between read and destructive-write capability"
+      ]
+    },
+    {
+      "id": 110,
+      "name": "proper-mcp-delegation-coherent-design",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-110/ as the complete evidence available about this system -- there is nothing else to consult. Use Review mode to review this MCP server's auth/authorization design before it goes into production.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-110/context.md",
+        "evals/identity-authority-audit/cases/case-110/auth_middleware.py",
+        "evals/identity-authority-audit/cases/case-110/mcp_server.py",
+        "evals/identity-authority-audit/cases/case-110/orders_tools.py"
+      ],
+      "expectations": [
+        "REQUIRED: names audience, issuer, and expiry validation in auth_middleware.authenticate() as present and correct, grounded in the explicit audience=\"orders-mcp\"/issuer checks and the caught jwt exceptions -- not merely 'a token is checked'",
+        "REQUIRED: names the read/write scope separation for tools as present and correct, specifically citing that refund_order requires the narrower, separately-granted orders:refund scope while list_orders requires only orders:read, and that dispatch enforces this before the handler runs",
+        "REQUIRED: names the destination-side per-resource authorization check in refund_order (order[\"account_id\"] != ctx.claims[\"account_id\"]) as present, and correctly characterizes it as checking that this specific order belongs to the delegating user's account, not merely that a validly-scoped token was presented",
+        "REQUIRED: names preserved actor attribution as present -- both the delegating user (act_as) and the agent's own identity (client_id) are extracted as distinct claims and both are logged on every tool invocation, including the denied path",
+        "REQUIRED: does not invent a Confirmed or Likely finding ungrounded in the actual code -- no speculative items such as token replay, whether orders:refund should be scoped further, STS/token-exchange compromise, or a generic step-up-authentication demand may be reported as a Confirmed or Likely finding; if any finding is present at all it must be LOW-consequence at most and explicitly tied to a specific line or behavior actually shown in the three files, not hypothetical",
+        "The report positively names at least the scope-separation and destination-side authorization as specific design strengths rather than only stating a generic 'looks fine'"
+      ]
+    },
+    {
+      "id": 111,
+      "name": "step-up-freshness-vs-mfa-already-upstream",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-111/ (context.md, idp_tenant_config.yaml, billing_api.py, wire_transfer_api.py) as the complete evidence available about this system -- there is nothing else to consult. An engineer preparing a compliance response asks: wire transfers have a re-authentication step, but /api/billing-history doesn't, even though it shows sensitive financial data -- is that a gap? Use Review mode to answer.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-111/context.md",
+        "evals/identity-authority-audit/cases/case-111/idp_tenant_config.yaml",
+        "evals/identity-authority-audit/cases/case-111/billing_api.py",
+        "evals/identity-authority-audit/cases/case-111/wire_transfer_api.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies create_wire_transfer()'s check (auth_time freshness within 5 minutes AND amr containing webauthn) as a correctly implemented step-up/assurance transition -- checking recency of a phishing-resistant factor, not merely that one happened at some point in the session",
+        "REQUIRED: reads and cites idp_tenant_config.yaml establishing that this tenant's IdP enforces WebAuthn as the sole primary factor for every login with no password-only fallback, and correctly concludes that MFA factor strength is handled entirely upstream for every session this app ever sees",
+        "REQUIRED: given that, does NOT recommend adding a step-up/MFA check to billing_history() and does NOT treat its absence as a compliance gap on the factor-strength dimension -- explicitly tells the engineer this is not a gap to fix, distinguishing it from a genuine missing-MFA finding",
+        "REQUIRED: does not fail to notice or engage with idp_tenant_config.yaml -- a report that evaluates billing_history() as if password-only login might be possible for this tenant fails this case",
+        "A report may separately and distinctly note that billing_history() lacks any session-freshness/re-auth-interval requirement (a long-lived old session could still view it) as its own low-to-medium observation, but only if clearly distinguished from the MFA-factor-strength question -- conflating the two fails this case"
+      ]
+    },
+    {
+      "id": 112,
+      "name": "secret-manager-mechanics-vs-resulting-service-authority",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-112/ (context.md, db_connection.py, vault_client.py, vault_db_role.sql) as the complete evidence available about this system -- there is nothing else to consult. A new hire asks: we pull the DB password from Vault instead of an env var, which seems secure -- is there anything else worth checking, or is this part done? Use Review mode to answer.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-112/context.md",
+        "evals/identity-authority-audit/cases/case-112/db_connection.py",
+        "evals/identity-authority-audit/cases/case-112/vault_client.py",
+        "evals/identity-authority-audit/cases/case-112/vault_db_role.sql"
+      ],
+      "expectations": [
+        "REQUIRED: correctly classifies the Vault retrieval as credential management/service authentication -- how the service proves its own identity to Postgres -- explicitly distinct from authorization (what the resulting credential is allowed to do), and credits the short-lived, auto-rotated credential as sound practice on that specific dimension",
+        "REQUIRED: does NOT stop at 'it uses Vault, so this is done' -- goes on to inspect what the resulting credential is actually scoped to",
+        "REQUIRED: identifies, citing vault_db_role.sql's GRANT ALL PRIVILEGES ON ALL TABLES/SEQUENCES IN SCHEMA analytics, that the dynamically-minted credential is scoped far beyond what the service uses (the file's own comment and the service's code show only SELECT queries), and names this as a least-privilege/over-scoped-service-credential finding",
+        "REQUIRED: directly answers the new hire's question: no, using Vault addresses credential storage/rotation, not authorization scope, and here the resulting access is over-broad",
+        "REQUIRED: rates the over-scoping as a Likely-to-Confirmed issue at MEDIUM or HIGH consequence (either is defensible -- HIGH if reasoned as a sensitive write reachable via the credential itself; not LOW, since it is a real least-privilege gap, not a style nit)"
+      ]
+    },
+    {
+      "id": 113,
+      "name": "recovery-flow-silently-inherits-primary-assurance-label",
+      "prompt": "Treat the files in evals/identity-authority-audit/cases/case-113/ (context.md, login_webauthn.py, account_recovery.py) as the complete evidence available about this system -- there is nothing else to consult. A security team member wants to describe the app's authentication as 'phishing-resistant MFA throughout' for a customer audit, and is asking whether the SMS-based account-recovery flow changes how that should be described. Use Review mode to answer.",
+      "files": [
+        "evals/identity-authority-audit/cases/case-113/context.md",
+        "evals/identity-authority-audit/cases/case-113/login_webauthn.py",
+        "evals/identity-authority-audit/cases/case-113/account_recovery.py"
+      ],
+      "expectations": [
+        "REQUIRED: identifies that login_webauthn.py's primary login is genuinely passkey-only with no password fallback, and credits it as such",
+        "REQUIRED: identifies that account_recovery.py's complete_recovery() authenticates via SMS one-time code (a materially weaker factor, vulnerable to SIM-swap/number-porting) but then sets session[\"amr\"] = [\"webauthn\"] -- the identical claim the real WebAuthn login sets -- so downstream code cannot distinguish a passkey-established session from an SMS-recovered one",
+        "REQUIRED: answers the security team member's question directly: yes, this changes how the posture should be described -- 'phishing-resistant MFA throughout' is not accurate as implemented, because the recovery path both weakens real assurance and mislabels that weaker assurance as the strong one",
+        "REQUIRED: rates this as a Confirmed issue (the mislabeling is directly visible in the code, not inferred) at MEDIUM or HIGH consequence, with reasoning given for whichever level is chosen",
+        "REQUIRED: stays scoped to what this evidence shows and does not expand into a general audit of SMS carrier security, the identity provider's broader recovery policy, or generic account-recovery hardening advice beyond this fixture's own evidence"
+      ]
+    }
+  ]
+}

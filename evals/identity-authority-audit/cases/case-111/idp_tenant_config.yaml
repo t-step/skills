@@ -1,0 +1,16 @@
+# Identity-provider configuration for this tenant (Acme Corp).
+# Source of truth: managed in the enterprise IdP admin console; this file
+# mirrors the current settings for reference during reviews.
+
+tenant: acme-corp
+primary_authentication:
+  # WebAuthn is the sole primary factor for this tenant -- there is no
+  # password-only login path. Every session, without exception, is
+  # established via a phishing-resistant factor before this app ever
+  # sees it.
+  required_factors:
+    - webauthn
+  password_only_fallback: false
+session_claims_forwarded_to_app:
+  - amr        # authentication methods used, e.g. ["webauthn"]
+  - auth_time  # unix timestamp of the authentication event
