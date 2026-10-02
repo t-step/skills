@@ -1,0 +1,150 @@
+{
+  "skill_name": "task-composition",
+  "note": "Real-world fixture suite -- see README.md. Full REQUIRED/DEFENSIBLE/DIAGNOSTIC reasoning and provenance citations live in evals/task-composition/grading/case-3xx.expected.md; 'expectations' below are a condensed checklist, not a substitute for the grading file.",
+  "evals": [
+    {
+      "id": 301,
+      "name": "real-world-ignite-iep119-phase1",
+      "prompt": "Treat evals/task-composition/cases/case-301/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Recognizes the two stated 'blocks' links onto IGNITE-24850, does not treat IGNITE-24850 as foundational/enabling despite sounding architectural, identifies IGNITE-24782 (module creation) as an inferred multi-consumer enabler without overclaiming it as a stated dependency, does not resolve the IGNITE-24957/IGNITE-24851 tangle into false certainty, does not invent a stated link between the two same-class shared-file pairs, and does not invent detail for the four title-only tasks.",
+      "files": [
+        "evals/task-composition/cases/case-301/context.md",
+        "evals/task-composition/cases/case-301/tasks.md",
+        "evals/task-composition/cases/case-301/dependencies.md",
+        "evals/task-composition/cases/case-301/source-notes.md",
+        "evals/task-composition/cases/case-301/repository-state.md"
+      ],
+      "expectations": [
+        "IGNITE-24850 is shown depending on both IGNITE-24846 and IGNITE-24848 (stated links), not scheduled as an independent or early/foundational step",
+        "IGNITE-24782 (create ignite-commons module) is identified as a real prerequisite for the other 'Move X' tasks via inference, not presented as if the tracker states the link explicitly, and is not casually dismissed as too simple to be an enabler given it unlocks at least 7 other tasks",
+        "The IGNITE-24957/IGNITE-24851 relationship is not resolved into one confident, unacknowledged direction -- either named as a genuine partial tangle, or one reading is chosen with explicit acknowledgment of the other",
+        "No stated dependency is invented between IGNITE-24941/IGNITE-24850 or IGNITE-24946/IGNITE-24846 (both same-class pairs with no actual link) -- shared-class exposure may be flagged, but not presented as a tracker-stated fact",
+        "IGNITE-24846, IGNITE-24847, IGNITE-24848, and IGNITE-24852 are not given invented detail (file paths, method signatures, rationale) beyond their real title-only content"
+      ]
+    },
+    {
+      "id": 302,
+      "name": "real-world-cassandra-sai-cep7",
+      "prompt": "Treat evals/task-composition/cases/case-302/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Identifies CASSANDRA-18112 as blocked by an external community DISCUSS process rather than by anything in this task set, identifies CASSANDRA-18345 as reaching into shared storage-engine machinery outside SAI's own ownership, names a real dependency/convergence between CASSANDRA-18067, -18345, and -18490 rather than treating them as independent, does not serialize the eight smaller cleanup tasks behind -18067 without a stated reason, does not manufacture CASSANDRA-18166 into a horizontal enabler with unnamed consumers, and honors -18067 as the one stated priority signal without inventing a ranking among the rest.",
+      "files": [
+        "evals/task-composition/cases/case-302/context.md",
+        "evals/task-composition/cases/case-302/tasks.md",
+        "evals/task-composition/cases/case-302/dependencies.md",
+        "evals/task-composition/cases/case-302/source-notes.md",
+        "evals/task-composition/cases/case-302/repository-state.md"
+      ],
+      "expectations": [
+        "CASSANDRA-18112 is named as blocked by something outside this task set (an unresolved community DISCUSS thread), not treated as an ordinary orderable/parallelizable task",
+        "CASSANDRA-18345 is distinguished from an ordinary in-task-set dependency -- named as touching shared, non-SAI-owned storage-engine machinery (the SSTable streamed-component set) with wider blast radius",
+        "CASSANDRA-18067, -18345, and -18490 are not listed as fully independent/parallel-safe with no dependency or shared-checkpoint relationship named between them",
+        "The eight smaller cleanup/improvement tasks (18165, 18166, 18167, 18216, 18280, 18494, 18515, 18521) are not silently serialized behind CASSANDRA-18067 purely because they share the SAI label",
+        "CASSANDRA-18166 is not promoted to horizontal-enabler status with two or more named downstream consumers the record doesn't support",
+        "CASSANDRA-18067 is treated as the one stated priority signal (Phase 3, active); no substitute priority ranking is invented among the other twelve tasks"
+      ]
+    },
+    {
+      "id": 303,
+      "name": "real-world-hudi-metadata-table",
+      "prompt": "Treat evals/task-composition/cases/case-303/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Treats several genuinely open/unscoped tickets (HUDI-2436, -2459, -2460) as uncertain rather than inventing a concrete fix; names HUDI-2432/-2477 as dependent on HUDI-2422 without asserting a confident order between 2432 and 2477 themselves; does not silently merge or strictly sequence HUDI-2458/-2459; does not elevate HUDI-2474 into a standalone multi-consumer enabler; does not declare HUDI-2476 cleanly independent of HUDI-2285; does not fabricate a link from HUDI-2452 into the rest of the plan; keeps HUDI-2459/-2460 as two distinct deliverables; does not treat the shared 'Blocker' label (11 of 19 tasks) as a real priority signal; surfaces the rollback/restore/bootstrap-check correctness cluster (2422/2432/2477/2468/2476) as a shared-area signal worth naming, without folding in HUDI-2478; and treats HUDI-2303/HUDI-2472 as functionally tied to HUDI-2276 rather than freely parallel.",
+      "files": [
+        "evals/task-composition/cases/case-303/context.md",
+        "evals/task-composition/cases/case-303/tasks.md",
+        "evals/task-composition/cases/case-303/dependencies.md",
+        "evals/task-composition/cases/case-303/source-notes.md"
+      ],
+      "expectations": [
+        "HUDI-2436, HUDI-2459, and HUDI-2460 are treated as open/unscoped investigations, not given an invented concrete fix presented as the task's real content",
+        "HUDI-2432 and HUDI-2477 are both shown depending on HUDI-2422, and no confident single execution order between 2432 and 2477 themselves is presented as settled fact (filing-date/number order is not treated as dependency order)",
+        "HUDI-2458 and HUDI-2459 are not silently treated as either the same fix or strictly sequential without naming that the record doesn't state which",
+        "HUDI-2474 is not elevated into a standalone horizontal enabler -- its record supports only one real named consumer",
+        "HUDI-2476 is not declared fully independent of HUDI-2285 with no caveat, given both describe the same delta-commit retry mechanics",
+        "HUDI-2452 is not given a fabricated dependency link to the rollback/restore cluster or to HUDI-2276 just because it shares a filing window or priority label",
+        "HUDI-2459 and HUDI-2460 are kept as two distinct deliverables, not merged into one 'async metadata ops' slice",
+        "The shared 'Blocker' priority label (11 of 19 tasks) is not treated as a discriminating priority order used to justify a sequencing choice",
+        "The rollback/restore/bootstrap-check cluster (HUDI-2422, -2432, -2477, -2468, -2476) is named as a shared-area signal worth a closer look somewhere in the report (any resulting grouping is acceptable), and HUDI-2478 is not folded into that cluster",
+        "HUDI-2303 and HUDI-2472 are shown as functionally tied to HUDI-2276's rollout, not listed as freely parallel with it with no mention of the consequence relationship"
+      ]
+    },
+    {
+      "id": 304,
+      "name": "real-world-kep753-sidecar-containers",
+      "prompt": "Treat evals/task-composition/cases/case-304/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Does not treat already-landed work (base SidecarContainers PR, kubectl describe-nodes fix, LimitRanger fix) as remaining work; does not invent a concrete implementation design for the memory-manager, device-manager, or topology-manager items, which are only a named code location or a bare TODO; names the shared discovered root cause across the CPU/memory/device (and, more weakly, topology) manager items without declaring them fully independent, but also without inventing a merge-order dependency among them; recognizes the topology-manager item as materially thinner in commitment than the memory/device items rather than a uniform fourth instance; shows the final e2e task depending on both e2e prerequisite PRs per the umbrella issue's own stated checklist order; does not claim either open e2e PR is nearly finished; keeps the HPA/autoscaler gap independent of the manager cluster with no invented dependency; does not present the same-day kubelet regression as resolved, and does not present either of its two draft PRs (or either reviewer's preferred approach on the reviewed one) as the settled fix; does not fabricate a link between that regression and the manager cluster; does not invent a priority ranking for the unprioritized items, and does not extend the one genuinely-labeled item's (the kubelet regression's) priority to anything else.",
+      "files": [
+        "evals/task-composition/cases/case-304/context.md",
+        "evals/task-composition/cases/case-304/tasks.md",
+        "evals/task-composition/cases/case-304/dependencies.md",
+        "evals/task-composition/cases/case-304/source-notes.md",
+        "evals/task-composition/cases/case-304/repository-state.md"
+      ],
+      "expectations": [
+        "Already-landed work (the base SidecarContainers PR, the kubectl describe-nodes fix, the LimitRanger fix) is not listed as remaining/open work needing a slice",
+        "MEM-119442, DEV-119442, and TOPO-119407 are treated as named-but-unscoped, not given an invented concrete fix design presented as the task's real content",
+        "CPU-119447, MEM-119442, and DEV-119442 (and/or TOPO-119407) are not presented as fully independent/parallel-safe with no mention of their shared discovered root cause",
+        "No merge-order or blocking dependency is invented among CPU-119447, MEM-119442, and DEV-119442 themselves",
+        "TOPO-119407 is recognized as materially thinner in stage/commitment than MEM-119442/DEV-119442, not treated as a uniform fourth instance of the same status",
+        "E2E-119014 is shown depending on both E2E-119019 and E2E-30281, per the umbrella issue's own stated checklist order, not listed as parallel-safe with either",
+        "E2E-119019 and E2E-30281 are not claimed to be nearly finished or given an invented expected landing time",
+        "HPA-119991 is not folded into the CPU/MEM/DEV/TOPO cluster and is not given an invented dependency on or from it",
+        "REGR-120247 is not presented as already resolved, and neither of its two same-day draft PRs (nor either reviewer's preferred approach on the reviewed one) is presented as the settled fix",
+        "No dependency is fabricated linking REGR-120247 to the CPU/MEM/DEV/TOPO resource-manager cluster",
+        "No priority ranking or beta-deadline urgency is invented for the unprioritized items, and REGR-120247's own priority labels are not extended to any other item"
+      ]
+    },
+    {
+      "id": 305,
+      "name": "real-world-rust-afit-rpitit",
+      "prompt": "Treat evals/task-composition/cases/case-305/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Does not treat already-landed work (both features' original implementation, the AFIT gate-split PR, RFC 3425's own ratification, AFIT's resolved Send-bounds question) as remaining work; does not present AFIT and RPITIT as fully unrelated features given their stated shared desugaring mechanism, a verified shared implementation file, and a core-team quote that async fn in trait 'is just' RPITIT; does not collapse all nine items into one indivisible slice on the strength of that coupling; treats the one dual-labeled ticket with a stated shared-mechanism claim as one piece of work, not two; does not assume the other two dual-labeled tickets share that same status without saying so; shows the RFC's own named stabilize-together question as linked to (not independent of, and not automatically resolved by) the one issue that RFC text itself names alongside it; does not extend that pairing's scope to the other seven, unrelated items; does not present the RFC's own explicitly unresolved question as already decided; does not conflate two textually distinct RPITIT lifetime-capture bugs into one; does not invent a merge-order dependency among the four single-feature-only items; does not invent a priority ranking beyond what the record states; and does not pull return-type notation into scope beyond what's actually named.",
+      "files": [
+        "evals/task-composition/cases/case-305/context.md",
+        "evals/task-composition/cases/case-305/tasks.md",
+        "evals/task-composition/cases/case-305/dependencies.md",
+        "evals/task-composition/cases/case-305/source-notes.md",
+        "evals/task-composition/cases/case-305/repository-state.md"
+      ],
+      "expectations": [
+        "Already-landed work (both features' 2022 implementation, the AFIT gate-split PR, RFC 3425's ratification, AFIT's resolved Send-bounds question) is not listed as remaining/open work needing a slice",
+        "AFIT and RPITIT are not presented as fully unrelated features with no shared mechanism, given the stated desugaring relationship, the verified shared file, and the direct core-team quote that async fn in trait is just RPITIT",
+        "All nine items are not collapsed into one indivisible slice purely because a shared mechanism exists somewhere in the codebase -- at minimum the four single-feature-only items stay visibly separable from a merged grouping",
+        "AFIT-RPITIT-108309 is treated as one piece of work, not split into a separate AFIT sub-task and RPITIT sub-task",
+        "AFIT-RPITIT-108304 and AFIT-RPITIT-109016 are not silently assumed to share AFIT-RPITIT-108309's stated shared-mechanism status merely because they carry the same two labels",
+        "RFC-3425-QUESTIONS's stabilize-together question is shown as textually linked to RPITIT-112194 (per RFC 3425's own 'Unresolved questions' text), not as a fully independent item with no relationship at all",
+        "RFC-3425-QUESTIONS's or RPITIT-112194's scope is not extended to any of the other seven items with no dependency the record states",
+        "RFC 3425's stabilize-together question and RPITIT-112194 are not presented as already resolved or decided -- both are explicitly unresolved in the RFC's own ratified text",
+        "RPITIT-109468 and RPITIT-112194 (two textually distinct RPITIT lifetime-capture bugs filed about ten weeks apart) are not conflated into one bug or given an invented dependency between them",
+        "No merge-order or blocking dependency is invented among AFIT-104689, AFIT-RTN-110963, RPITIT-111105, and RPITIT-109468, or between any of these and the dual-labeled/convergence items",
+        "No priority ranking, urgency signal, or deadline is invented for any of the nine items beyond what the record states",
+        "Return-type notation (RTN) is not pulled into scope as a task or dependency beyond what AFIT-RTN-110963 and RFC-3425-QUESTIONS's own text state"
+      ]
+    },
+    {
+      "id": 306,
+      "name": "real-world-kafka-kip405-tiered-storage-spi",
+      "prompt": "Treat evals/task-composition/cases/case-306/*.md as the complete plan and task list for the remaining work -- there is nothing else to consider. Partition it into delivery slices.",
+      "expected_output": "Does not treat KAFKA-9554 (a same-day duplicate of KAFKA-9548) as a remaining open task; recognizes KAFKA-9548 (the SPI) as a real, textually-established prerequisite for KAFKA-9549, KAFKA-9550, KAFKA-9555, and KAFKA-9579; recognizes the SPI has more than one real, distinctly-owned downstream consumer and gives it independent standing rather than folding it silently into one slice; does not place KAFKA-9565 (S3) and KAFKA-9569 (HDFS) on the same in-scope-deliverable footing as the other consumers without naming the KIP's own stated external-repo intent for them; does not collapse all five SPI-related items into one indivisible slice; does not invent a merge-order dependency between KAFKA-9550 and KAFKA-9579; does not overclaim the SPI's stability in either direction (neither 'already finished' nor 'blocked until finalized'); does not treat KAFKA-9564 (integration test framework) as a second independent enabler; does not invent a priority ranking among the nine items; does not invent implementation detail for title-only tasks; and does not treat automatic umbrella-subtask linkage as a curated roadmap signal.",
+      "files": [
+        "evals/task-composition/cases/case-306/context.md",
+        "evals/task-composition/cases/case-306/tasks.md",
+        "evals/task-composition/cases/case-306/dependencies.md",
+        "evals/task-composition/cases/case-306/source-notes.md",
+        "evals/task-composition/cases/case-306/repository-state.md"
+      ],
+      "expectations": [
+        "KAFKA-9554 (filed one day after KAFKA-9548, closed same day as a stated duplicate) is not listed as an open, remaining task needing its own slice",
+        "KAFKA-9548 is shown as a real, textually-established prerequisite for at least KAFKA-9549, KAFKA-9550, KAFKA-9555, and KAFKA-9579, not as an unrelated, independently-schedulable item",
+        "The SPI is recognized as having more than one real, distinctly-owned downstream consumer (at minimum KAFKA-9549 under one assignee and the KAFKA-9550/-9555/-9579 group under another) and is given independent slice standing rather than being folded silently into a single consumer's slice",
+        "KAFKA-9565 (S3) and KAFKA-9569 (HDFS) are not placed on the same in-scope-deliverable footing as KAFKA-9549/-9550/-9555/-9579 without naming the KIP's own stated intent that HDFS/S3 implementations were planned for external repositories, not this one",
+        "KAFKA-9548, -9549, -9550, -9555, and -9579 are not collapsed into one indivisible slice purely because they share the SPI -- at minimum KAFKA-9549 stays visibly separable from the KAFKA-9550/-9555/-9579 group",
+        "No merge-order or blocking dependency is invented between KAFKA-9550 and KAFKA-9579, which the KIP's own text describes as two separate, unordered thread pools",
+        "The SPI's stability is not overclaimed in either direction -- neither presented as already finished/settled at filing, nor as having blocked all downstream work until finalized",
+        "KAFKA-9564 (integration test framework) is not treated as a second independent horizontal enabler on the same footing as KAFKA-9548 merely because its title sounds architectural",
+        "No priority ranking, urgency signal, or deadline is invented for any of the nine items beyond the record's identical priority label on all of them",
+        "No concrete implementation detail (class names, method signatures, design decisions) is invented for the six items whose own description is empty or a single line",
+        "KAFKA-7739's automatic subtask linkage of all nine items is not treated as a curated, hand-sequenced roadmap or priority signal"
+      ]
+    }
+  ]
+}
